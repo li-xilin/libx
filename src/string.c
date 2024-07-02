@@ -23,7 +23,6 @@
 #include "x/def.h"
 #include "x/string.h"
 #include "x/assert.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -289,7 +288,6 @@ size_t x_strtoargv(char *s, char *argv[], size_t argc_mx)
 void x_memxor(void *a, const void *b, size_t size)
 {
 	int i, j;
-
 	for (i = 0; i < size / sizeof(long); i++)
 		((long *)a)[i] ^= ((long *)b)[i];
 

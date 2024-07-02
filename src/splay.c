@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2020-2024 Li Xilin <lixilin@gmx.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "x/splay.h"
 #include <stdlib.h>
 #include <assert.h>
@@ -7,12 +29,10 @@ static void check_sanity(x_splay *t);
 static void rotate(x_btnode *child);
 static x_btnode *leftmost(x_btnode *node);
 static x_btnode *rightmost(x_btnode *node);
-
+static void mark_gp(x_btnode *child);
 inline static void zig(x_btnode *x, x_btnode *p);
 inline static void zigzig(x_btnode *x, x_btnode *p);
 inline static void zigzag(x_btnode *x, x_btnode *p);
-
-static void mark_gp(x_btnode *child);
 
 static void splay(x_splay *t, x_btnode *x)
 {
@@ -57,7 +77,7 @@ inline static void zigzag(x_btnode *x, x_btnode *p)
 	rotate(x);
 }
 
-x_btnode *splay_find_or_insert(x_splay *t, x_btnode *new)
+x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new)
 {
 	x_btnode *removed = NULL;
 	new->left = NULL;
@@ -99,7 +119,7 @@ out:
 	return removed;
 }
 
-void splay_replace(x_splay *t, x_btnode *old, x_btnode *new)
+void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new)
 {
 	assert(t->comp(old, new) == 0);
 
@@ -136,17 +156,17 @@ void splay_replace(x_splay *t, x_btnode *old, x_btnode *new)
 		new->right = NULL;
 }
 
-x_btnode *splay_replace_or_insert(x_splay *t, x_btnode *new)
+x_btnode *x_splay_replace_or_insert(x_splay *t, x_btnode *new)
 {
-	x_btnode *pNode = splay_find_or_insert(t, new);
+	x_btnode *pNode = x_splay_find_or_insert(t, new);
 	if (pNode) {
-		splay_replace(t, pNode, new);
+		x_splay_replace(t, pNode, new);
 		return pNode;
 	}
 	return NULL;
 }
 
-x_btnode *splay_find(x_splay *t, const x_btnode *node)
+x_btnode *x_splay_find(x_splay *t, const x_btnode *node)
 {
 	x_btnode *curr = t->root;
 	while (curr != NULL) {
@@ -164,7 +184,7 @@ found:
 	return curr;
 }
 
-void splay_remove(x_splay *t, x_btnode *node)
+void x_splay_remove(x_splay *t, x_btnode *node)
 {
 	if (!node)
 		return;
@@ -197,12 +217,12 @@ void splay_remove(x_splay *t, x_btnode *node)
 	check_sanity(t);
 }
 
-x_btnode *splay_first(x_splay *t)
+x_btnode *x_splay_first(x_splay *t)
 {
 	return leftmost(t->root);
 }
 
-x_btnode *splay_next(x_btnode *node)
+x_btnode *x_splay_next(x_btnode *node)
 {
 	if (node->right)
 		return leftmost(node->right);
@@ -211,7 +231,7 @@ x_btnode *splay_next(x_btnode *node)
 	return node->parent;
 }
 
-x_btnode *splay_prev(x_btnode *node)
+x_btnode *x_splay_prev(x_btnode *node)
 {
 	if (node->left)
 		return rightmost(node->left);
@@ -220,7 +240,7 @@ x_btnode *splay_prev(x_btnode *node)
 	return node->parent;
 }
 
-x_btnode *splay_last(x_splay *t)
+x_btnode *x_splay_last(x_splay *t)
 {
 	return rightmost(t->root);
 }
@@ -280,7 +300,7 @@ static x_btnode *rightmost(x_btnode *node)
 }
 
 #ifndef NDEBUG
-int check_node_sanity(x_btnode *x, void *floor, void *ceil, splay_comp_f *comp)
+int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_splay_comp_f *comp)
 {
 	int count = 1;
 	if (x->left) {

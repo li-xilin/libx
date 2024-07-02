@@ -36,7 +36,7 @@ struct x_link_st
 	x_link *prev, *next;
 };
 
-#define X_LIST_INITIALIZER(name) { &(name), &(name) }
+#define X_LIST_INIT(name) { &(name), &(name) }
 
 inline static void x_list_init(x_link *list)
 {
@@ -56,12 +56,12 @@ inline static void __x_list_add(x_link *new_link, x_link *prev, x_link *next)
         prev->next = new_link;
 }
 
-inline static void x_list_add_front(x_link *new_link, x_link *head)
+inline static void x_list_add_front(x_link *head, x_link *new_link)
 {
         __x_list_add(new_link, head, head->next);
 }
 
-inline static void x_link_add_back(x_link *new_link, x_link *head)
+inline static void x_list_add_back(x_link *head, x_link *new_link)
 {
         __x_list_add(new_link, head->prev, head);
 }

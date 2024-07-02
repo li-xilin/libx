@@ -29,7 +29,7 @@ LIB = $(ROOT)/lib
 BIN = $(ROOT)/bin
 
 CFLAGS += --pedantic -std=c99 -I$(ROOT)/src/include -I$(INCLUDE)
-CFLAGS += -Wall -Werror -fPIC
+CFLAGS += -Wall -Werror -fPIC -D_POSIX_C_SOURCE=199309L
 
 DISABLE_DEBUG = no
 DISABLE_CASSERT = no

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@
 
 #include "x/log.h"
 #include "x/tcolor.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +33,7 @@
 static int s_mode = 0;
 static x_log_handler_f *s_handler = NULL;
 static void *s_handler_arg = NULL;
+// static x_mutex s_lock = X_MUTEX_INIT;
 	
 int x_log_mode()
 {
@@ -44,8 +44,6 @@ void x_log_set_mode(int mode)
 {
 	s_mode = mode;
 }
-
-// static x_mutex s_lock = X_MUTEX_INIT;
 
 void x_log_set_handler(x_log_handler_f *f, void *arg)
 {

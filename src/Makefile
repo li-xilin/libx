@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Li hsilin <lihsilyn@gmail.com>
+# Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ include $(ROOT)/config.mak
 TARGET = $(ROOT)/lib/libx.a
 
 OBJS = base64.o bitmap.o dump.o dumpfmt.o pipe.o log.o splay.o string.o tcolor.o \
-       assert.o heap.o
+       assert.o heap.o memory.o
 all: $(TARGET)
 
 $(TARGET): $(OBJS)

@@ -90,9 +90,9 @@ char *x_memtohex(const void *p, size_t size, char *out);
 
 void x_membyhex(const char *text, void *out);
 
-char **x_strargv(const char *cmdline, int* count);
+char **x_strargv(const char *cmdline, int *count);
 
-wchar_t **x_wcsargv(const wchar_t *cmdline, int* count);
+wchar_t **x_wcsargv(const wchar_t *cmdline, int *count);
 
 void x_memxor(void *a, const void *b, size_t size);
 

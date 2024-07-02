@@ -22,7 +22,6 @@
 
 #include "x/tcolor.h"
 #include "x/detect.h"
-
 #include <stdio.h>
 
 #ifdef X_OS_WIN32

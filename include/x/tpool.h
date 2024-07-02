@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2020-2024 Li Xilin <lixilin@gmx.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * Copyright (c) 2022-2024 Li Xilin <lixilin@gmx.com>
+ * 
+ * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -20,29 +20,23 @@
  * THE SOFTWARE.
  */
 
-#include "x/assert.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef AX_TPOOL_H
+#define AX_TPOOL_H
 
-int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, ...)
-{
-	va_list vl;
-	char text[2048];
-	int nchar = snprintf(text, sizeof text, "%s:%s:%d:%s", loc->file, loc->func, loc->line, brief);
-	if (fmt && sizeof text - nchar > sizeof ":\n") {
-		text[nchar++] = ':';
-		text[nchar] = '\0';
-		va_start(vl, fmt);
-		nchar += vsnprintf(text + nchar, sizeof text - nchar, fmt, vl);
-		va_end(vl);
-	} 
-	text[nchar++] = '\n';
-	text[nchar]= '\0';
-	fputs(text, stderr);
-		
-	abort();
-	return 0;
-}
+#include <stdbool.h>
+#include <stddef.h>
 
+#ifndef AX_TPOOL_DEFINED
+#define AX_TPOOL_DEFINED
+typedef struct ax_tpool_st ax_tpool;
+#endif
+
+typedef void ax_tpool_worker_f(void *arg);
+
+ax_tpool *ax_tpool_create(size_t num);
+void ax_tpool_destroy(ax_tpool *tpool);
+
+int ax_tpool_add_work(ax_tpool *tpool, ax_tpool_worker_f *func, void *arg);
+void ax_tpool_wait(ax_tpool *tpool);
+
+#endif

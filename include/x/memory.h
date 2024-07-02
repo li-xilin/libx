@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,29 @@
  * THE SOFTWARE.
  */
 
-#include "x/assert.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef X_MEMORY_H
+#define X_MEMORY_H
 
-int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, ...)
-{
-	va_list vl;
-	char text[2048];
-	int nchar = snprintf(text, sizeof text, "%s:%s:%d:%s", loc->file, loc->func, loc->line, brief);
-	if (fmt && sizeof text - nchar > sizeof ":\n") {
-		text[nchar++] = ':';
-		text[nchar] = '\0';
-		va_start(vl, fmt);
-		nchar += vsnprintf(text + nchar, sizeof text - nchar, fmt, vl);
-		va_end(vl);
-	} 
-	text[nchar++] = '\n';
-	text[nchar]= '\0';
-	fputs(text, stderr);
-		
-	abort();
-	return 0;
-}
+#include <stddef.h>
+#include <stdint.h>
+
+typedef struct x_mset_st x_mset;
+
+x_mset *x_mset_create(void);
+
+void x_mset_free(x_mset *mset);
+
+void *x_calloc(x_mset *mset, size_t nmemb, size_t size);
+
+void *x_malloc(x_mset *mset, size_t size);
+
+void *x_realloc(void *ptr, size_t size);
+
+void x_free(void *ptr);
+
+void x_mdetach(void *ptr);
+
+void x_mattach(x_mset *mset, void *ptr);
+
+#endif
 

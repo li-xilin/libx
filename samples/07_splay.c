@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct number { x_splay_node node; int i; };
+struct number { x_btnode node; int i; };
 
-int cmp(const x_splay_node *n1, const x_splay_node *n2)
+int cmp(const x_btnode *n1, const x_btnode *n2)
 {
 	struct number *v1 = x_container_of(n1, struct number, node);
 	struct number *v2 = x_container_of(n2, struct number, node);
@@ -17,14 +17,13 @@ int main()
 {
 	x_splay t;
 	x_splay_init(&t, cmp);
-	
 	x_forvalues(int, 7, 8, 3, 9, 4, 1, 2, 6, 5, 0) {
                 struct number *p = malloc(sizeof *p);
                 p->i = _;
-                x_splay_insert(&t, &p->node);
+                x_splay_replace_or_insert(&t, &p->node);
         }
 
-        x_splay_node *cur;
+        x_btnode *cur;
 
 	cur = x_splay_first(&t);
         while (cur) {

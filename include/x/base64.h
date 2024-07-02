@@ -20,8 +20,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef AX_BASE64_H
-#define AX_BASE64_H
+#ifndef X_BASE64_H
+#define X_BASE64_H
 
 #include <stdint.h>
 #include <stddef.h>
