@@ -22,6 +22,7 @@
 
 #include "x/log.h"
 #include "x/tcolor.h"
+#include "x/mutex.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,7 @@
 static int s_mode = 0;
 static x_log_handler_f *s_handler = NULL;
 static void *s_handler_arg = NULL;
-// static x_mutex s_lock = X_MUTEX_INIT;
+static x_mutex s_lock = X_MUTEX_INIT;
 	
 int x_log_mode()
 {
@@ -76,8 +77,7 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 		snprintf(loc_buf, sizeof loc_buf, "%s :%s:%d", loc->file, loc->func, loc->line);
 	}
 
-	// if (x_mutex_lock(&s_lock))
-	// 	goto out;
+	x_mutex_lock(&s_lock);
 
 	if (fputc('[', fp) < 0)
 		goto out;
@@ -154,7 +154,7 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 		goto out;
 	retval = 0;
 out:
-	// x_mutex_unlock(&s_lock);
+	x_mutex_unlock(&s_lock);
 	return retval;
 }
 
