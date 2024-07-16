@@ -1,0 +1,29 @@
+# LibX #
+
+轻量级的C工具库
+
+| 头文件     | 说明 |
+| ---        | ---  |
+| assert.h   | 静态断言和动态断言 |
+| base64.h   | Base64编解码 |
+| bitmap.h   | 位图 |
+| cond.h     | 条件变量
+| def.h      | 基础宏定义 |
+| detect.h   | 操作系统、编译器、硬件架构探测 |
+| dump.h     | 转储操作 |
+| flowctl.h  | 流程控制语句 |
+| heap.h     | 堆结构（用于构造优先队列） |
+| list.h     | 无内存分配链表 |
+| log.h      | 日志打印 |
+| memory.h   | 内存统一分配和释放 |
+| mutex.h    | 互斥量
+| narg.h     | 参数数量计算
+| once.h     | 原子初始化 |
+| pipe.h     | FIFO队列 |
+| splay.h    | Splay树结构，用于键值映射 |
+| string.h   | 字符串操作 |
+| tcolor.h   | 终端颜色支持 |
+| thread.h   | 线程操作 |
+| tpool.h    | 线程池 |
+| trick.h    | 魔法宏 |
+
