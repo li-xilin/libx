@@ -22,6 +22,7 @@
 
 #include "x/list.h"
 #include "x/memory.h"
+#include "x/once.h"
 #include "x/thread.h"
 #include "x/mutex.h"
 #include <stdlib.h>
@@ -41,8 +42,6 @@ struct x_mset_st
 	x_link list;
 	x_mutex lock;
 };
-
-x_mset *s_default_mset = NULL;
 
 x_mset *x_mset_create(void)
 {
