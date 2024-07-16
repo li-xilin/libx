@@ -30,7 +30,7 @@
 #include <stdint.h>
 #include <setjmp.h>
 
-#define x_block while (0)
+#define x_block for(register int __ax_block_flag = 0; __ax_block_flag != 1; __ax_block_flag = 1)
 
 #define x_repeat(_n) for(size_t _ = 0; _ != (_n); _++)
 
