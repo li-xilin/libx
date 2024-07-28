@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "x/log.h"
 
 int main()
@@ -13,7 +14,7 @@ int main()
 
 	x_log_set_mode(X_LM_NOLOC);
 
-	x_pinfo("Info message with location");
+	x_pinfo("Info message with location: %s", "[test string]");
 	x_pdebug("Debug message with location");
 	x_pwarn("Warn message with location");
 	x_perror("Error message with location");

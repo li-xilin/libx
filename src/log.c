@@ -74,7 +74,7 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 	}
 
 	if (!(mode & X_LM_NOLOC)) {
-		snprintf(loc_buf, sizeof loc_buf, "%s :%s:%d", loc->file, loc->func, loc->line);
+		snprintf(loc_buf, sizeof loc_buf, "%s:%s:%d", loc->file, loc->func, loc->line);
 	}
 
 	x_mutex_lock(&s_lock);
@@ -147,8 +147,15 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 		}
 	}
 
-	if (fprintf(fp, " %s\n", text) < 0)
+	if (fputc(' ', fp) == EOF)
 		goto out;
+
+	if (fputs(text, fp) == EOF)
+		goto out;
+
+	if (!text[0] || text[strlen(text) - 1] != '\n')
+		if (fputc('\n', fp) == EOF)
+			goto out;
 
 	if (fflush(fp))
 		goto out;
@@ -196,7 +203,7 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 	}
 
 	char ms_buf[X_LOG_MX];
-	if (snprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
+	if (vsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)
