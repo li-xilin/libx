@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2024 Li Xilin <lixilin@gmx.com>
+# Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,29 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-AR            = ar
-RM            = rm -f
-CC            = gcc
-CFLAGS        = 
-LDFLAGS       = 
+DESTDIR ?= /usr/local
+ALL_CFLAGS += --pedantic -std=c99 -I ../include -Wall -Werror \
+	      -fPIC -D_POSIX_C_SOURCE=199309L -D_WIN32_WINNT=0x0600
 
-INCLUDE = $(ROOT)/include
-LIB = $(ROOT)/lib
-BIN = $(ROOT)/bin
-
-CFLAGS += --pedantic -std=c99 -I$(ROOT)/src/include -I$(INCLUDE)
-CFLAGS += -Wall -Werror -fPIC -D_POSIX_C_SOURCE=199309L
-
-DISABLE_DEBUG = no
-DISABLE_CASSERT = no
-
-ifeq ($(DISABLE_DEBUG),yes)
-	CFLAGS += -O2
-else
-	CFLAGS += -g -O0
+ifeq ($(CFLAGS),)
+	ALL_FLAGS += -g -O2
 endif
 
-ifeq ($(DISABLE_CASSERT),yes)
-	CFLAGS += -DNDEBUG
-endif
+all:
+	$(MAKE) -C src $@ CFLAGS="$(ALL_CFLAGS) $(CFLAGS)" CC=$(CC) AR=$(AR)
+clean:
+	$(MAKE) -C src $@
+
+install: all
+	install -m 755 -d $(DESTDIR)/include/x $(DESTDIR)/lib
+	install -m 644 src/libx.a $(DESTDIR)/lib
+	install -m 644 include/x/*.h $(DESTDIR)/include/x
+
+.PHONY: all clean install
 
