@@ -61,6 +61,7 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 	const char *type;
 	int mode = x_log_mode();
 	FILE *fp = arg ? arg : stderr;
+	x_tcolor tc = { 0 };
 
 	time_buf[0] = '\0';
 	loc_buf[0] = '\0';
@@ -74,7 +75,7 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 	}
 
 	if (!(mode & X_LM_NOLOC)) {
-		snprintf(loc_buf, sizeof loc_buf, "%s :%s:%d", loc->file, loc->func, loc->line);
+		snprintf(loc_buf, sizeof loc_buf, "%s:%s:%d", loc->file, loc->func, loc->line);
 	}
 
 	x_mutex_lock(&s_lock);
@@ -82,51 +83,51 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 	if (fputc('[', fp) < 0)
 		goto out;
 
-	x_tcolor_set(fp);
+	x_tcolor_set(fp, &tc);
 	switch(level) {
 		case X_LL_DEBUG:
 			type = "DEBUG";
-			x_tcolor_fg(fp, X_TCOLOR_BLUE);
+			x_tcolor_fg(&tc, X_TCOLOR_BLUE);
 			break;
 		case X_LL_INFO:
 			type = "INFO";
-			x_tcolor_fg(fp, X_TCOLOR_GREEN);
+			x_tcolor_fg(&tc, X_TCOLOR_GREEN);
 			break;
 		case X_LL_WARN:
 			type = "WARN";
-			x_tcolor_fg(fp, X_TCOLOR_YELLOW);
+			x_tcolor_fg(&tc, X_TCOLOR_YELLOW);
 			break;
 		case X_LL_ERROR:
 			type = "ERROR";
-			x_tcolor_fg(fp, X_TCOLOR_RED);
+			x_tcolor_fg(&tc, X_TCOLOR_RED);
 			break;
 		case X_LL_FATAL:
 			type = "FATAL";
-			x_tcolor_fg(fp, X_TCOLOR_BRED);
+			x_tcolor_fg(&tc, X_TCOLOR_BRED);
 			break;
 		default:
 			snprintf(level_buf, sizeof level_buf, "%d", level);
 			type = level_buf;
-			x_tcolor_fg(fp, X_TCOLOR_GREEN);
+			x_tcolor_fg(&tc, X_TCOLOR_GREEN);
 	}
 	if (fprintf(fp, "%-5s", type) < 0) {
-		x_tcolor_reset(fp);
+		x_tcolor_reset(&tc);
 		goto out;
 	}
-	x_tcolor_reset(fp);
+	x_tcolor_reset(&tc);
 	if (fputs("]", fp) < 0)
 		goto out;
 
 	if (time_buf[0]) {
 		if (fputc('[', fp) < 0)
 			goto out;
-		x_tcolor_set(fp);
-		x_tcolor_fg(fp, X_TCOLOR_GREEN);
+		x_tcolor_set(fp, &tc);
+		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
 		if (fprintf(fp, "%s", time_buf) < 0) {
-			x_tcolor_reset(fp);
+			x_tcolor_reset(&tc);
 			goto out;
 		}
-		x_tcolor_reset(fp);
+		x_tcolor_reset(&tc);
 		if (fputc(']', fp) < 0) {
 			goto out;
 		}
@@ -135,20 +136,27 @@ static int log_default_handler(const x_location *loc, void *arg, int level, cons
 	if (loc_buf[0]) {
 		if (fputc('[', fp) < 0)
 			goto out;
-		x_tcolor_set(fp);
-		x_tcolor_fg(fp, X_TCOLOR_GREEN);
+		x_tcolor_set(fp, &tc);
+		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
 		if (fprintf(fp, "%s", loc_buf) < 0) {
-			x_tcolor_reset(fp);
+			x_tcolor_reset(&tc);
 			goto out;
 		}
-		x_tcolor_reset(fp);
+		x_tcolor_reset(&tc);
 		if (fputc(']', fp) < 0) {
 			goto out;
 		}
 	}
 
-	if (fprintf(fp, " %s\n", text) < 0)
+	if (fputc(' ', fp) == EOF)
 		goto out;
+
+	if (fputs(text, fp) == EOF)
+		goto out;
+
+	if (!text[0] || text[strlen(text) - 1] != '\n')
+		if (fputc('\n', fp) == EOF)
+			goto out;
 
 	if (fflush(fp))
 		goto out;
@@ -196,7 +204,7 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 	}
 
 	char ms_buf[X_LOG_MX];
-	if (snprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
+	if (vsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)

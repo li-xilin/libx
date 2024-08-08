@@ -23,7 +23,9 @@
 #ifndef X_TCOLOR_H
 #define X_TCOLOR_H
 
+#include "detect.h"
 #include <stdio.h>
+#include <stdint.h>
 
 enum {
 	X_TCOLOR_BLACK = 0,
@@ -45,11 +47,25 @@ enum {
 	X_TCOLOR_BWHITE,
 };
 
-void x_tcolor_set(FILE *file);
-void x_tcolor_reset(FILE *file);
-void x_tcolor_bold( FILE *file); /* Does not do anything on Windows */
+typedef struct x_tcolor_st
+{
+	FILE *fp;
+#ifdef X_OS_WIN
+	uint16_t attr;
+	int8_t bg_color;
+	int8_t fg_color;
+#endif
+} x_tcolor;
 
-void x_tcolor_fg(FILE *file, int color);
-void x_tcolor_bg(FILE *file, int color);
+void x_tcolor_set(FILE *file, x_tcolor *tc);
+
+void x_tcolor_reset(x_tcolor *tc);
+
+void x_tcolor_bold( x_tcolor *tc); /* Does not do anything on Windows */
+
+void x_tcolor_fg(x_tcolor *tc, int color);
+
+void x_tcolor_bg(x_tcolor *tc, int color);
 
 #endif
+

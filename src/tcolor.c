@@ -23,9 +23,11 @@
 #include "x/tcolor.h"
 #include "x/detect.h"
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef X_OS_WIN32
 #include <windows.h>
+#include <io.h>
 static WORD s_fg_colors[] = {
 	[X_TCOLOR_BLACK]   = 0,
 	[X_TCOLOR_RED]     = FOREGROUND_RED,
@@ -66,15 +68,10 @@ static WORD s_bg_colors[] = {
 	[X_TCOLOR_BWHITE]   = BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY,
 };
 
-static WORD s_wErrAttr = 0;
-static WORD s_wErrForeColor = 0;
-static WORD s_wErrBackColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-
-static WORD s_wOutAttr = 0;
-static WORD s_wOutForeColor = 0;
-static WORD s_wOutBackColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+#define COLOR_BITS (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 
 #else
+#include <unistd.h>
 
 static const char *s_fg_colors[] = {
 	[X_TCOLOR_BLACK]   = "\x1b[30m",
@@ -117,115 +114,99 @@ static const char *s_bg_colors[] = {
 };
 #endif
 
-void x_tcolor_set(FILE *file) {
+static int file_isatty(FILE *file)
+{
 #ifdef X_OS_WIN32
-	HANDLE handle;
+	return _isatty(_fileno(file));
+#else
+	return isatty(fileno(file));
+#endif
+}
+
+void x_tcolor_set(FILE *file, x_tcolor *tc)
+{
+	assert(tc->fp == NULL);
+	if (!file_isatty(file)) {
+		tc->fp = NULL;
+		return;
+	}
+#ifdef X_OS_WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	if (file == stderr) {
-		handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (GetFileType(handle) != FILE_TYPE_CHAR)
-			return;
-		GetConsoleScreenBufferInfo(handle, &csbi);
-		s_wErrAttr = csbi.wAttributes;
-		s_wErrForeColor = csbi.wAttributes & (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		s_wErrBackColor = csbi.wAttributes & (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
-	}
-	else if (file == stdout) {
-		handle = GetStdHandle(STD_ERROR_HANDLE);
-		if (GetFileType(handle) != FILE_TYPE_CHAR)
-			return;
-		GetConsoleScreenBufferInfo(handle, &csbi);
-		s_wOutAttr = csbi.wAttributes;
-		s_wOutForeColor = csbi.wAttributes & (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		s_wOutBackColor = csbi.wAttributes & (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
-	}
-	else
+	HANDLE handle = (HANDLE)_get_osfhandle(_fileno(file));
+	if (handle == INVALID_HANDLE_VALUE)
 		return;
 
+	handle = GetStdHandle(STD_ERROR_HANDLE);
+	if (GetFileType(handle) != FILE_TYPE_CHAR)
+		return;
+	GetConsoleScreenBufferInfo(handle, &csbi);
 
+	tc->attr = csbi.wAttributes;
+	tc->bg_color = -1;
+	tc->fg_color = -1;
 #endif
+	tc->fp = file;
 }
-
-void x_tcolor_reset(FILE *file) {
+void x_tcolor_reset(x_tcolor *tc)
+{
+	if (!tc->fp)
+		return;
 #ifdef X_OS_WIN32
-	HANDLE hOutput;
-	if (file == stderr) {
-		hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-		SetConsoleTextAttribute(hOutput, s_wErrAttr);
-	}
-	else if (file == stdout) {
-		hOutput = GetStdHandle(STD_ERROR_HANDLE);
-		SetConsoleTextAttribute(hOutput, s_wOutAttr);
-	}
-	else
+	HANDLE handle = (HANDLE)_get_osfhandle(_fileno(tc->fp));
+	if (handle == INVALID_HANDLE_VALUE)
 		return;
+	SetConsoleTextAttribute(handle, tc->attr);
 #else
-	if (file != stderr && file != stdout)
-		return;
-
-	fputs("\x1b[0m", file);
+	fputs("\x1b[0m", tc->fp);
 #endif
+	tc->fp = NULL;
 }
-
-void x_tcolor_bold(FILE *file) {
+void x_tcolor_bold( x_tcolor *tc) /* Does not do anything on Windows */
+{
+	if (!tc->fp)
+		return;
 #ifdef X_OS_WIN32
-	(void)file;
+	(void)tc;
 #else
-	if (file != stderr && file != stdout)
-		return;
-
-	fputs("\x1b[1m", file);
+	fputs("\x1b[1m", tc->fp);
 #endif
 }
-
-void x_tcolor_fg(FILE *file, int color) {
+void x_tcolor_fg(x_tcolor *tc, int color)
+{
+	if (!tc->fp)
+		return;
 	if (color < 0)
 		return;
 #ifdef X_OS_WIN32
-	HANDLE handle;
-	if (file == stderr) {
-		handle = GetStdHandle(STD_ERROR_HANDLE);
-		s_wErrForeColor = s_fg_colors[color];
-		SetConsoleTextAttribute(handle, s_wErrForeColor | s_wErrBackColor);
-	}
-	else if (file == stdout) {
-		handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		s_wOutForeColor = s_fg_colors[color];
-		SetConsoleTextAttribute(handle, s_wOutForeColor | s_wOutBackColor);
-	}
-	else
+	HANDLE handle =(HANDLE) _get_osfhandle(_fileno(tc->fp));
+	if (handle == INVALID_HANDLE_VALUE)
 		return;
-
+	tc->fg_color = color;
+	WORD wAttr = (tc->attr & ~COLOR_BITS)
+		| s_fg_colors[color]
+		| (tc->bg_color < 0 ? 0 : s_bg_colors[tc->bg_color]);
+	SetConsoleTextAttribute(handle, wAttr);
 #else
-	if (file != stderr && file != stdout)
-		return;
-
-	fputs(s_fg_colors[color], file);
+	fputs(s_fg_colors[color], tc->fp);
 #endif
 }
 
-void x_tcolor_bg(FILE *file, int color) {
+void x_tcolor_bg(x_tcolor *tc, int color)
+{
+	if (!tc->fp)
+		return;
 	if (color < 0)
 		return;
 #ifdef X_OS_WIN32
-	HANDLE handle;
-	if (file == stderr) {
-		handle = GetStdHandle(STD_ERROR_HANDLE);
-		s_wErrBackColor = s_bg_colors[color];
-		SetConsoleTextAttribute(handle, s_wErrForeColor | s_wErrBackColor);
-	}
-	else if (file == stdout) {
-		handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		s_wOutBackColor = s_bg_colors[color];
-		SetConsoleTextAttribute(handle, s_wOutForeColor | s_wOutBackColor);
-	}
-	else
+	HANDLE handle =(HANDLE) _get_osfhandle(_fileno(tc->fp));
+	if (handle == INVALID_HANDLE_VALUE)
 		return;
+	tc->fg_color = color;
+	WORD wAttr = (tc->attr & ~COLOR_BITS)
+		| s_bg_colors[color]
+		| (tc->fg_color < 0 ? 0 : s_fg_colors[tc->bg_color]);
+	SetConsoleTextAttribute(handle, wAttr);
 #else
-	if (file != stderr && file != stdout)
-		return;
-
-	fputs(s_bg_colors[color], file);
+	fputs(s_bg_colors[color], tc->fp);
 #endif
 }
