@@ -52,7 +52,7 @@ void x_log_set_handler(x_log_handler_f *f, void *arg)
 	s_handler_arg = arg;
 }
 
-static int log_default_handler(const x_location *loc, void *arg, int level, const char* text)
+int x_log_default_handler(const x_location *loc, void *arg, int level, const char* text)
 {
 	int retval = -1;
 	char time_buf[64];
@@ -208,7 +208,7 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)
-		: log_default_handler(loc, s_handler_arg, level, ms_buf);
+		: x_log_default_handler(loc, s_handler_arg, level, ms_buf);
 	return ret;
 }
 

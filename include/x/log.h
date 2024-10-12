@@ -58,6 +58,8 @@ int x_log_mode();
 
 typedef int x_log_handler_f(const x_location *loc, void *arg, int level, const char *text);
 
+x_log_handler_f x_log_default_handler;
+
 void x_log_set_handler(x_log_handler_f *f, void *arg);
 
 #define x_log(level, ...) __x_log_print(X_WHERE, level, __VA_ARGS__)
