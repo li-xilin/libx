@@ -52,6 +52,19 @@ void x_log_set_handler(x_log_handler_f *f, void *arg)
 	s_handler_arg = arg;
 }
 
+static inline const char *__basename(const char *path)
+{
+	int c = 0, i;
+	for (i = 0; path[i]; i++)
+#ifdef X_OS_WIN
+		if (path[i] == '\\')
+#else
+		if (path[i] == '/')
+#endif
+			c = i + 1;
+	return path + c;
+}
+
 int x_log_default_handler(const x_location *loc, void *arg, int level, const char* text)
 {
 	int retval = -1;
@@ -75,7 +88,7 @@ int x_log_default_handler(const x_location *loc, void *arg, int level, const cha
 	}
 
 	if (!(mode & X_LM_NOLOC)) {
-		snprintf(loc_buf, sizeof loc_buf, "%s:%s:%d", loc->file, loc->func, loc->line);
+		snprintf(loc_buf, sizeof loc_buf, "%s:%s:%d", __basename(loc->file), loc->func, loc->line);
 	}
 
 	x_mutex_lock(&s_lock);
