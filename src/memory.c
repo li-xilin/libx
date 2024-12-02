@@ -39,7 +39,7 @@ struct block_st
 
 struct x_mset_st
 {
-	x_link list;
+	x_list list;
 	x_mutex lock;
 };
 
@@ -97,6 +97,9 @@ void *x_calloc(x_mset *mset, size_t nmemb, size_t size)
 
 void *x_realloc(void *ptr, size_t size)
 {
+	if (!ptr)
+		return x_malloc(NULL, size);
+
 	struct block_st *b = x_container_of(ptr, struct block_st, data);
 
 	if (b->mset) {
@@ -108,7 +111,8 @@ void *x_realloc(void *ptr, size_t size)
 	struct block_st *new_blk = realloc(b, sizeof *b + size);
 	while (!new_blk) {
 		x_thread_sleep(RETRY_INTERVAL);
-		new_blk = realloc(b, sizeof *b + size);
+		struct block_st **bp = &b;
+		new_blk = realloc(*bp, sizeof *b + size);
 	}
 
 	if (new_blk->mset) {
