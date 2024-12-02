@@ -1,6 +1,4 @@
-ROOT = ..
-include $(ROOT)/config.mak
-
+CFLAGS = -I ../include
 LDFLAGS += -L../lib -lm
 SRCS = $(wildcard *.c)
 TARGETS = $(SRCS:.c=.exe)
