@@ -148,10 +148,9 @@ size_t x_pipe_pour(x_pipe *src, x_pipe *dst, size_t size)
 	size_t read_size, write_size;
 
 	do {
-		void *p;
-		read_size = x_min(size - moved_size, x_pipe_zc_read(src, &p));
-		write_size = x_pipe_write(dst, p, read_size);
-		x_pipe_commit_zc_read(src, write_size);
+		read_size = x_min(size - moved_size, x_pipe_zread_size(src));
+		write_size = x_pipe_write(dst, x_pipe_zread(src), read_size);
+		x_pipe_zread_commit(src, write_size);
 		moved_size += write_size;
 	} while (read_size && write_size);
 	return moved_size;
