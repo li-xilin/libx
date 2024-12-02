@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 struct x_pipe_st
 {
@@ -36,9 +37,9 @@ struct x_pipe_st
 
 typedef struct x_pipe_st x_pipe;
 
-typedef void pipe_drain_f(void *data, size_t size, void *arg);
+typedef void x_pipe_drain_f(void *data, size_t size, void *arg);
 
-inline static void pipe_init(x_pipe *b, void *buf, size_t size)
+inline static void x_pipe_init(x_pipe *b, void *buf, size_t size)
 {
 	assert(size > 1);
 	b->size = size;
@@ -46,78 +47,95 @@ inline static void pipe_init(x_pipe *b, void *buf, size_t size)
 	b->rear = b->front = 0;
 }
 
-inline static size_t pipe_data_size(x_pipe *b)
+inline static size_t x_pipe_data_size(x_pipe *b)
 {
 	return (b->size + b->rear - b->front) % b->size;
 }
 
-inline static bool pipe_is_full(x_pipe *b)
+inline static bool x_pipe_is_full(x_pipe *b)
 {
 	return (b->rear + 1) % b->size == b->front;
 }
 
-inline static bool pipe_is_empty(x_pipe *b)
+inline static bool x_pipe_is_empty(x_pipe *b)
 {
 	return b->rear == b->front;
 }
 
-inline static size_t pipe_max_size(x_pipe *b)
+inline static size_t x_pipe_max_size(x_pipe *b)
 {
 	return b->size - 1;
 }
 
-inline static size_t pipe_buffer_size(x_pipe *b)
+inline static size_t x_pipe_buffer_size(x_pipe *b)
 {
-	return pipe_max_size(b) - pipe_data_size(b);
+	return x_pipe_max_size(b) - x_pipe_data_size(b);
 }
 
-inline static size_t pipe_zc_read(const x_pipe *b, void **ptr)
+inline static void *x_pipe_zread(const x_pipe *b)
 {
-	if (ptr)
-		*ptr = b->buf + b->front;
-        return (b->rear >= b->front)
+	return b->buf + b->front;
+}
+
+inline static size_t x_pipe_zread_size(const x_pipe *b)
+{
+	return (b->rear >= b->front)
 		? b->rear - b->front
 		: b->size - b->front;
 }
 
-inline static void pipe_commit_zc_read(x_pipe *b, size_t size)
+inline static void x_pipe_zread_commit(x_pipe *b, size_t size)
 {
-        assert(size <= pipe_zc_read(b, NULL));
+	assert(size <= x_pipe_zread_size(b));
 	b->front = (b->front + size) % b->size;
 }
 
-inline static size_t pipe_zc_write(const x_pipe *b, void **ptr)
+inline static void *x_pipe_zwrite(const x_pipe *b)
 {
-	if (ptr)
-		*ptr = b->buf + b->rear;
-        return (b->rear >= b->front)
+		return b->buf + b->rear;
+}
+
+inline static size_t x_pipe_zwrite_size(const x_pipe *b)
+{
+	return (b->rear >= b->front)
 		? b->size - b->rear - !b->front
 		: b->front - b->rear - 1;
 }
 
-inline static void pipe_commit_zc_write(x_pipe *b, size_t size)
+inline static void x_pipe_zwrite_commit(x_pipe *b, size_t size)
 {
-        assert(size <= pipe_zc_write(b, NULL));
+	assert(size <= x_pipe_zwrite_size(b));
 	b->rear = (b->rear + size) % b->size;
 }
 
-inline static void pipe_clear(x_pipe *b)
+inline static void x_pipe_clear(x_pipe *b)
 {
 	b->rear = b->front = 0;
 }
 
-size_t pipe_write(x_pipe *b, void *p, size_t size);
+size_t x_pipe_write(x_pipe *b, void *p, size_t size);
 
-size_t pipe_pour(x_pipe *src, x_pipe *dst, size_t size);
+size_t x_pipe_pour(x_pipe *src, x_pipe *dst, size_t size);
 
-size_t pipe_peek(x_pipe *b, void *buf, size_t start, size_t size);
+size_t x_pipe_peek(x_pipe *b, void *buf, size_t start, size_t size);
 
-size_t pipe_read(x_pipe *b, void *buf, size_t size);
+size_t x_pipe_read(x_pipe *b, void *buf, size_t size);
 
-void *pipe_change_buffer(x_pipe *b, void *buf, size_t size);
+void *x_pipe_change_buffer(x_pipe *b, void *buf, size_t size);
 
-size_t pipe_drain(x_pipe *b, size_t size, pipe_drain_f *cb, void *arg);
+size_t x_pipe_drain(x_pipe *b, size_t size, x_pipe_drain_f *cb, void *arg);
 
-void *pipe_pullup(x_pipe *b);
+void *x_pipe_pullup(x_pipe *b);
+
+inline static void x_pipe_refront(x_pipe *b)
+{
+	if (b->front <= b->rear)
+		memmove(b->buf, b->buf + b->front, x_pipe_data_size(b));
+	else
+		x_pipe_pullup(b);
+
+	b->rear = x_pipe_data_size(b);
+	b->front = 0;
+}
 
 #endif
