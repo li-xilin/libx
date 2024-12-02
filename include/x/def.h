@@ -36,7 +36,7 @@
 #define x_unused(_var) ((void)&(_var))
 
 #define x_align(_size, _align) \
-	((x_cast(size_t, _size) + _align - 1) / x_cast(size_t, _align) * (_align))
+	(((_size) + (_align) - 1) / (_align) * (_align))
 
 #define __x_stringy(_x) #_x
 #define x_stringy(_x) __x_stringy(_x)
