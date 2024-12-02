@@ -31,21 +31,31 @@
 typedef struct x_link_st x_link;
 #endif
 
+#ifndef X_LIST_DEFINED
+#define X_LIST_DEFINED
+typedef struct x_list_st x_list;
+#endif
+
 struct x_link_st
 {
 	x_link *prev, *next;
 };
 
+struct x_list_st
+{
+	x_link head;
+};
+
 #define X_LIST_INIT(name) { &(name), &(name) }
 
-inline static void x_list_init(x_link *list)
+inline static void x_list_init(x_list *list)
 {
-        list->next = list->prev = list;
+        list->head.next = list->head.prev = &list->head;
 }
 
-inline static void x_list_clear(x_link *list)
+inline static void x_list_clear(x_list *list)
 {
-        list->next = list->prev = NULL;
+        list->head.next = list->head.prev = NULL;
 }
 
 inline static void __x_list_add(x_link *new_link, x_link *prev, x_link *next)
@@ -61,9 +71,9 @@ inline static void x_list_add_front(x_link *head, x_link *new_link)
         __x_list_add(new_link, head, head->next);
 }
 
-inline static void x_list_add_back(x_link *head, x_link *new_link)
+inline static void x_list_add_back(x_list *list, x_link *new_link)
 {
-        __x_list_add(new_link, head->prev, head);
+        __x_list_add(new_link, list->head.prev, &list->head);
 }
 
 inline static void __x_list_del(x_link * prev, x_link * next)
@@ -82,22 +92,22 @@ inline static void x_list_del(x_link *link)
         link->prev = link->next = 0;
 }
 
-inline static int x_list_is_empty(const x_link *head)
+inline static int x_list_is_empty(const x_list *list)
 {
-        return head->next == head;
+        return list->head.next == &list->head;
 }
 
-inline static x_link *x_list_first(x_link *list)
+inline static x_link *x_list_first(x_list *list)
 {
-	return x_list_is_empty(list) ? NULL : list->next;
+	return x_list_is_empty(list) ? NULL : list->head.next;
 }
 
-inline static x_link *x_link_last(x_link *list)
+inline static x_link *x_link_last(x_list *list)
 {
-	return x_list_is_empty(list) ? NULL : list->prev;
+	return x_list_is_empty(list) ? NULL : list->head.prev;
 }
 
-#define x_list_foreach(pos, head) \
-	for ((pos) = (head)->next; (pos) != (head); (pos) = (pos)->next)
+#define x_list_foreach(pos, list) \
+	for ((pos) = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
 
 #endif
