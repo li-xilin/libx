@@ -67,5 +67,7 @@ int x_ini_get_int(const x_ini *d, const char *seckey, int dft_value);
 
 char *x_ini_get_str(const x_ini *d, const char *seckey, char *dft_value);
 
+void x_ini_pure(x_ini *d);
+
 #endif
 

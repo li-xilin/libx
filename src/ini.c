@@ -603,3 +603,26 @@ char *x_ini_get_str(const x_ini *d, const char *path, char *dft_value)
 	return value;
 }
 
+void x_ini_pure(x_ini *d)
+{
+	if (!d)
+		return;
+	x_link *cur_sec, *cur_opt;
+	x_list_foreach(cur_sec, &d->sec_list) {
+		struct section *sec = x_container_of(cur_sec, struct section, link);
+		free(sec->comment);
+		sec->comment = NULL;
+
+		for (cur_opt = x_list_first(&sec->opt_list); cur_opt != &sec->opt_list.head; ) {
+			struct option *opt = x_container_of(cur_opt, struct option, link);
+			cur_opt = cur_opt->next;
+			free(opt->comment);
+			opt->comment = NULL;
+			if (opt->key) {
+				continue;
+			}
+			x_list_del(&opt->link);
+			free_option(opt);
+		}
+	}
+}
