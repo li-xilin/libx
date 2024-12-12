@@ -384,3 +384,39 @@ wchar_t *x_wcstrim(wchar_t *s)
 		s[end + 1] = L'\0';
 	return s + begin;
 }
+
+size_t x_strnihash(const char *s, size_t len)
+{
+	size_t h = 5381;
+	for (int i = 0; i < len && s[i]; i++) {
+		h = (h ^ (h << 5)) ^ tolower(s[i]);
+	}
+	return h;
+}
+
+size_t x_strihash(const char *s)
+{
+	size_t h = 5381;
+	int c;
+	while ((c = *s++)) {
+		h = (h ^ (h << 5)) ^ tolower(c);
+	}
+	return h;
+}
+
+int x_stricmp(const char *s1, const char *s2)
+{
+	int i;
+	for (i = 0; s1[i] && s2[i] && tolower(s1[i]) == tolower(s2[i]); i++);
+	return tolower(s1[i]) - tolower(s2[i]);
+}
+
+int x_strnicmp(const char *s1, const char *s2, size_t len)
+{
+	int i;
+	for (i = 0; i < len && s1[i] && s2[i] && tolower(s1[i]) == tolower(s2[i]); i++);
+	if (i == len)
+		return 0;
+	return tolower(s1[i]) - tolower(s2[i]);
+}
+

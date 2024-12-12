@@ -20,7 +20,7 @@
 
 TARGET = ../lib/libx.a
 OBJS = base64.o bitmap.o dump.o dumpfmt.o pipe.o log.o splay.o string.o tcolor.o \
-       assert.o heap.o memory.o
+       assert.o heap.o memory.o ini.o
 
 all: $(TARGET)
 

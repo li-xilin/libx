@@ -72,6 +72,10 @@ size_t x_wcshash(const wchar_t *s);
 
 size_t x_memhash(const void *p, size_t size);
 
+size_t x_strnihash(const char *s, size_t len);
+
+size_t x_strihash(const char *s);
+
 uint64_t x_hash64_thomas(uint64_t key);
 
 uint64_t x_hash64inv_thomas(uint64_t key);
@@ -101,6 +105,10 @@ char *x_strbaseconv(char *s, char *buf, size_t size, int old_base, int new_base)
 char *x_strtrim(char *s);
 
 wchar_t *x_wcstrim(wchar_t *s);
+
+int x_stricmp(const char *s1, const char *s2);
+
+int x_strnicmp(const char *s1, const char *s2, size_t len);
 
 #endif
 

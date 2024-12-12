@@ -53,6 +53,11 @@ inline static void x_list_init(x_list *list)
         list->head.next = list->head.prev = &list->head;
 }
 
+inline static void x_link_init(x_link *link)
+{
+	link->prev = link->next = NULL;
+}
+
 inline static void x_list_clear(x_list *list)
 {
         list->head.next = list->head.prev = NULL;
@@ -102,7 +107,7 @@ inline static x_link *x_list_first(x_list *list)
 	return x_list_is_empty(list) ? NULL : list->head.next;
 }
 
-inline static x_link *x_link_last(x_list *list)
+inline static x_link *x_list_last(x_list *list)
 {
 	return x_list_is_empty(list) ? NULL : list->head.prev;
 }

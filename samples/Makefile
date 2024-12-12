@@ -1,4 +1,4 @@
-CFLAGS = -I ../include
+CFLAGS = -I ../include -g -O0
 LDFLAGS += -L../lib -lm
 SRCS = $(wildcard *.c)
 TARGETS = $(SRCS:.c=.exe)
