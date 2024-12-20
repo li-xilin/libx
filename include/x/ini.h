@@ -49,6 +49,8 @@ const char *x_ini_get(const x_ini *d, const char *sec_name, const char *key);
 
 char *x_ini_path_get(const x_ini *d, const char *path);
 
+int x_ini_path_set(x_ini *d, const char *path, const char *fmt, ...);
+
 int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, const char *comment);
 
 int x_ini_push_sec(x_ini *d, const char *sec_name, const char *comment);
@@ -61,11 +63,11 @@ bool x_ini_check_name(char *name);
 
 const char *x_ini_strerror(int errcode);
 
-int x_ini_get_bool(const x_ini *d, const char *seckey, bool dft_value);
+int x_ini_get_bool(const x_ini *d, const char *path, bool dft_value);
 
-int x_ini_get_int(const x_ini *d, const char *seckey, int dft_value);
+int x_ini_get_int(const x_ini *d, const char *path, int dft_value);
 
-char *x_ini_get_str(const x_ini *d, const char *seckey, char *dft_value);
+char *x_ini_get_str(const x_ini *d, const char *path, char *dft_value);
 
 void x_ini_pure(x_ini *d);
 

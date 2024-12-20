@@ -27,6 +27,7 @@
 #include "x/detect.h"
 
 #include <stdint.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
@@ -118,7 +119,7 @@ static struct option *find_option(struct section *sec, const char *key)
 
 static struct section *find_section(const x_ini *d, const char *sec_name)
 {
-	if (!sec_name)
+	if (!sec_name || sec_name[0] == '\0')
 		sec_name = DEFAULT_SEC_NAME;
 
 	size_t sec_hash = x_strihash(sec_name);
@@ -137,8 +138,10 @@ static struct section *find_section(const x_ini *d, const char *sec_name)
 
 static struct section *find_section_with_len(const x_ini *d, const char *sec_name, size_t sec_name_len)
 {
-	if (!sec_name)
+	if (!sec_name || sec_name_len == 0) {
 		sec_name = DEFAULT_SEC_NAME;
+		sec_name_len = strlen(sec_name);
+	}
 
 	size_t sec_hash = x_strnihash(sec_name, sec_name_len);
 
@@ -232,6 +235,8 @@ int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, 
 	struct option *opt = NULL;
 	struct section *sec = NULL;
 
+	x_assert(key && val, "The parameter key and/or value not specified");
+
 	if (!(sec = find_section(d, sec_name))) {
 		if (!(sec = alloc_section(sec_name, NULL)))
 			goto out;
@@ -257,8 +262,11 @@ int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, 
 
 		free(opt->val);
 		opt->val = val_dup;
+		if (comment) {
+			free(opt->comment);
+			opt->comment = x_strdup(comment);
+		}
 	}
-
 	retval = 0;
 out:
 	return retval;
@@ -551,6 +559,37 @@ char *x_ini_path_get(const x_ini *d, const char *path)
 	if (!opt)
 		return NULL;
 	return opt->val;
+}
+
+int x_ini_path_set(x_ini *d, const char *path, const char *fmt, ...)
+{
+	int ret = -1;
+	char buf[1024], *sec_name = NULL, *val = NULL;
+	va_list ap;
+	int sec_len = section_name_len(path);
+	x_assert(sec_len >= 0, "no colon(:) found in field path");
+
+	sec_name = malloc(sec_len + 1);
+	if (!sec_name)
+		goto out;
+	memcpy(sec_name, path, sec_len);
+	sec_name[sec_len] = '\0';
+
+	va_start(ap, fmt);
+	size_t len = vsnprintf(buf, sizeof buf, fmt, ap);
+	if (len != strlen(buf)) {
+		val = malloc(len + 1);
+		if (!val)
+			goto out;
+		vsnprintf(val, sizeof buf, fmt, ap);
+	}
+
+	ret = x_ini_set(d, sec_name, path + sec_len + 1, val ? val : buf, NULL);
+out:
+	va_end(ap);
+	free(val);
+	free(sec_name);
+	return ret;
 }
 
 int x_ini_get_bool(const x_ini *d, const char *path, bool dft_value)
