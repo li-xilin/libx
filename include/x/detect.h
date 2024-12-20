@@ -24,6 +24,7 @@
 #define X_ARCH_H
 
 /* Detect machine byte-order */
+#include <endian.h>
 
 #if defined(__BYTE_ORDER__)
 #  define X_BYTE_ORDER __BYTE_ORDER__
