@@ -110,5 +110,7 @@ int x_stricmp(const char *s1, const char *s2);
 
 int x_strnicmp(const char *s1, const char *s2, size_t len);
 
+char *x_strnstr(const char *s, const char *find, size_t slen);
+
 #endif
 
