@@ -46,7 +46,7 @@ struct x_list_st
 	x_link head;
 };
 
-#define X_LIST_INIT(name) { &(name), &(name) }
+#define X_LIST_INIT(name) { &(name.head), &(name.head) }
 
 inline static void x_list_init(x_list *list)
 {
