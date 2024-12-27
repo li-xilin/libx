@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-TARGET = ../lib/libx.a
+TARGET = libx.a
 OBJS = base64.o bitmap.o dump.o dumpfmt.o pipe.o log.o splay.o string.o tcolor.o \
        assert.o heap.o memory.o ini.o
 

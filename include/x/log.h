@@ -47,7 +47,7 @@
 	| X_LM_NOERROR \
 	| X_LM_NOFATAL)
 
-#define X_LOG_MX 4096
+#define X_LOG_MX 8192
 
 int __x_log_print(const x_location *loc, int level, const char* fmt, ...);
 int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap);
