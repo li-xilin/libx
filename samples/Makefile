@@ -1,5 +1,5 @@
 CFLAGS = -I ../include -g -O0
-LDFLAGS += -L../lib -lm
+LDFLAGS += -L../src -lm
 SRCS = $(wildcard *.c)
 TARGETS = $(SRCS:.c=.exe)
 

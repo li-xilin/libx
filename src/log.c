@@ -98,6 +98,10 @@ int x_log_default_handler(const x_location *loc, void *arg, int level, const cha
 
 	x_tcolor_set(fp, &tc);
 	switch(level) {
+		case X_LL_TRACE:
+			type = "TRACE";
+			x_tcolor_fg(&tc, X_TCOLOR_BBLUE);
+			break;
 		case X_LL_DEBUG:
 			type = "DEBUG";
 			x_tcolor_fg(&tc, X_TCOLOR_BLUE);
@@ -194,6 +198,10 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 	switch(level)
 	{
 		default:
+		case X_LL_TRACE:
+			if (mode & X_LM_NOTRACE)
+				return 0;
+			break;
 		case X_LL_DEBUG:
 			if (mode & X_LM_NODEBUG)
 				return 0;

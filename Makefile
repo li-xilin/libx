@@ -23,7 +23,7 @@ ALL_CFLAGS += --pedantic -std=c99 -I ../include -Wall -Werror \
 	      -fPIC -D_POSIX_C_SOURCE=199309L -D_WIN32_WINNT=0x0600
 
 ifeq ($(CFLAGS),)
-	ALL_FLAGS += -g -O2
+	CFLAGS = -g -O2
 endif
 
 all:
