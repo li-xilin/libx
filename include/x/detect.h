@@ -98,6 +98,13 @@
 #  define X_ARCH_AARCH64
 #elif defined(__mips__) || defined(__mips) || defined(__MIPS__)
 #  define X_ARCH_MIPS
+#  if defined(__mips64) || defined(__mips64__)
+#    if defined(__MIPSEL__) || defined(MIPSEL) || defined(__MIPSEL)
+#      define X_ARCH_MIPS64EL
+#    else
+#      define X_ARCH_MIPS64
+#    endif
+#  endif
 #elif defined(__alpha__) || defined(__alpha) || defined(_M_ALPHA)
 #  define X_ARCH_ALPHA
 #  if defined(__alpha_ev4__)
@@ -138,6 +145,11 @@
 #    define X_ARCH_HPPA_10
 #  elif defined(_PA_RISC2_0) || defined(__RISC2_0__) || defined(__HPPA20__) || defined(__PA8000__)
 #    define X_ARCH_HPPA_10
+#  endif
+#elif defined(__loongarch__) || defined(__loongarch)
+#  define X_ARCH_LOONGARCH
+#  if defined(__loongarch64)
+#    define X_ARCH_LOONGARCH64
 #  endif
 #endif
 
