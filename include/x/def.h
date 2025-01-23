@@ -29,7 +29,7 @@
 #include <stdbool.h>
 
 #define x_min(a, b) ((a) < (b) ? (a) : (b))
-#define x_mx(a, b) ((a) > (b) ? (a) : (b))
+#define x_max(a, b) ((a) > (b) ? (a) : (b))
 #define x_cyclic_inc(i, n) ((i + 1) % n)
 #define x_cyclic_dec(i, n) ((i + n - 1) % n)
 

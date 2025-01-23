@@ -19,11 +19,16 @@
 # THE SOFTWARE.
 
 DESTDIR ?= /usr/local
-ALL_CFLAGS += --pedantic -std=c99 -I ../include -Wall -Werror \
-	      -fPIC -D_POSIX_C_SOURCE=199309L -D_WIN32_WINNT=0x0600
+ALL_CFLAGS = --pedantic -std=c99 -I ../include -Wall -Werror \
+	      -fPIC -D_POSIX_C_SOURCE=199309L -D_WIN32_WINNT=0x0600 \
+		  -Wno-use-after-free
 
 ifeq ($(CFLAGS),)
 	CFLAGS = -g -O2
+endif
+
+ifneq ($(SYSROOT),)
+	ALL_CFLAGS += --sysroot='$(SYSROOT)'
 endif
 
 all:
