@@ -32,6 +32,7 @@
 #define x_max(a, b) ((a) > (b) ? (a) : (b))
 #define x_cyclic_inc(i, n) ((i + 1) % n)
 #define x_cyclic_dec(i, n) ((i + n - 1) % n)
+#define x_bit(i) (1LL << i)
 
 #define x_unused(_var) ((void)&(_var))
 
