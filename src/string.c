@@ -440,3 +440,31 @@ char *x_strnstr(const char *s, const char *find, size_t slen)
 	return ((char *)s);
 }
 
+int x_strnrcmp(const char *s1, const char *s2, size_t len)
+{
+	long len1 = strlen(s1);
+	long len2 = strlen(s2);
+	while (len1 && len2 && len) {
+		int cmp = s1[len1 - 1] - s2[len2 - 1];
+		if (cmp)
+			return cmp;
+		len1--, len2--, len--;
+	}
+
+	if (!len)
+		return 0;
+
+	int style = (!!len1 << 4) | !!len2;
+	switch (style) {
+		case 0x00:
+			return 0;
+		case 0x01:
+			return -s2[len2 - 1];
+		case 0x10:
+			return s1[len1 - 1];
+		case 0x11:
+			return s1[len1 - 1] - s2[len2 - 1];
+		default:
+			abort();
+	}
+}
