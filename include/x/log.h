@@ -62,7 +62,7 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 
 void x_log_set_mode(int mode);
 
-int x_log_mode();
+int x_log_mode(void);
 
 typedef int x_log_handler_f(const x_location *loc, void *arg, int level, const char *text);
 

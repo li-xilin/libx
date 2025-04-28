@@ -37,7 +37,7 @@ typedef struct x_ini_st x_ini;
 
 typedef int x_ini_parse_error_f(unsigned lineno, unsigned error, void *args);
 
-x_ini *x_ini_create();
+x_ini *x_ini_create(void);
 
 x_ini *x_ini_load(FILE *fp, x_ini_parse_error_f *error_cb, void *args);
 

@@ -36,7 +36,7 @@ static x_log_handler_f *s_handler = NULL;
 static void *s_handler_arg = NULL;
 static x_mutex s_lock = X_MUTEX_INIT;
 	
-int x_log_mode()
+int x_log_mode(void)
 {
 	return s_mode;
 }

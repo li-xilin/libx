@@ -70,7 +70,7 @@ struct x_ini_st
 static void free_section(struct section *sec);
 static void free_option(struct option *opt);
 
-x_ini *x_ini_create()
+x_ini *x_ini_create(void)
 {
 	x_ini *d = malloc(sizeof *d);
 	if (!d)

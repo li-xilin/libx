@@ -88,8 +88,8 @@ int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp);
 
 int x_dump_serialize(const x_dump *dmp, const x_dump_format *format, x_dump_out_cb_f *cb, void *ctx);
 
-const x_dump_format *x_dump_default_format();
+const x_dump_format *x_dump_default_format(void);
 
-const x_dump_format *x_dump_pretty_format();
+const x_dump_format *x_dump_pretty_format(void);
 
 #endif

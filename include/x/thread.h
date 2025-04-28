@@ -75,7 +75,7 @@ struct __x_thread_argument_st
 #ifdef X_OS_WIN
 static DWORD WINAPI __x_thread_proc(void *arg)
 {
-        struct __x_thread_argument_st ta =
+	struct __x_thread_argument_st ta =
 		*(struct __x_thread_argument_st *)arg;
 	free(arg);
 	DWORD dwRetCode = ta.func(ta.arg);
@@ -86,9 +86,11 @@ static DWORD WINAPI __x_thread_proc(void *arg)
 #else
 static void * __x_thread_proc(void *arg)
 {
-        struct __x_thread_argument_st ta =
+	struct __x_thread_argument_st ta =
 		*(struct __x_thread_argument_st *)arg;
 	free(arg);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	return (void *)ta.func(ta.arg);
 }
 #endif

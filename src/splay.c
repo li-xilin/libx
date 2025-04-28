@@ -327,7 +327,7 @@ static int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_splay_comp_
 
 static void check_sanity(x_splay *t)
 {
-#ifdef DEBUG
+#ifndef NDEBUG
 	if (!t->root)
 		assert(t->size == 0);
 	else {
