@@ -1,0 +1,14 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libx
+Description: Lightweight C Toolkit Based on Standard Library 
+URL: http:s//github.com/li-xilin/axe
+Version: @VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -lx
+Cflags: -I${includedir}
+

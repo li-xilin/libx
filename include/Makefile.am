@@ -1,0 +1,26 @@
+xincludedir = $(includedir)/x
+xinclude_HEADERS = \
+	x/assert.h \
+	x/base64.h \
+	x/bitmap.h \
+	x/cond.h \
+	x/def.h \
+	x/detect.h \
+	x/dump.h \
+	x/flowctl.h \
+	x/heap.h \
+	x/ini.h \
+	x/list.h \
+	x/log.h \
+	x/memory.h \
+	x/mutex.h \
+	x/narg.h \
+	x/once.h \
+	x/pipe.h \
+	x/splay.h \
+	x/string.h \
+	x/tcolor.h \
+	x/thread.h \
+	x/tpool.h \
+	x/trick.h
+
