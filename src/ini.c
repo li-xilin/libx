@@ -24,7 +24,6 @@
 #include "x/list.h"
 #include "x/assert.h"
 #include "x/string.h"
-#include "x/detect.h"
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -207,7 +206,7 @@ fail:
 	return NULL;
 }
 
-struct option *alloc_option(const char *key, const char *val, const char *comment)
+static struct option *alloc_option(const char *key, const char *val, const char *comment)
 {
 	struct option *opt = NULL;
 

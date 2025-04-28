@@ -383,7 +383,7 @@ void x_dump_free(x_dump *dmp)
 	dump_rec_free(dmp);
 }
 
-int write_file_cb(const char *buf, size_t len, void *ctx)
+static int write_file_cb(const char *buf, size_t len, void *ctx)
 {
 	FILE *fp = ctx;
 	if (fwrite(buf, 1, len, fp) != len)
@@ -391,7 +391,7 @@ int write_file_cb(const char *buf, size_t len, void *ctx)
 	return 0;
 }
 
-int indent_check_cb(const char *buf, size_t len, void *ctx)
+static int indent_check_cb(const char *buf, size_t len, void *ctx)
 {
 	struct search_args *args = ctx;
 	for (size_t i = 0; i < len; i++)
@@ -399,7 +399,7 @@ int indent_check_cb(const char *buf, size_t len, void *ctx)
 	return args->out_cb(buf, len, args->ctx);
 }
 
-int filter_cb(const char *buf, size_t len, void *ctx)
+static int filter_cb(const char *buf, size_t len, void *ctx)
 {
 
 	struct search_args *args = ctx;

@@ -300,7 +300,7 @@ static x_btnode *rightmost(x_btnode *node)
 }
 
 #ifndef NDEBUG
-int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_splay_comp_f *comp)
+static int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_splay_comp_f *comp)
 {
 	int count = 1;
 	if (x->left) {
