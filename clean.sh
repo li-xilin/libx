@@ -1,22 +1,8 @@
 #!/bin/sh -x
-make distclean
-rm -rf autom4te.cache/
-rm -rf build-aux/
-rm -rf m4/
-rm -rf src/.deps/
-rm -rf src/.libs/
-rm -f Makefile.in
-rm -f aclocal.m4
-rm -f config.h.in
-rm -f config.h.in~
-rm -f configure
-rm -f configure~
-rm -f config.h
-rm -f config.status
-rm -f config.log
-rm -f libtool
-rm -f stamp-h1
-rm -f libx.pc
-rm -f include/Makefile.in
-rm -f src/Makefile.in
 
+make distclean
+rm -rf autom4te.cache build-aux m4 libx/.deps libx/.libs samples/.deps
+rm -f Makefile.in aclocal.m4 config.h.in config.h.in~ configure \
+	configure~ config.h config.status config.log libtool \
+	stamp-h1 libx.pc include/Makefile.in src/Makefile.in
+[ ! -f configure.ac ] && rmdir include libx samples
