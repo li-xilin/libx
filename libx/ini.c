@@ -57,12 +57,14 @@ struct option
 	x_link link;
 	size_t hash;
 	char *key;
+	char *index;
 	char *val;
 	char *comment;
 };
 
 struct x_ini_st
 {
+	char allowed_ch[16];
 	size_t size;
 	x_list sec_list;
 };
@@ -76,6 +78,7 @@ x_ini *x_ini_create(void)
 	if (!d)
 		return NULL;
 
+	d->allowed_ch[0] = '\0';
 	d->size = 0 ;
 	x_list_init(&d->sec_list);
 	return d ;
@@ -234,7 +237,17 @@ int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, 
 	struct option *opt = NULL;
 	struct section *sec = NULL;
 
-	x_assert(key && val, "The parameter key and/or value not specified");
+	x_assert(key && val, "NULL pointer for sec_name, key or val");
+
+	if (sec_name && !x_ini_check_section_name(sec_name)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!x_ini_check_key_name(key, d->allowed_ch)) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	if (!(sec = find_section(d, sec_name))) {
 		if (!(sec = alloc_section(sec_name, NULL)))
@@ -276,7 +289,7 @@ int x_ini_push_sec(x_ini *d, const char *sec_name, const char *comment)
 	int retval = -1;
 	struct section *sec = NULL;
 	if ((sec = find_section(d, sec_name))) {
-		errno = EALREADY;
+		errno = EEXIST;
 		goto out;
 	}
 	if (!(sec = alloc_section(sec_name, comment)))
@@ -301,7 +314,7 @@ int x_ini_push_opt(x_ini *d, const char *key, const char *val, const char *comme
 	sec = x_container_of(x_list_last(&d->sec_list), struct section, link);
 	if (key) {
 		if ((opt = find_option(sec, key))){
-			errno = EALREADY;
+			errno = EEXIST;
 			return -1;
 		}
 	}
@@ -371,9 +384,7 @@ void x_ini_dump(const x_ini *d, FILE *out)
 					fputc(' ', out);
 					print_comment(out, opt->comment);
 				}
-				
 			}
-
 			fputc('\n', out);
 		}
 	}
@@ -394,14 +405,58 @@ static char *strstrip(char *s)
 	return s;
 }
 
-bool x_ini_check_name(char *name)
+bool x_ini_check_section_name(const char *name)
 {
 	if (name[0] == '\0')
 		return false;
 	if (!isalpha(name[0]) && !isdigit(name[0]) && name[0] != '_')
 		return false;
 	for (int i = 1; name[i]; i++) {
-		if (!isalpha(name[i]) && !isdigit(name[i]) && name[i] != '_' && name[i] != '.')
+		if (!isalpha(name[i]) && !isdigit(name[i]) && name[i] != '_' && name[i] != '.' && name[i] != '-' && name[i] != ' ')
+			return false;
+	}
+	return true;
+}
+
+bool x_ini_check_key_name(const char *name, const char *ext_chars)
+{
+	int l = -1, r = -1;
+	if (name[0] == '\0')
+		return false;
+	if (!isalpha(name[0]) && !isdigit(name[0]) && name[0] != '_')
+		return false;
+	for (int i = 1; name[i]; i++) {
+		if (name[i] == '[') {
+			if (l > 0)
+				return false;
+			l = i;
+			continue;
+		}
+		if (name[i] == ']') {
+			if (r > 0)
+				return false;
+			r = i;
+			continue;
+		}
+		if (l > 0 && r < 0)
+			continue;
+
+		if (!isalpha(name[i]) && !isdigit(name[i]) && name[i] != '_')
+			return false;
+		for (int j = 0; ext_chars[j]; j++) {
+			if (name[i] == ext_chars[j])
+				goto cont;
+		}
+		return false;
+cont:
+		continue;
+	}
+	if (l > 0 || r > 0) {
+		if (l <= 0 || r <= 0)
+			return false;
+		if (name[r + 1] != '\0')
+			return false;
+		if (l + 1 >= r)
 			return false;
 	}
 	return true;
@@ -442,7 +497,7 @@ static int parse_line(char *line_buf, x_ini *d)
 
 		name[len - 1] = '\0';
 		char *sec_name = strstrip(name + 1);
-		if (!x_ini_check_name(sec_name))
+		if (!x_ini_check_section_name(sec_name))
 			return X_INI_EBADNAME;
 
 		if (x_ini_push_sec(d, sec_name, comment))
@@ -450,7 +505,7 @@ static int parse_line(char *line_buf, x_ini *d)
 	}
 	else {
 		char *key = strstrip(line);
-		if (!x_ini_check_name(key))
+		if (!x_ini_check_key_name(key, d->allowed_ch))
 			return X_INI_EBADNAME;
 
 		char *val1 = strstrip(val);

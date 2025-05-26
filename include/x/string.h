@@ -76,10 +76,6 @@ size_t x_strnihash(const char *s, size_t len);
 
 size_t x_strihash(const char *s);
 
-uint64_t x_hash64_thomas(uint64_t key);
-
-uint64_t x_hash64inv_thomas(uint64_t key);
-
 char *x_strsplit(char **s, char ch);
 
 size_t x_strtoargv(char *s, char *argv[], size_t len);

@@ -59,7 +59,9 @@ int x_ini_push_opt(x_ini *d, const char *key, const char *val, const char *comme
 
 void x_ini_unset(x_ini *d, const char *sec_name, const char *key);
 
-bool x_ini_check_name(char *name);
+bool x_ini_check_section_name(const char *name);
+
+bool x_ini_check_key_name(const char *name, const char *ext_chars);
 
 const char *x_ini_strerror(int errcode);
 

@@ -29,7 +29,8 @@ global:
 	x_heap_pop;
 	x_heap_push;
 	x_heap_top;
-	x_ini_check_name;
+	x_ini_check_section_name;
+	x_ini_check_key_name;
 	x_ini_create;
 	x_ini_dump;
 	x_ini_free;
@@ -103,5 +104,6 @@ global:
 	x_wcshash;
 	x_wcsrepl;
 	x_wcstrim;
+
 local: *;
 };
