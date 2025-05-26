@@ -24,58 +24,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void splay(x_splay *t, x_btnode *x);
 static void check_sanity(x_splay *t);
-static void rotate(x_btnode *child);
-static x_btnode *leftmost(x_btnode *node);
-static x_btnode *rightmost(x_btnode *node);
-static void mark_gp(x_btnode *child);
-inline static void zig(x_btnode *x, x_btnode *p);
-inline static void zigzig(x_btnode *x, x_btnode *p);
-inline static void zigzag(x_btnode *x, x_btnode *p);
-
-static void splay(x_splay *t, x_btnode *x)
-{
-	while (1) {
-		x_btnode *p = x->parent;
-		if (!p) {
-			t->root = x;
-			return;
-		}
-
-		x_btnode *g = p->parent;
-		if (!p->parent) {
-			zig(x, p);
-			continue;
-		}
-		if (x == p->left && p == g->left) {
-			zigzig(x, p);
-			continue;
-		}
-		if (x == p->right && p == g->right) {
-			zigzig(x, p);
-			continue;
-		}
-		zigzag(x, p);
-	}
-}
-
-inline static void zig(x_btnode *x, x_btnode *p)
-{
-	rotate(x);
-}
-
-inline static void zigzig(x_btnode *x, x_btnode *p)
-{
-	rotate(p);
-	rotate(x);
-}
-
-inline static void zigzag(x_btnode *x, x_btnode *p)
-{
-	rotate(x);
-	rotate(x);
-}
 
 x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new)
 {
@@ -87,7 +36,6 @@ x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new)
 		new->parent = NULL;
 		goto out;
 	}
-
 	x_btnode *curr = t->root;
 	x_btnode *parent;
 	int left;
@@ -114,7 +62,8 @@ x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new)
 	else
 		parent->right = new;
 out:
-	splay(t, new);
+	x_btnode_splay(new);
+	t->root = new;
 	t->size++;
 	return removed;
 }
@@ -180,7 +129,8 @@ x_btnode *x_splay_find(x_splay *t, const x_btnode *node)
 	}
 	return NULL;
 found:
-	splay(t, curr);
+	x_btnode_splay(curr);
+	t->root = curr;
 	return curr;
 }
 
@@ -188,7 +138,8 @@ void x_splay_remove(x_splay *t, x_btnode *node)
 {
 	if (!node)
 		return;
-	splay(t, node);
+	x_btnode_splay(node);
+	t->root = node;
 	if (!node->left) {
 		t->root = node->right;
 		if (t->root != NULL)
@@ -199,7 +150,7 @@ void x_splay_remove(x_splay *t, x_btnode *node)
 		t->root->parent = NULL;
 	}
 	else {
-		x_btnode *x = leftmost(node->right);
+		x_btnode *x = x_btnode_first(node->right);
 		if (x->parent != node) {
 			x->parent->left = x->right;
 			if (x->right != NULL)
@@ -217,90 +168,8 @@ void x_splay_remove(x_splay *t, x_btnode *node)
 	check_sanity(t);
 }
 
-x_btnode *x_splay_first(x_splay *t)
-{
-	return leftmost(t->root);
-}
-
-x_btnode *x_splay_next(x_btnode *node)
-{
-	if (node->right)
-		return leftmost(node->right);
-	while (node->parent && node == node->parent->right)
-		node = node->parent;
-	return node->parent;
-}
-
-x_btnode *x_splay_prev(x_btnode *node)
-{
-	if (node->left)
-		return rightmost(node->left);
-	while (node->parent && node == node->parent->left)
-		node = node->parent;
-	return node->parent;
-}
-
-x_btnode *x_splay_last(x_splay *t)
-{
-	return rightmost(t->root);
-}
-
-static void rotate(x_btnode *child)
-{
-	x_btnode *parent = child->parent;
-	assert(parent != NULL);
-	if (parent->left == child) {
-		mark_gp(child);
-		parent->left = child->right;
-		if (child->right)
-			child->right->parent = parent;
-		child->right = parent;
-	}
-	else {
-		mark_gp(child);
-		parent->right = child->left;
-		if (child->left)
-			child->left->parent = parent;
-		child->left = parent;
-	}
-}
-
-static void mark_gp(x_btnode *child)
-{
-	x_btnode *parent = child->parent;
-	x_btnode *grand = parent->parent;
-	child->parent = grand;
-	parent->parent = child;
-	if (!grand)
-		return;
-	if (grand->left == parent)
-		grand->left = child;
-	else
-		grand->right = child;
-}
-
-static x_btnode *leftmost(x_btnode *node)
-{
-	x_btnode *parent = NULL;
-	while (node) {
-		parent = node;
-		node = node->left;
-	}
-	return parent;
-}
-
-static x_btnode *rightmost(x_btnode *node)
-{
-	x_btnode *parent = NULL;
-	while (node) {
-		parent = node;
-		node = node->right;
-	}
-	return parent;
-}
-
 #ifndef NDEBUG
-static int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_splay_comp_f *comp)
+static int check_node_sanity(x_btnode *x, void *floor, void *ceil, x_btnode_comp_f *comp)
 {
 	int count = 1;
 	if (x->left) {

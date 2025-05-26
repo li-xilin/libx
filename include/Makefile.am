@@ -22,5 +22,7 @@ xinclude_HEADERS = \
 	x/tcolor.h \
 	x/thread.h \
 	x/tpool.h \
-	x/trick.h
+	x/trick.h \
+	x/rope.h \
+	x/btnode.h
 

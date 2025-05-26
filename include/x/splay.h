@@ -23,33 +23,22 @@
 #ifndef X_SPLAY_H
 #define X_SPLAY_H
 
+#include "btnode.h"
 #include <stddef.h>
 #include <stdbool.h>
-
-#ifndef X_BTNODE
-#define X_BTNODE
-typedef struct x_btnode_st x_btnode;
-#endif
 
 #ifndef X_SPLAY
 #define X_SPLAY
 typedef struct x_splay_st x_splay;
 #endif
 
-struct x_btnode_st
-{
-    x_btnode *parent, *left, *right;
-};
-
-typedef int x_splay_comp_f(const x_btnode *left, const x_btnode *right);
-
 struct x_splay_st {
     x_btnode *root;
-    x_splay_comp_f *comp;
+    x_btnode_comp_f *comp;
     size_t size;
 };
 
-inline static void x_splay_init(x_splay *t, x_splay_comp_f *f)
+inline static void x_splay_init(x_splay *t, x_btnode_comp_f *f)
 {
 	t->root = NULL;
 	t->comp = f;
@@ -61,22 +50,30 @@ inline static bool x_splay_linked(x_splay *t, const x_btnode *node)
 	return node->left || node->right || node->parent || t->root == node;
 }
 
+inline static x_btnode *x_splay_first(x_splay *t)
+{
+	return x_btnode_first(t->root);
+}
+
+inline static x_btnode *x_splay_next(x_btnode *node)
+{
+	return x_btnode_next(node);
+}
+
+inline static x_btnode *x_splay_prev(x_btnode *node)
+{
+	return x_btnode_prev(node);
+}
+
+inline static x_btnode *x_splay_last(x_splay *t)
+{
+	return x_btnode_last(t->root);
+}
+
 x_btnode *x_splay_find(x_splay *t, const x_btnode *node);
-
 x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new);
-
 void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new);
-
 x_btnode *x_splay_replace_or_insert(x_splay *t, x_btnode *new);
-
 void x_splay_remove(x_splay *t, x_btnode *node);
-
-x_btnode *x_splay_first(x_splay *t);
-
-x_btnode *x_splay_next(x_btnode *node);
-
-x_btnode *x_splay_prev(x_btnode *node);
-
-x_btnode *x_splay_last(x_splay *t);
 
 #endif

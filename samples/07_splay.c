@@ -15,35 +15,37 @@ int cmp(const x_btnode *n1, const x_btnode *n2)
 
 int main()
 {
+	int i = 0;
+	struct number numarr[10];
 	x_splay t;
 	x_splay_init(&t, cmp);
 	x_forvalues(int, 7, 8, 3, 9, 4, 1, 2, 6, 5, 0) {
-                struct number *p = malloc(sizeof *p);
-                p->i = _;
-                x_splay_replace_or_insert(&t, &p->node);
-        }
+		struct number *p = numarr + i++;
+		p->i = _;
+		x_splay_replace_or_insert(&t, &p->node);
+	}
 
-        x_btnode *cur;
+	x_btnode *cur;
 
 	cur = x_splay_first(&t);
-        while (cur) {
-                struct number *p = x_container_of(cur, struct number, node);
+	while (cur) {
+		struct number *p = x_container_of(cur, struct number, node);
 		printf("%d ", p->i);
-                cur = x_splay_next(cur);
-        }
+		cur = x_splay_next(cur);
+	}
 	putchar('\n');
 
 	cur = x_splay_last(&t);
-        while (cur) {
-                struct number *p = x_container_of(cur, struct number, node);
+	while (cur) {
+		struct number *p = x_container_of(cur, struct number, node);
 		printf("%d ", p->i);
-                cur = x_splay_prev(cur);
-        }
+		cur = x_splay_prev(cur);
+	}
 	putchar('\n');
 
 	for (int i = 0; i < 10; i++) {
 		struct number key = { .i = i };
-                struct number *p = x_container_of(x_splay_find(&t, &key.node), struct number, node);
+		struct number *p = x_container_of(x_splay_find(&t, &key.node), struct number, node);
 		printf("%d ", p->i);
 	}
 	putchar('\n');
