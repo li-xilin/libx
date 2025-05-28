@@ -22,21 +22,9 @@
 #ifndef X_ROPE_H
 #define X_ROPE_H
 
+#include "types.h"
 #include "btnode.h"
 #include "macros.h"
-#include <stddef.h>
-#include <stdint.h>
-#include <stdarg.h>
-
-#ifndef X_ROPE_NODE
-#define X_ROPE_NODE
-typedef struct x_rope_node_st x_rope_node;
-#endif
-
-#ifndef X_ROPE_DEFINED
-#define X_ROPE_DEFINED
-typedef struct x_rope_st x_rope;
-#endif
 
 #define X_ROPE_SPLIT_SIZE 4096
 

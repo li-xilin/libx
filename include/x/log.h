@@ -57,17 +57,12 @@
 
 #define X_LOG_MX 8192
 
+typedef int x_log_handler_f(const x_location *loc, void *arg, int level, const char *text);
 int __x_log_print(const x_location *loc, int level, const char* fmt, ...);
 int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap);
-
 void x_log_set_mode(int mode);
-
 int x_log_mode(void);
-
-typedef int x_log_handler_f(const x_location *loc, void *arg, int level, const char *text);
-
 x_log_handler_f x_log_default_handler;
-
 void x_log_set_handler(x_log_handler_f *f, void *arg);
 
 #define x_log(level, ...) __x_log_print(X_WHERE, level, __VA_ARGS__)

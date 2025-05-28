@@ -26,7 +26,6 @@
 #include "x/string.h"
 
 #include <stdint.h>
-#include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>

@@ -24,16 +24,12 @@
 #define X_DUMP_H
 
 #include "macros.h"
+#include "types.h"
 #include <stdio.h>
-
-#ifndef X_DUMP_DEFINED
-#define X_DUMP_DEFINED
-typedef struct x_dump_st x_dump;
-#endif
 
 typedef int x_dump_out_cb_f(const char *str, size_t len, void *ctx);
 
-typedef struct x_dump_format_st
+struct x_dump_format_st
 {
 	int (*snumber)(intmax_t value, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*unumber)(uintmax_t value, x_dump_out_cb_f *out_cb, void *ctx);
@@ -51,45 +47,29 @@ typedef struct x_dump_format_st
 	int (*block_right)(const char *label, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*nomem)(x_dump_out_cb_f *out_cb, void *ctx);
 	int (*indent)(int depth, x_dump_out_cb_f *out_cb, void *ctx);
-} x_dump_format;
+};
 
 x_dump *x_dump_int(intmax_t val);
-
 x_dump *x_dump_uint(uintmax_t val);
-
 x_dump *x_dump_float(double val);
-
 x_dump *x_dump_ptr(const void *val);
-
 x_dump *x_dump_str(const char *val);
-
 x_dump *x_dump_wcs(const wchar_t *val);
-
 x_dump *x_dump_mem(const void *ptr, size_t size);
-
 x_dump *x_dump_symbol(const char *sym);
-
 x_dump *x_dump_pair(x_dump *d1, x_dump *d2);
-
 x_dump *x_dump_block(const char* name, size_t elem_cnt);
-
 int x_dump_set_name(x_dump *dmp, const char *sym);
-
 void x_dump_bind(x_dump *dmp, int index, x_dump* binding);
+void x_dump_free(x_dump *dmp);
+int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp);
+int x_dump_serialize(const x_dump *dmp, const x_dump_format *format, x_dump_out_cb_f *cb, void *ctx);
+const x_dump_format *x_dump_default_format(void);
+const x_dump_format *x_dump_pretty_format(void);
 
 inline static void x_dump_named_bind(x_dump *dmp, int index, const char *name, x_dump* binding)
 {
 	x_dump_bind(dmp, index, x_dump_pair(x_dump_symbol(name), binding));
 }
-
-void x_dump_free(x_dump *dmp);
-
-int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp);
-
-int x_dump_serialize(const x_dump *dmp, const x_dump_format *format, x_dump_out_cb_f *cb, void *ctx);
-
-const x_dump_format *x_dump_default_format(void);
-
-const x_dump_format *x_dump_pretty_format(void);
 
 #endif

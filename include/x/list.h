@@ -23,26 +23,15 @@
 #ifndef X_LIST_H
 #define X_LIST_H
 
+#include "types.h"
 #include "macros.h"
 #include <assert.h>
 
-#ifndef X_LINK_DEFINED
-#define X_LINK_DEFINED
-typedef struct x_link_st x_link;
-#endif
-
-#ifndef X_LIST_DEFINED
-#define X_LIST_DEFINED
-typedef struct x_list_st x_list;
-#endif
-
-struct x_link_st
-{
+struct x_link_st {
 	x_link *prev, *next;
 };
 
-struct x_list_st
-{
+struct x_list_st {
 	x_link head;
 };
 

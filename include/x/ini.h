@@ -23,17 +23,12 @@
 #ifndef X_INI_H
 #define X_INI_H
 
+#include "types.h"
 #include <stdio.h>
-#include <stdbool.h>
 
 #define X_INI_EBADNAME 1
 #define X_INI_ETOOLONG 2
 #define X_INI_ESYNTAX 3
-
-#ifndef X_INI_DEFINED
-#define X_INI_DEFINED
-typedef struct x_ini_st x_ini;
-#endif
 
 typedef int x_ini_parse_error_f(unsigned lineno, unsigned error, void *args);
 

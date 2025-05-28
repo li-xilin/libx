@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,10 @@
  * SOFTWARE.
  */
 
-#ifndef AX_BITMAP_H
-#define AX_BITMAP_H
+#ifndef X_BITMAP_H
+#define X_BITMAP_H
 
-#ifndef AX_BITMAP_DEFINED
-#define AX_BITMAP_DEFINED
-typedef struct x_bitmap_st x_bitmap;
-#endif
-
+#include "types.h"
 #include "assert.h"
 #include <stdint.h>
 #include <string.h>
@@ -91,7 +87,6 @@ inline static void x_bitmap_toggle(x_bitmap *bm, size_t idx)
 }
 
 int x_bitmap_find(x_bitmap *bm, size_t start, int bit);
-
 size_t x_bitmap_count(x_bitmap *bm);
 
 #endif

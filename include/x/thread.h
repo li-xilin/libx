@@ -23,6 +23,7 @@
 #ifndef X_THREAD_H
 #define X_THREAD_H
 
+#include "types.h"
 #include "assert.h"
 #include "detect.h"
 #include <errno.h>
@@ -51,11 +52,6 @@ struct x_thread_st
 #endif
 
 typedef uintptr_t (x_thread_func_f)(void *arg);
-
-#ifndef X_THREAD_DEFINED
-#define X_THREAD_DEFINED
-typedef struct x_thread_st x_thread;
-#endif
 
 static inline x_thread x_thread_self(void)
 {

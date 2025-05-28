@@ -23,10 +23,9 @@
 #ifndef X_MEMORY_H
 #define X_MEMORY_H
 
+#include "types.h"
 #include <stddef.h>
 #include <stdint.h>
-
-typedef struct x_mset_st x_mset;
 
 x_mset *x_mset_create(void);
 

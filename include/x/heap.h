@@ -24,14 +24,7 @@
 #ifndef X_HEAP_H
 #define X_HEAP_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-#ifndef X_HEAP_DEFINED
-#define X_HEAP_DEFINED
-typedef struct x_heap_st x_heap;
-#endif
+#include "types.h"
 
 typedef bool x_heap_cmp_f(const void *, const void *, void *ctx);
 

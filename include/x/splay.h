@@ -23,14 +23,8 @@
 #ifndef X_SPLAY_H
 #define X_SPLAY_H
 
+#include "types.h"
 #include "btnode.h"
-#include <stddef.h>
-#include <stdbool.h>
-
-#ifndef X_SPLAY
-#define X_SPLAY
-typedef struct x_splay_st x_splay;
-#endif
 
 struct x_splay_st {
     x_btnode *root;

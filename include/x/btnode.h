@@ -23,23 +23,14 @@
 #ifndef X_BTNODE_H
 #define X_BTNODE_H
 
-#include <stddef.h>
-#include <stdbool.h>
+#include "types.h"
 
-#ifndef X_BTNODE
-#define X_BTNODE
-typedef struct x_btnode_st x_btnode;
-#endif
+typedef int x_btnode_comp_f(const x_btnode *left, const x_btnode *right);
 
 struct x_btnode_st
 {
     x_btnode *parent, *left, *right;
 };
-
-#ifndef X_BTNODE_COMP_F
-#define X_BTNODE_COMP_F
-typedef int x_btnode_comp_f(const x_btnode *left, const x_btnode *right);
-#endif
 
 x_btnode *x_btnode_first(x_btnode *node);
 x_btnode *x_btnode_next(x_btnode *node);

@@ -26,7 +26,6 @@
 #include "trick.h"
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 #define x_min(a, b) ((a) < (b) ? (a) : (b))
 #define x_max(a, b) ((a) > (b) ? (a) : (b))

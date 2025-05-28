@@ -23,19 +23,15 @@
 #ifndef X_PIPE_H
 #define X_PIPE_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "types.h"
 #include <string.h>
 #include <assert.h>
-#include <stdbool.h>
 
 struct x_pipe_st
 {
 	size_t size, front, rear;
 	uint8_t *buf;
 };
-
-typedef struct x_pipe_st x_pipe;
 
 typedef void x_pipe_drain_f(void *data, size_t size, void *arg);
 

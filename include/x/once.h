@@ -23,6 +23,7 @@
 #ifndef X_ONCE_H
 #define X_ONCE_H
 
+#include "types.h"
 #include "detect.h"
 #include <errno.h>
 #include <assert.h>
@@ -41,11 +42,6 @@ struct x_once_st
 	pthread_once_t once;
 };
 #define X_ONCE_INIT { PTHREAD_ONCE_INIT }
-#endif
-
-#ifndef X_ONCE_DEFINED
-#define X_ONCE_DEFINED
-typedef struct x_once_st x_once;
 #endif
 
 typedef void x_once_f(void);
