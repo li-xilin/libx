@@ -23,7 +23,7 @@
 #ifndef X_LIST_H
 #define X_LIST_H
 
-#include "def.h"
+#include "macros.h"
 #include <assert.h>
 
 #ifndef X_LINK_DEFINED

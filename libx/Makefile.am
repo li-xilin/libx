@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libx.la
 
-AM_CFLAGS = $(regular_CFLAGS) -fPIC -I$(top_srcdir)/include -Wformat-security
+AM_CFLAGS = $(regular_CFLAGS) -fPIC -I$(top_srcdir)/include -Wno-format-nonliteral
 
 if WINDOWS
 AM_CFLAGS += -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN

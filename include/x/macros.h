@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_DEF_H
-#define X_DEF_H
+#ifndef X_MACROS_H
+#define X_MACROS_H
 
 #include "trick.h"
 #include <stdint.h>

@@ -4,7 +4,7 @@ xinclude_HEADERS = \
 	x/base64.h \
 	x/bitmap.h \
 	x/cond.h \
-	x/def.h \
+	x/macros.h \
 	x/detect.h \
 	x/dump.h \
 	x/flowctl.h \

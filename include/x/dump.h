@@ -23,7 +23,7 @@
 #ifndef X_DUMP_H
 #define X_DUMP_H
 
-#include "def.h"
+#include "macros.h"
 #include <stdio.h>
 
 #ifndef X_DUMP_DEFINED

@@ -22,8 +22,8 @@
 #ifndef X_ROPE_H
 #define X_ROPE_H
 
-#include "def.h"
 #include "btnode.h"
+#include "macros.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>

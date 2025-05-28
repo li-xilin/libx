@@ -109,6 +109,8 @@ size_t x_strhash(const char *s)
 	while ((c = *s++)) {
 		h = (h ^ (h << 5)) ^ c; /* hash * 33 + c */
 	}
+	if (h == 0)
+		h = 1;
 	return h;
 }
 
@@ -121,6 +123,8 @@ size_t x_wcshash(const wchar_t *s)
 	while ((c = *s++)) {
 		h = (h ^ (h << 5)) ^ c; /* hash * 33 + c */
 	}
+	if (h == 0)
+		h = 1;
 	return h;
 }
 
@@ -132,6 +136,8 @@ size_t x_memhash(const void *p, size_t size)
 	for (size_t i = 0; i < size; i++) {
 		h = (h ^ (h << 5)) ^ ((uint8_t *)p)[i];
 	}
+	if (h == 0)
+		h = 1;
 	return h;
 }
 

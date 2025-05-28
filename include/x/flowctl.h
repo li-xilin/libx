@@ -23,9 +23,7 @@
 #ifndef X_FLOWCTL_H
 #define X_FLOWCTL_H
 
-#include "def.h"
-#include "trick.h"
-#include "narg.h"
+#include "macros.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <setjmp.h>

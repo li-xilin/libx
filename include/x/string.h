@@ -23,7 +23,7 @@
 #ifndef X_STRING_H
 #define X_STRING_H
 
-#include "def.h"
+#include "macros.h"
 #include <string.h>
 
 #define x_swap(a, b, type) \

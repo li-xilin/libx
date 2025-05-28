@@ -63,6 +63,7 @@ void x_rope_free(x_rope *r)
 	n.root_node = x_container_of(r->root_node, x_rope_node, node);
 	free(n.root_node->ptr);
 	free(n.root_node);
+	r->root_node = NULL;
 }
 
 const x_rope_node *x_rope_get_node(x_rope *r, size_t index)

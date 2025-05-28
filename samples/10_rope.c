@@ -33,16 +33,16 @@ int main()
 	puts("[Build r2]");
 	x_rope r2;
 	x_rope_init(&r2, NULL);
-	x_rope_append(&r2, "What");
-	x_rope_append(&r2, "language");
-	x_rope_append(&r2, "is");
-	x_rope_append(&r2, "thy");
-	x_rope_append(&r2, "answer,");
-	x_rope_append(&r2, "O sky?");
-	x_rope_append(&r2, "The");
-	x_rope_append(&r2, "language" );
-	x_rope_append(&r2, "of");
-	x_rope_append(&r2, "eternal silence.");
+	x_rope_printf(&r2, x_rope_length(&r2), "What");
+	x_rope_printf(&r2, x_rope_length(&r2), "language");
+	x_rope_printf(&r2, x_rope_length(&r2), "is");
+	x_rope_printf(&r2, x_rope_length(&r2), "thy");
+	x_rope_printf(&r2, x_rope_length(&r2), "answer,");
+	x_rope_printf(&r2, x_rope_length(&r2), "O sky?");
+	x_rope_printf(&r2, x_rope_length(&r2), "The");
+	x_rope_printf(&r2, x_rope_length(&r2), "language" );
+	x_rope_printf(&r2, x_rope_length(&r2), "of");
+	x_rope_printf(&r2, x_rope_length(&r2), "eternal silence.");
 	x_rope_dump_tree(&r2, stdout);
 
 	puts("[Merge r2 to r1]");
