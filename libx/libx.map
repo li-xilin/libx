@@ -138,5 +138,12 @@ global:
 	x_rope_vprintf;
 	x_rope_get_node;
 	x_rope_balance;
+	x_tpool_init;
+	x_tpool_add_work;
+	x_tpool_destroy;
+	x_tpool_wait;
+	x_tpool_work_create;
+	x_tpool_worker;
+	x_tpool_work_free;
 local: *;
 };

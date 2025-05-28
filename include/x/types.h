@@ -113,5 +113,15 @@ typedef struct x_btnode_st x_btnode;
 typedef struct x_bitmap_st x_bitmap;
 #endif
 
+#ifndef X_TPOOL_DEFINED
+#define X_TPOOL_DEFINED
+typedef struct x_tpool_st x_tpool;
+#endif
+
+#ifndef X_TPOOL_WORK_DEFINED
+#define X_TPOOL_WORK_DEFINED
+typedef struct x_tpool_work_st x_tpool_work;
+#endif
+
 #endif
 
