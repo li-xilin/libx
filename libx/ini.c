@@ -42,42 +42,23 @@
 #define COMMENT_CHAR '#'
 #endif
 
-struct section
-{
-	x_link link;
-	x_list opt_list;
-	char *name;
-	size_t hash;
-	char *comment;
-};
+static void free_section(struct x_ini_section_st *sec);
+static void free_option(struct x_ini_option_st *opt);
 
-struct option
+x_ini *x_ini_create(const char *ext_keych)
 {
-	x_link link;
-	size_t hash;
-	char *key;
-	char *index;
-	char *val;
-	char *comment;
-};
-
-struct x_ini_st
-{
-	char allowed_ch[16];
-	size_t size;
-	x_list sec_list;
-};
-
-static void free_section(struct section *sec);
-static void free_option(struct option *opt);
-
-x_ini *x_ini_create(void)
-{
+	if (ext_keych && strlen(ext_keych) > 14) {
+		errno = ENAMETOOLONG;
+		return NULL;
+	}
 	x_ini *d = malloc(sizeof *d);
 	if (!d)
 		return NULL;
 
-	d->allowed_ch[0] = '\0';
+	if (ext_keych)
+		strcpy(d->allowed_ch, ext_keych);
+	else
+		d->allowed_ch[0] = '\0';
 	d->size = 0 ;
 	x_list_init(&d->sec_list);
 	return d ;
@@ -89,10 +70,10 @@ void x_ini_free(x_ini * d)
 		return;
 
 	while (!x_list_is_empty(&d->sec_list)) {
-		struct section *sec = x_container_of(x_list_first(&d->sec_list), struct section, link);
+		struct x_ini_section_st *sec = x_container_of(x_list_first(&d->sec_list), struct x_ini_section_st, link);
 		x_list_del(&sec->link);
 		while (!x_list_is_empty(&sec->opt_list)) {
-			struct option *opt = x_container_of(x_list_first(&sec->opt_list), struct option, link);
+			struct x_ini_option_st *opt = x_container_of(x_list_first(&sec->opt_list), struct x_ini_option_st, link);
 			x_list_del(&opt->link);
 			free_option(opt);
 		}
@@ -101,12 +82,12 @@ void x_ini_free(x_ini * d)
 	free(d);
 }
 
-static struct option *find_option(struct section *sec, const char *key)
+static struct x_ini_option_st *find_option(struct x_ini_section_st *sec, const char *key)
 {
 	size_t key_hash = x_strihash(key);
 	x_link *cur_opt;
 	x_list_foreach(cur_opt, &sec->opt_list) {
-		struct option *opt = x_container_of(cur_opt, struct option, link);
+		struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 		if (!opt->key)
 			continue;
 		if (key_hash != opt->hash)
@@ -118,7 +99,7 @@ static struct option *find_option(struct section *sec, const char *key)
 	return NULL;
 }
 
-static struct section *find_section(const x_ini *d, const char *sec_name)
+static struct x_ini_section_st *find_section(const x_ini *d, const char *sec_name)
 {
 	if (!sec_name || sec_name[0] == '\0')
 		sec_name = DEFAULT_SEC_NAME;
@@ -127,7 +108,7 @@ static struct section *find_section(const x_ini *d, const char *sec_name)
 
 	x_link *cur_sec;
 	x_list_foreach(cur_sec, &d->sec_list) {
-		struct section *sec = x_container_of(cur_sec, struct section, link);
+		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (sec_hash != sec->hash)
 			continue;
 		if (x_stricmp(sec_name, sec->name))
@@ -137,7 +118,7 @@ static struct section *find_section(const x_ini *d, const char *sec_name)
 	return NULL;
 }
 
-static struct section *find_section_with_len(const x_ini *d, const char *sec_name, size_t sec_name_len)
+static struct x_ini_section_st *find_section_with_len(const x_ini *d, const char *sec_name, size_t sec_name_len)
 {
 	if (!sec_name || sec_name_len == 0) {
 		sec_name = DEFAULT_SEC_NAME;
@@ -148,7 +129,7 @@ static struct section *find_section_with_len(const x_ini *d, const char *sec_nam
 
 	x_link *cur_sec;
 	x_list_foreach(cur_sec, &d->sec_list) {
-		struct section *sec = x_container_of(cur_sec, struct section, link);
+		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (sec_hash != sec->hash)
 			continue;
 		if (x_strnicmp(sec_name, sec->name, sec_name_len))
@@ -160,16 +141,16 @@ static struct section *find_section_with_len(const x_ini *d, const char *sec_nam
 
 const char *x_ini_get(const x_ini *d, const char *sec_name, const char *key)
 {
-	struct section *sec = find_section(d, sec_name);
+	struct x_ini_section_st *sec = find_section(d, sec_name);
 	if (!sec)
 		return NULL;
-	struct option *opt = find_option(sec, key);
+	struct x_ini_option_st *opt = find_option(sec, key);
 	if (!opt)
 		return NULL;
 	return opt->val;
 }
 
-static void free_section(struct section *sec)
+static void free_section(struct x_ini_section_st *sec)
 {
 	if (!sec)
 		return;
@@ -178,7 +159,7 @@ static void free_section(struct section *sec)
 	free(sec);
 }
 
-static void free_option(struct option *opt)
+static void free_option(struct x_ini_option_st *opt)
 {
 	if (opt) {
 		free(opt->key);
@@ -188,9 +169,9 @@ static void free_option(struct option *opt)
 	}
 }
 
-static struct section *alloc_section(const char *sec_name, const char *comment)
+static struct x_ini_section_st *alloc_section(const char *sec_name, const char *comment)
 {
-	struct section *sec = NULL;
+	struct x_ini_section_st *sec = NULL;
 
 	if (!(sec = calloc(1, sizeof *sec)))
 		goto fail;
@@ -208,9 +189,9 @@ fail:
 	return NULL;
 }
 
-static struct option *alloc_option(const char *key, const char *val, const char *comment)
+static struct x_ini_option_st *alloc_option(const char *key, const char *val, const char *comment)
 {
-	struct option *opt = NULL;
+	struct x_ini_option_st *opt = NULL;
 
 	if (!(opt = calloc(1, sizeof *opt)))
 		goto fail;
@@ -233,8 +214,8 @@ fail:
 int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, const char *comment)
 {
 	int retval = -1;
-	struct option *opt = NULL;
-	struct section *sec = NULL;
+	struct x_ini_option_st *opt = NULL;
+	struct x_ini_section_st *sec = NULL;
 
 	x_assert(key && val, "NULL pointer for sec_name, key or val");
 
@@ -286,7 +267,7 @@ out:
 int x_ini_push_sec(x_ini *d, const char *sec_name, const char *comment)
 {
 	int retval = -1;
-	struct section *sec = NULL;
+	struct x_ini_section_st *sec = NULL;
 	if ((sec = find_section(d, sec_name))) {
 		errno = EEXIST;
 		goto out;
@@ -302,15 +283,15 @@ out:
 int x_ini_push_opt(x_ini *d, const char *key, const char *val, const char *comment)
 {
 	int retval = -1;
-	struct option *opt = NULL;
-	struct section *sec = NULL;
+	struct x_ini_option_st *opt = NULL;
+	struct x_ini_section_st *sec = NULL;
 	if (x_list_is_empty(&d->sec_list)) {
 		if (!(sec = alloc_section(DEFAULT_SEC_NAME, NULL)))
 			goto out;
 		x_list_add_back(&d->sec_list, &sec->link);
 	}
 
-	sec = x_container_of(x_list_last(&d->sec_list), struct section, link);
+	sec = x_container_of(x_list_last(&d->sec_list), struct x_ini_section_st, link);
 	if (key) {
 		if ((opt = find_option(sec, key))){
 			errno = EEXIST;
@@ -330,10 +311,10 @@ out:
 
 void x_ini_unset(x_ini *d, const char *sec_name, const char *key)
 {
-	struct section *sec = find_section(d, sec_name);
+	struct x_ini_section_st *sec = find_section(d, sec_name);
 	if (!sec)
 		return;
-	struct option *opt = find_option(sec, key);
+	struct x_ini_option_st *opt = find_option(sec, key);
 	if (!opt)
 		return;
 
@@ -363,7 +344,7 @@ void x_ini_dump(const x_ini *d, FILE *out)
 {
 	x_link *cur_sec, *cur_opt;
 	x_list_foreach(cur_sec, &d->sec_list) {
-		struct section *sec = x_container_of(cur_sec, struct section, link);
+		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (&sec->link != d->sec_list.head.next || x_stricmp(sec->name, DEFAULT_SEC_NAME) != 0) {
 			fprintf(out, "[%s]", sec->name);
 			if (sec->comment && sec->comment[0]) {
@@ -373,7 +354,7 @@ void x_ini_dump(const x_ini *d, FILE *out)
 			fputc('\n', out);
 		}
 		x_list_foreach(cur_opt, &sec->opt_list) {
-			struct option *opt = x_container_of(cur_opt, struct option, link);
+			struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 			if (opt->key)
 				fprintf(out, "%s = %s", opt->key, opt->val);
 			if (opt->comment) {
@@ -439,16 +420,18 @@ bool x_ini_check_key_name(const char *name, const char *ext_chars)
 		}
 		if (l > 0 && r < 0)
 			continue;
-
-		if (!isalpha(name[i]) && !isdigit(name[i]) && name[i] != '_')
-			return false;
+		if (isalpha(name[i]) || isdigit(name[i]) || name[i] == '_')
+			continue;
+		bool found = false;
 		for (int j = 0; ext_chars[j]; j++) {
-			if (name[i] == ext_chars[j])
-				goto cont;
+			if (name[i] == ext_chars[j]) {
+				found = true;
+				break;
+			}
 		}
+		if (found)
+			continue;
 		return false;
-cont:
-		continue;
 	}
 	if (l > 0 || r > 0) {
 		if (l <= 0 || r <= 0)
@@ -514,7 +497,7 @@ static int parse_line(char *line_buf, x_ini *d)
 	return 0;
 }
 
-x_ini *x_ini_load(FILE *fp, x_ini_parse_error_f *error_cb, void *args)
+x_ini *x_ini_load(FILE *fp, const char *ext_keych, x_ini_parse_error_f *error_cb, void *args)
 {
 	x_ini *d = NULL;
 	char *line_buf = NULL;
@@ -524,7 +507,7 @@ x_ini *x_ini_load(FILE *fp, x_ini_parse_error_f *error_cb, void *args)
 	if (!(line_buf = malloc(sizeof(char) * buf_len * 2)))
 		goto fail;
 
-	if (!(d = x_ini_create()))
+	if (!(d = x_ini_create(ext_keych)))
 		goto fail;
 
 	while (fgets(line, sizeof line, fp)) {
@@ -545,7 +528,7 @@ x_ini *x_ini_load(FILE *fp, x_ini_parse_error_f *error_cb, void *args)
 			if (buf_len >= MAX_LEN) {
 				/* max size limit exceed*/
 				int ch;
-				if (error_cb(lineno, X_INI_ETOOLONG, args))
+				if (error_cb && error_cb(lineno, X_INI_ETOOLONG, args))
 					goto out;
 				/* consume the remaining chars in current line */
 				while (((ch = fgetc(fp)) != '\n' && ch != EOF));
@@ -561,13 +544,13 @@ x_ini *x_ini_load(FILE *fp, x_ini_parse_error_f *error_cb, void *args)
 		else {
 			line_buf[buf_offset - 1] = '\0';
 			buf_offset = 0;
-			lineno++;
 
 			int err = parse_line(line_buf, d);
 			if (err == -1)
 				goto fail;
-			if (err > 0 && error_cb(lineno, err, args))
+			if (err > 0 && error_cb && error_cb(lineno, err, args))
 				goto out;
+			lineno++;
 		}
 	}
 	if (!feof(fp)) {
@@ -601,17 +584,29 @@ static int section_name_len(const char *path)
 	return -1;
 }
 
-char *x_ini_path_get(const x_ini *d, const char *path)
+char *x_ini_path_vget(const x_ini *d, const char *path_fmt, va_list ap)
 {
+	char path[256];
+	path[sizeof path - 1] = '\0';
+	vsnprintf(path, sizeof path - 1, path_fmt, ap);
 	int sec_len = section_name_len(path);
 	x_assert(sec_len >= 0, "no colon(:) found in field path");
-	struct section *sec = find_section_with_len(d, path, sec_len);
+	struct x_ini_section_st *sec = find_section_with_len(d, path, sec_len);
 	if (!sec)
 		return NULL;
-	struct option *opt = find_option(sec, path + sec_len + 1);
+	struct x_ini_option_st *opt = find_option(sec, path + sec_len + 1);
 	if (!opt)
 		return NULL;
 	return opt->val;
+}
+
+char *x_ini_path_get(const x_ini *d, const char *path_fmt, ...)
+{
+	va_list ap;
+	va_start(ap, path_fmt);
+	char *ret = x_ini_path_vget(d, path_fmt, ap);
+	va_end(ap);
+	return ret;
 }
 
 int x_ini_path_set(x_ini *d, const char *path, const char *fmt, ...)
@@ -645,9 +640,12 @@ out:
 	return ret;
 }
 
-int x_ini_get_bool(const x_ini *d, const char *path, bool dft_value)
+int x_ini_get_bool(const x_ini *d, const char *path_fmt, int dft_value, ...)
 {
-	char *value = x_ini_path_get(d, path);
+	va_list ap;
+	va_start(ap, dft_value);
+	char *value = x_ini_path_vget(d, path_fmt, ap);
+	va_end(ap);
 	if (!value)
 		return dft_value;
 
@@ -674,22 +672,40 @@ int x_ini_get_bool(const x_ini *d, const char *path, bool dft_value)
 	return -1;
 }
 
-int x_ini_get_int(const x_ini *d, const char *path, int dft_value)
+int x_ini_get_int(const x_ini *d, const char *path_fmt, int dft_value, ...)
 {
-
-	char *value = x_ini_path_get(d, path);
+	va_list ap;
+	va_start(ap, dft_value);
+	char *value = x_ini_path_vget(d, path_fmt, ap);
+	va_end(ap);
 	if (!value)
 		return dft_value;
-
 	int num;
 	if (sscanf(value, "%d", &num) != 1)
 		return dft_value;
 	return num;
 }
 
-char *x_ini_get_str(const x_ini *d, const char *path, char *dft_value)
+double x_ini_get_float(const x_ini *d, const char *path_fmt, double dft_value, ...)
 {
-	char *value = x_ini_path_get(d, path);
+	va_list ap;
+	va_start(ap, dft_value);
+	char *value = x_ini_path_vget(d, path_fmt, ap);
+	va_end(ap);
+	if (!value)
+		return dft_value;
+	double num;
+	if (sscanf(value, "%lf", &num) != 1)
+		return dft_value;
+	return num;
+}
+
+char *x_ini_get_str(const x_ini *d, const char *path_fmt, char *dft_value, ...)
+{
+	va_list ap;
+	va_start(ap, dft_value);
+	char *value = x_ini_path_vget(d, path_fmt, ap);
+	va_end(ap);
 	if (!value)
 		return dft_value;
 	return value;
@@ -701,12 +717,12 @@ void x_ini_pure(x_ini *d)
 		return;
 	x_link *cur_sec, *cur_opt;
 	x_list_foreach(cur_sec, &d->sec_list) {
-		struct section *sec = x_container_of(cur_sec, struct section, link);
+		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		free(sec->comment);
 		sec->comment = NULL;
 
 		for (cur_opt = x_list_first(&sec->opt_list); cur_opt != &sec->opt_list.head; ) {
-			struct option *opt = x_container_of(cur_opt, struct option, link);
+			struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 			cur_opt = cur_opt->next;
 			free(opt->comment);
 			opt->comment = NULL;

@@ -28,9 +28,11 @@
 #include <stdint.h>
 #include <setjmp.h>
 
-#define x_block for(register int __ax_block_flag = 0; __ax_block_flag != 1; __ax_block_flag = 1)
+#define x_block for (register int __ax_block_flag = 0; __ax_block_flag != 1; __ax_block_flag = 1)
 
-#define x_repeat(_n) for(size_t _ = 0; _ != (_n); _++)
+#define x_block_var(...) for (__VA_ARGS__, *__ax_block_flag = (void *)(uintptr_t)1; __ax_block_flag != NULL; __ax_block_flag = NULL)
+
+#define x_repeat(_n) for (size_t _ = 0; _ != (_n); _++)
 
 #define x_forever for(;;)
 

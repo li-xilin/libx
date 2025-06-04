@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
-int err_cb(unsigned line, unsigned err, void *args)
+int err_cb(int line, int err, void *args)
 {
 	fprintf(stderr, "error: line = %u, err = %s\n", line, x_ini_strerror(err));
 	return 0;
@@ -15,7 +15,7 @@ int main()
 		fprintf(stderr, "fopen: %s\n", strerror(errno));
 		return 1;
 	}
-	x_ini *d = x_ini_load(fp, err_cb, NULL);
+	x_ini *d = x_ini_load(fp, NULL, err_cb, NULL);
 
 	puts("\n--- Find option ---\n");
 

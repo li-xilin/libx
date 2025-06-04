@@ -83,6 +83,16 @@ typedef struct x_list_st x_list;
 typedef struct x_ini_st x_ini;
 #endif
 
+#ifndef X_INI_SECTION_DEFINED
+#define X_INI_SECTION_DEFINED
+typedef struct x_ini_section_st x_ini_section;
+#endif
+
+#ifndef X_INI_OPTION_DEFINED
+#define X_INI_OPTION_DEFINED
+typedef struct x_ini_option_st x_ini_option;
+#endif
+
 #ifndef X_HEAP_DEFINED
 #define X_HEAP_DEFINED
 typedef struct x_heap_st x_heap;

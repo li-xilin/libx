@@ -74,8 +74,14 @@ static inline int x_cond_init(x_cond *cond)
 	}
 	InitializeConditionVariable(cond->condvar);
 #else
-	if (pthread_cond_init(&cond->cond, NULL))
+	pthread_condattr_t attr;
+	pthread_condattr_init(&attr);
+	pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+	if (pthread_cond_init(&cond->cond, &attr)) {
+		pthread_condattr_destroy(&attr);
 		return -1;
+	}
+	pthread_condattr_destroy(&attr);
 #endif
 	return 0;
 }
@@ -90,40 +96,37 @@ static inline int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise)
 		return -1;
 	}
 	if (__x_cond_init_competitive(cond)) {
-		x_error_occur();
+		x_errno();
 		return -1;
 	}
-	
+
 	if (!SleepConditionVariableCS(cond->condvar, mutex->section,
 				millise < 0 ? INFINITE : millise)) {
-		x_error_occur();
-		if (GetLastError() == ERROR_TIMEOUT)
-			return 1;
+		x_errno();
 		return -1;
 	}
 #else
 	if (millise < 0)
 		return - !!pthread_cond_wait(&cond->cond, &mutex->mutex);
 
-        const int NS_PER_MS = (1000 * 1000 * 1000);
-        struct timespec spec;
-        if (clock_gettime(CLOCK_REALTIME, &spec) == -1)
-                return -1;
-        uint32_t sec = millise / 1000;
-        uint32_t nsec = (millise % 1000) * 1000 * 1000;
-        if ((NS_PER_MS - spec.tv_nsec) < nsec)
-                spec.tv_sec += sec, spec.tv_nsec += nsec;
-        else
-                spec.tv_sec += sec + 1, spec.tv_nsec += (spec.tv_nsec + nsec) % NS_PER_MS;
-
+	const uint64_t NS_PER_S = (1000 * 1000 * 1000);
+	struct timespec spec;
+	if (clock_gettime(CLOCK_MONOTONIC, &spec) == -1)
+		return -1;
+	uint32_t sec = millise / 1000;
+	uint32_t nsec = (millise % 1000) * 1000 * 1000;
+	if ((NS_PER_S - spec.tv_nsec) > nsec)
+		spec.tv_sec += sec, spec.tv_nsec += nsec;
+	else
+		spec.tv_sec += sec + 1, spec.tv_nsec = nsec - (NS_PER_S - spec.tv_nsec);
 	// Shall not return EINTR
-        int ret = pthread_cond_timedwait(&cond->cond, &mutex->mutex, &spec);
-        if (ret == ETIMEDOUT)
-                return 1;
-        if (!ret)
-                return 0;
-        else
-                return -1;
+	int ret = pthread_cond_timedwait(&cond->cond, &mutex->mutex, &spec);
+	if (!ret)
+		return 0;
+	else {
+		errno = ret;
+		return -1;
+	}
 
 #endif
 	return 0;
@@ -134,7 +137,7 @@ static inline int x_cond_wake(x_cond *cond)
 	assert(cond);
 #ifdef X_OS_WIN
 	if (__x_cond_init_competitive(cond)) {
-		x_error_occur();
+		x_errno();
 		return -1;
 	}
 	WakeConditionVariable(cond->condvar);
@@ -151,7 +154,7 @@ static inline int x_cond_wake_all(x_cond *cond)
 	assert(cond);
 #ifdef X_OS_WIN
 	if (__x_cond_init_competitive(cond)) {
-		x_error_occur();
+		x_errno();
 		return -1;
 	}
 	WakeAllConditionVariable(cond->condvar);
