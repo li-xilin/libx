@@ -64,6 +64,11 @@ inline static x_btnode *x_splay_last(x_splay *t)
 	return x_btnode_last(t->root);
 }
 
+inline static bool x_splay_empty(x_splay *t)
+{
+	return !t->root;
+}
+
 x_btnode *x_splay_find(x_splay *t, const x_btnode *node);
 x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new);
 void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new);
