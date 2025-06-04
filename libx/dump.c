@@ -264,7 +264,7 @@ x_dump *x_dump_pair(x_dump *d1, x_dump *d2)
 	return dmp;
 }
 
-x_dump *x_dump_block(const char *sym, size_t len)
+x_dump *x_dump_empty_block(const char *sym, size_t len)
 {
 	check_symbol(sym);
 
@@ -334,6 +334,24 @@ void x_dump_bind(x_dump *dmp, int index, x_dump* binding)
 		default:
 			break;
 	}
+}
+
+x_dump *x_dump_block(const char *sym, ...)
+{
+	size_t n = 0;
+	va_list ap;
+	va_start(ap, sym);
+	while (va_arg(ap, void *))
+		n++;
+	va_end(ap);
+	x_dump *blk = x_dump_empty_block(sym, n);
+	va_start(ap, sym);
+	for (int i = 0; i < n; i++) {
+		x_dump *v = va_arg(ap, void *);
+		x_dump_bind(blk, i, v);
+	}
+	va_end(ap);
+	return blk;
 }
 
 static void dump_rec_free(x_dump *dmp)
