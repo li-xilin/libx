@@ -1,29 +1,30 @@
-# LibX #
+基于POSIX的轻量级C标准库扩展库
 
-轻量级的C工具库
-
-| 头文件     | 说明 |
-| ---        | ---  |
-| assert.h   | 静态断言和动态断言 |
-| base64.h   | Base64编解码 |
-| bitmap.h   | 位图 |
-| cond.h     | 条件变量
-| def.h      | 基础宏定义 |
-| detect.h   | 操作系统、编译器、硬件架构探测 |
-| dump.h     | 转储操作 |
-| flowctl.h  | 流程控制语句 |
-| heap.h     | 堆结构（用于构造优先队列） |
-| list.h     | 无内存分配链表 |
-| log.h      | 日志打印 |
-| memory.h   | 内存统一分配和释放 |
-| mutex.h    | 互斥量
-| narg.h     | 参数数量计算
-| once.h     | 原子初始化 |
-| pipe.h     | FIFO队列 |
-| splay.h    | Splay树结构，用于键值映射 |
-| string.h   | 字符串操作 |
-| tcolor.h   | 终端颜色支持 |
-| thread.h   | 线程操作 |
-| tpool.h    | 线程池 |
-| trick.h    | 魔法宏 |
+x/macros.h       宏函数
+x/types.h        类型定义
+x/errno.h        错误处理
+x/rope.h         绳索，快速编辑超长字符串
+x/assert.h       静态断言和动态断言
+x/base64.h       Base64编解码
+x/bitmap.h       位图
+x/cond.h         条件变量
+x/detect.h       操作系统、编译器、硬件架构探测
+x/dump.h         复杂数据结构可视化转储
+x/flowctl.h      流程控制语句
+x/heap.h         堆，可构造优先队列
+x/list.h         侵入式链表
+x/splay.h        侵入式伸展树
+x/btnode.h       二叉树
+x/log.h          日志打印
+x/memory.h       内存管理
+x/mutex.h        互斥量
+x/narg.h         参数数量计算
+x/once.h         原子初始化
+x/pipe.h         FIFO队列
+x/string.h       串操作
+x/tcolor.h       终端颜色支持
+x/thread.h       线程操作
+x/tpool.h        线程池
+x/trick.h        魔法宏
+x/ini.h          配置文件读写
 
