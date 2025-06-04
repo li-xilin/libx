@@ -39,9 +39,11 @@ global:
 	x_ini_get;
 	x_ini_get_bool;
 	x_ini_get_int;
+	x_ini_get_float;
 	x_ini_get_str;
 	x_ini_load;
 	x_ini_path_get;
+	x_ini_path_vget;
 	x_ini_path_set;
 	x_ini_pure;
 	x_ini_push_opt;
