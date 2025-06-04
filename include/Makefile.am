@@ -24,5 +24,7 @@ xinclude_HEADERS = \
 	x/tpool.h \
 	x/trick.h \
 	x/rope.h \
-	x/btnode.h
+	x/btnode.h \
+	x/types.h \
+	x/errno.h
 

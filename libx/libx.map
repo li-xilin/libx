@@ -1,12 +1,14 @@
 LIBX_1.0 {
 global:
 	__x_assert_fail;
+	__x_errno_pointer;
 	x_base64_decode;
 	x_base64_encode;
 	x_bitmap_count;
 	x_bitmap_find;
 	x_calloc;
 	x_dump_bind;
+	x_dump_empty_block;
 	x_dump_block;
 	x_dump_default_format;
 	x_dump_float;
