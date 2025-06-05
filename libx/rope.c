@@ -1,5 +1,4 @@
 #include "x/rope.h"
-#include "x/def.h"
 #include "x/splay.h"
 #include "x/string.h"
 #include <string.h>

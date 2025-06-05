@@ -1,6 +1,4 @@
-#include "x/trick.h"
-#include "x/narg.h"
-#include "x/def.h"
+#include "x/macros.h"
 #include <stdio.h>
 
 #define show(line) printf("%s -> %s\n", #line, x_stringy(line))

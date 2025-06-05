@@ -20,7 +20,6 @@
  * THE SOFTWARE.
  */
 
-#include "x/def.h"
 #include "x/string.h"
 #include "x/pipe.h"
 #include <errno.h>

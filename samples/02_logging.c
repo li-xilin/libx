@@ -15,21 +15,21 @@ int main()
 
 	x_log_set_mode(X_LM_NOLOC);
 
-	x_pinfo("Info message with location: %s", "[test string]");
-	x_ptrace("Trace message with location");
-	x_pdebug("Debug message with location");
-	x_pwarn("Warn message with location");
-	x_perror("Error message with location");
-	x_pfatal("Fatal message with location");
+	x_pinfo("Info message without location: %s", "[test string]");
+	x_ptrace("Trace message without location");
+	x_pdebug("Debug message without location");
+	x_pwarn("Warn message without location");
+	x_perror("Error message without location");
+	x_pfatal("Fatal message without location");
 
 	x_log_set_mode(X_LM_NOTIME);
 
-	x_ptrace("Trace message with with");
-	x_pdebug("Debug message with time");
-	x_pinfo("Info message with time");
-	x_pwarn("Warn message with time");
-	x_perror("Error message with time");
-	x_pfatal("Fatal message with time");
+	x_ptrace("Trace message without time");
+	x_pdebug("Debug message without time");
+	x_pinfo("Info message without time");
+	x_pwarn("Warn message without time");
+	x_perror("Error message without time");
+	x_pfatal("Fatal message without time");
 
 	x_log_set_mode(0);
 
