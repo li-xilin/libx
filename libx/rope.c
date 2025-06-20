@@ -15,8 +15,8 @@ static x_rope_node *clone_node(const x_rope_node *x);
 static void splay_node(x_rope_node *x);
 static void eval_weight(x_rope_node *x);
 
-static const size_t BALANCE_BLOCK_SIZE = 4096;
-static const size_t BALANCE_BLOCK_NNODES = (BALANCE_BLOCK_SIZE / sizeof(uintptr_t));
+#define BALANCE_BLOCK_SIZE 4096
+#define BALANCE_BLOCK_NNODES (BALANCE_BLOCK_SIZE / sizeof(uintptr_t))
 
 int x_rope_init(x_rope *r, const char *str)
 {

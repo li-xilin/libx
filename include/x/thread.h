@@ -42,8 +42,6 @@ struct x_thread_st
 #include <pthread.h>
 #include <unistd.h>
 #include <limits.h>
-#undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 199309L
 #include <time.h>
 struct x_thread_st
 {
