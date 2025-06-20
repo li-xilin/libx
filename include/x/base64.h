@@ -27,7 +27,7 @@
 #include <stddef.h>
 
 char* x_base64_encode(const void *data, size_t size);
-void* x_base64_decode(const char *base64, size_t size);
+void* x_base64_decode(const char *base64, size_t size, size_t *plain_size);
 
 #endif
 

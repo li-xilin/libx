@@ -79,7 +79,7 @@ char* x_base64_encode(const void *data, size_t len)
 	return encode;
 }
 
-void* x_base64_decode(const char *base64, size_t len)
+void* x_base64_decode(const char *base64, size_t len, size_t *plainsize)
 {
 	if((len & 3) != 0) {
 		errno = EINVAL;
@@ -115,6 +115,7 @@ void* x_base64_decode(const char *base64, size_t len)
 			plain[j++] = (quad[2] << 6)|quad[3];
 		}
 	}
+	*plainsize = j;
 	return plain;
 }
 
