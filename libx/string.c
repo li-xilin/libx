@@ -90,8 +90,8 @@ wchar_t *x_wcsdup(const wchar_t* s)
 
 void *x_memdup(const void *p, size_t size)
 {
-	assert(p);
-
+	if (!p)
+		return NULL;
 	uint8_t *copy = malloc(size);
 	if (!copy)
 		return NULL;
