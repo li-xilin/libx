@@ -3,4 +3,4 @@ noinst_PROGRAMS = 01_flowctl 02_logging 03_base64 04_heap 05_bitmap 06_trick 07_
 AM_CFLAGS = -I$(top_srcdir)/include -D_POSIX_C_SOURCE=200112L -pthread
 LDADD = $(top_builddir)/libx/libx.la
 
-EXTRA_DIST = $(wildcard *.c)
+EXTRA_DIST = $(wildcard *.c) example.ini
