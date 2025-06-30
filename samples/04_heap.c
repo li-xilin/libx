@@ -7,7 +7,7 @@ static bool cmp(const void *p1, const void *p2, void *ctx)
 	return *(int *)p1 < *(int *)p2;
 }
 
-int main()
+int main(void)
 {
 	x_heap h;
 	x_heap_init(&h, sizeof(int), 1, cmp, NULL);

@@ -22,11 +22,12 @@
 
 #include "x/dump.h"
 #include "x/string.h"
+#include "x/detect.h"
 #include <stdint.h>
-#include <inttypes.h>
 #include <string.h>
 #include <wchar.h>
 #include <assert.h>
+#include <inttypes.h>
 
 static int default_snumber(intmax_t value, x_dump_out_cb_f *out_cb, void *ctx)
 {

@@ -6,7 +6,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
-void worker(void *arg)
+static void worker(void *arg);
+
+static void worker(void *arg)
 {
 	int *val = arg;
 	int  old = *val;
@@ -19,7 +21,7 @@ void worker(void *arg)
 	x_thread_sleep(100);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
 	x_tpool tm;
 	size_t   i;

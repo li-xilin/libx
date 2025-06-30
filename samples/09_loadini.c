@@ -3,12 +3,13 @@
 #include <string.h>
 #include <errno.h>
 
-int err_cb(int line, int err, void *args)
+static int err_cb(int line, int err, void *args)
 {
 	fprintf(stderr, "error: line = %u, err = %s\n", line, x_ini_strerror(err));
 	return 0;
 }
-int main()
+
+int main(void)
 {
 	FILE *fp = fopen("./example.ini", "r");
 	if (!fp) {

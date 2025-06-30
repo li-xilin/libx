@@ -2,15 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void dump(x_rope *r, int line)
-{
-	printf("dump:%d: len = %zd: ", line, x_rope_length(r));
-	x_rope_dump_seq(r, stderr);
-}
-
-#define dump(r) dump(r, __LINE__)
-
-int main()
+int main(void)
 {
 	puts("[Build r1 and display]");
 	x_rope r1;

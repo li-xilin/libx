@@ -9,7 +9,7 @@ static void print(x_bitmap *bm)
 	putchar('\n');
 }
 
-int main()
+int main(void)
 {
 	x_bitmap bm;
 	char buf[4]; // 32 bits

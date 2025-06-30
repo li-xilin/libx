@@ -12,7 +12,7 @@ int cmp(const x_btnode *n1, const x_btnode *n2)
 	return v1->i - v2->i;
 }
 
-int main()
+int main(void)
 {
 	int i = 0;
 	struct number numarr[10];
@@ -42,7 +42,7 @@ int main()
 	}
 	putchar('\n');
 
-	for (int i = 0; i < 10; i++) {
+	for (i = 0; i < 10; i++) {
 		struct number key = { .i = i };
 		struct number *p = x_container_of(x_splay_find(&t, &key.node), struct number, node);
 		printf("%d ", p->i);

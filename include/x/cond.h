@@ -23,12 +23,11 @@
 #ifndef X_COND_H
 #define X_COND_H
 
-#include "types.h"
-#include "mutex.h"
-#include "errno.h"
+#include "x/errno.h"
+#include "x/types.h"
+#include "x/mutex.h"
 #include <assert.h>
 #include <time.h>
-#include <errno.h>
 #include <stdlib.h>
 
 #ifdef X_OS_WIN
@@ -57,7 +56,7 @@ static inline int __x_cond_init_competitive(x_cond *cond)
 			errno = 0;
 			Sleep(20);
 		}
-		if (InterlockedCompareExchangePointer(&cond->condvar, condp, NULL))
+		if (InterlockedCompareExchangePointer((void *volatile *)&cond->condvar, condp, NULL))
 			free(condp);
 	}
 	return 0;
@@ -95,14 +94,12 @@ static inline int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise)
 		errno = EPERM;
 		return -1;
 	}
-	if (__x_cond_init_competitive(cond)) {
-		x_errno();
+	if (__x_cond_init_competitive(cond))
 		return -1;
-	}
 
 	if (!SleepConditionVariableCS(cond->condvar, mutex->section,
 				millise < 0 ? INFINITE : millise)) {
-		x_errno();
+		x_eval_errno();
 		return -1;
 	}
 #else
@@ -137,7 +134,7 @@ static inline int x_cond_wake(x_cond *cond)
 	assert(cond);
 #ifdef X_OS_WIN
 	if (__x_cond_init_competitive(cond)) {
-		x_errno();
+		x_eval_errno();
 		return -1;
 	}
 	WakeConditionVariable(cond->condvar);
@@ -154,7 +151,7 @@ static inline int x_cond_wake_all(x_cond *cond)
 	assert(cond);
 #ifdef X_OS_WIN
 	if (__x_cond_init_competitive(cond)) {
-		x_errno();
+		x_eval_errno();
 		return -1;
 	}
 	WakeAllConditionVariable(cond->condvar);
