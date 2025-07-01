@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "x/log.h"
 
-int main()
+int main(void)
 {
 	x_log_set_mode(X_LM_NOLOC | X_LM_NOTIME);
 

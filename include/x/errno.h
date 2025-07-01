@@ -20,12 +20,14 @@
  * THE SOFTWARE.
  */
 
-#ifndef AX_ERROR_H
+#ifndef X_ERROR_H
+#define X_ERROR_H
 
-#include <x/detect.h>
-#include <x/log.h>
-#include <errno.h>
+#include "x/detect.h"
+#include "x/log.h"
+#include "x/errno.h"
 #include <stddef.h>
+#include <errno.h>
 
 #define __X_EBASE 700
 
@@ -111,9 +113,7 @@
 
 #define X_EDQUOT __X_EBASE + 1
 
-int *__x_errno_pointer(void);
-
-#define x_errno (*__x_errno_pointer())
+int x_eval_errno(void);
 
 #endif
 

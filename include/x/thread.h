@@ -73,8 +73,8 @@ static DWORD WINAPI __x_thread_proc(void *arg)
 		*(struct __x_thread_argument_st *)arg;
 	free(arg);
 	DWORD dwRetCode = ta.func(ta.arg);
-	void __x_tss_free_all_win32(void);
-	__x_tss_free_all_win32();
+	// void __x_tss_free_all_win32(void);
+	// __x_tss_free_all_win32();
 	return dwRetCode;
 }
 #else
@@ -123,8 +123,8 @@ fail:
 static inline void x_thread_exit(uintptr_t ret_code)
 {
 #ifdef X_OS_WIN
-	void __x_tss_free_all_win32(void);
-	__x_tss_free_all_win32();
+	// void __x_tss_free_all_win32(void);
+	// __x_tss_free_all_win32();
 	ExitThread(ret_code);
 #else
 	pthread_exit((void *)ret_code);

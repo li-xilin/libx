@@ -24,12 +24,12 @@
 #include <x/detect.h>
 #include <stdlib.h>
 
-#ifdef AX_OS_WIN
+#ifdef X_OS_WIN
 #include <errhandlingapi.h>
 #include <windows.h>
 #endif
 
-#ifndef AX_OS_WIN
+#ifndef X_OS_WIN
 static int errno_is_common(int err)
 {
 	switch (err) {
@@ -116,8 +116,8 @@ static int errno_is_common(int err)
 }
 #endif
 
-#ifdef AX_OS_WIN
-static int get_errno(int winerror)
+#ifdef X_OS_WIN
+static int eval_errno(int winerror)
 {
 	// Unwrap FACILITY_WIN32 HRESULT errors.
 	if ((winerror & 0xFFFF0000) == 0x80070000) {
@@ -149,10 +149,10 @@ static int get_errno(int winerror)
 		case ERROR_BAD_NET_NAME:
 		case ERROR_BAD_PATHNAME:
 		case ERROR_FILENAME_EXCED_RANGE:
-			return AX_ENOENT;
+			return X_ENOENT;
 
 		case ERROR_BAD_ENVIRONMENT:
-			return AX_E2BIG;
+			return X_E2BIG;
 
 		case ERROR_BAD_FORMAT:
 		case ERROR_INVALID_STARTING_CODESEG:
@@ -170,27 +170,27 @@ static int get_errno(int winerror)
 		case ERROR_RING2SEG_MUST_BE_MOVABLE:
 		case ERROR_RELOC_CHAIN_XEEDS_SEGLIM:
 		case ERROR_INFLOOP_IN_RELOC_CHAIN:
-			return AX_ENOEXEC;
+			return X_ENOEXEC;
 
 		case ERROR_INVALID_HANDLE:
 		case ERROR_INVALID_TARGET_HANDLE:
 		case ERROR_DIRECT_ACCESS_HANDLE:
-			return AX_EBADF;
+			return X_EBADF;
 
 		case ERROR_WAIT_NO_CHILDREN:
 		case ERROR_CHILD_NOT_COMPLETE:
-			return AX_ECHILD;
+			return X_ECHILD;
 
 		case ERROR_NO_PROC_SLOTS:
 		case ERROR_MAX_THRDS_REACHED:
 		case ERROR_NESTING_NOT_ALLOWED:
-			return AX_EAGAIN;
+			return X_EAGAIN;
 
 		case ERROR_ARENA_TRASHED:
 		case ERROR_NOT_ENOUGH_MEMORY:
 		case ERROR_INVALID_BLOCK:
 		case ERROR_NOT_ENOUGH_QUOTA:
-			return AX_ENOMEM;
+			return X_ENOMEM;
 
 		case ERROR_ACCESS_DENIED:
 		case ERROR_CURRENT_DIRECTORY:
@@ -219,40 +219,40 @@ static int get_errno(int winerror)
 		case ERROR_NOT_LOCKED:
 		case ERROR_LOCK_FAILED:
 		case 35:
-			return AX_EACCES;
+			return X_EACCES;
 
 		case ERROR_FILE_EXISTS:
 		case ERROR_ALREADY_EXISTS:
-			return AX_EEXIST;
+			return X_EEXIST;
 
 		case ERROR_NOT_SAME_DEVICE:
-			return AX_EXDEV;
+			return X_EXDEV;
 
 		case ERROR_DIRECTORY:
-			return AX_ENOTDIR;
+			return X_ENOTDIR;
 
 		case ERROR_TOO_MANY_OPEN_FILES:
-			return AX_EMFILE;
+			return X_EMFILE;
 
 		case ERROR_DISK_FULL:
-			return AX_ENOSPC;
+			return X_ENOSPC;
 
 		case ERROR_BROKEN_PIPE:
 		case ERROR_NO_DATA:
-			return AX_EPIPE;
+			return X_EPIPE;
 
 		case ERROR_DIR_NOT_EMPTY:
-			return AX_ENOTEMPTY;
+			return X_ENOTEMPTY;
 
 		case ERROR_NO_UNICODE_TRANSLATION:
-			return AX_EILSEQ;
+			return X_EILSEQ;
 
 		case ERROR_INVALID_FUNCTION:
 		case ERROR_INVALID_ACCESS:
 		case ERROR_INVALID_DATA:
 		case ERROR_INVALID_PARAMETER:
 		case ERROR_NEGATIVE_SEEK:
-			return AX_EINVAL;
+			return X_EINVAL;
 		default:
 			return -winerror;
 
@@ -261,7 +261,7 @@ static int get_errno(int winerror)
 
 #else
 
-static int get_errno(int err)
+static int eval_errno(int err)
 {
 	switch(err) {
 		case 0:
@@ -275,17 +275,19 @@ static int get_errno(int err)
 
 #endif
 
-int *__x_errno_pointer(void)
+int x_eval_errno(void)
 {
-#ifdef AX_OS_WIN
-	int error = GetLastError();
+	int error = 0;
+#ifdef X_OS_WIN
+	error = GetLastError();
 #else
-	if (errno < 0)
-		return &(errno);
-	int error = errno;
+	int tmp = errno;
+	if (tmp < 0)
+		return tmp < -255 ? tmp : - tmp;
+	error = errno;
 #endif
 	if (error)
-		errno = get_errno(error);
-	return &(errno);
+		errno = eval_errno(error);
+	return error;
 }
 

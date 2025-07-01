@@ -6,7 +6,7 @@
 #include <assert.h>
 
 
-int main()
+int main(void)
 {
 	x_dump *dmp = x_dump_block("Locations", 
 			x_dump_pair(x_dump_symbol("Beijing"),

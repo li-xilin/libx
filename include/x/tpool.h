@@ -20,12 +20,12 @@
  * THE SOFTWARE.
  */
 
-#ifndef AX_TPOOL_H
-#define AX_TPOOL_H
+#ifndef X_TPOOL_H
+#define X_TPOOL_H
 
-#include "types.h"
-#include "cond.h"
-#include "thread.h"
+#include "x/types.h"
+#include "x/cond.h"
+#include "x/thread.h"
 
 typedef void x_tpool_worker_f(void *arg);
 

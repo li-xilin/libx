@@ -3,7 +3,7 @@
 
 #define show(line) printf("%s -> %s\n", #line, x_stringy(line))
 
-int main()
+int main(void)
 {
 	show(X_INC(3));
 	show(X_DEC(3));

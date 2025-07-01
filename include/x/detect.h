@@ -23,43 +23,6 @@
 #ifndef X_ARCH_H
 #define X_ARCH_H
 
-/* Detect machine byte-order */
-#include <endian.h>
-
-#if defined(__BYTE_ORDER__)
-#  define X_BYTE_ORDER __BYTE_ORDER__
-#elif defined(__BYTE_ORDER)
-#  define X_BYTE_ORDER __BYTE_ORDER
-#elif defined(BYTE_ORDER)
-#  define X_BYTE_ORDER BYTE_ORDER
-#else
-#  error "Unknown byte-order"
-#endif
-
-#if defined(__ORDER_BIG_ENDIAN__)
-#  define X_BIG_ENDIAN __ORDER_BIG_ENDIAN__
-#elif defined(__BIG_ENDIAN)
-#  define X_BIG_ENDIAN __BIG_ENDIAN
-#else
-#  define X_BIG_ENDIAN 4321
-#endif
-
-#if defined(__ORDER_LITTLE_ENDIAN__)
-#  define X_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
-#elif defined(__LITTLE_ENDIAN)
-#  define X_LITTLE_ENDIAN __LITTLE_ENDIAN
-#else
-#  define X_LITTLE_ENDIAN 1234
-#endif
-
-#if defined(__ORDER_PDP_ENDIAN__)
-#  define X_PDP_ENDIAN __ORDER_PDP_ENDIAN__
-#elif defined(__ORDER_PDP_ENDIAN)
-#  define X_PDP_ENDIAN __ORDER_PDP_ENDIAN
-#else
-#  define X_PDP_ENDIAN 3412
-#endif
-
 /* Detect architecture */
 
 #if defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
@@ -406,5 +369,47 @@
 #else
 #  error "Unknown compiler"
 #endif
+
+/* Detect machine byte-order */
+#ifdef X_OS_WIN
+#    define X_BYTE_ORDER 1234
+#    define X_BIG_ENDIAN 4321
+#    define X_LITTLE_ENDIAN 1234
+#    define X_PDP_ENDIAN 3412
+#else
+#  include <endian.h>
+#  if defined(__BYTE_ORDER__)
+#    define X_BYTE_ORDER __BYTE_ORDER__
+#  elif defined(__BYTE_ORDER)
+#    define X_BYTE_ORDER __BYTE_ORDER
+#  elif defined(BYTE_ORDER)
+#    define X_BYTE_ORDER BYTE_ORDER
+#  else
+#    error "Unknown byte-order"
+#  endif
+#  if defined(__ORDER_BIG_ENDIAN__)
+#    define X_BIG_ENDIAN __ORDER_BIG_ENDIAN__
+#  elif defined(__BIG_ENDIAN)
+#    define X_BIG_ENDIAN __BIG_ENDIAN
+#  else
+#    define X_BIG_ENDIAN 4321
+#  endif
+#  if defined(__ORDER_LITTLE_ENDIAN__)
+#    define X_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#  elif defined(__LITTLE_ENDIAN)
+#    define X_LITTLE_ENDIAN __LITTLE_ENDIAN
+#  else
+#    define X_LITTLE_ENDIAN 1234
+#  endif
+#  if defined(__ORDER_PDP_ENDIAN__)
+#    define X_PDP_ENDIAN __ORDER_PDP_ENDIAN__
+#  elif defined(__ORDER_PDP_ENDIAN)
+#    define X_PDP_ENDIAN __ORDER_PDP_ENDIAN
+#  else
+#    define X_PDP_ENDIAN 3412
+#  endif
+#endif
+
+
 
 #endif

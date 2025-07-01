@@ -1,6 +1,6 @@
 #include "x/memory.h"
 
-int main()
+int main(void)
 {
 	x_mset *mset = x_mset_create();
 
