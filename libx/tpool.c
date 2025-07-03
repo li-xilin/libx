@@ -62,9 +62,9 @@ static x_tpool_work *x_tpool_work_get(x_tpool *tp)
 	return work;
 }
 
-static uintptr_t tpool_worker(void *arg)
+static int tpool_worker(void)
 {
-	x_tpool *tp = arg;
+	x_tpool *tp = x_thread_data();
 	x_tpool_work *work;
 	while (true) {
 		x_mutex_lock(&(tp->work_mutex));
@@ -95,18 +95,16 @@ int x_tpool_init(x_tpool *tp, size_t num)
 	x_thread **thds = NULL;
 	if (num == 0)
 		num = 2;
+	memset(tp, 0, sizeof *tp);
 	tp->thread_cnt = num;
-	tp->stop = false;
 	x_mutex_init(&tp->work_mutex);
 	x_cond_init(&tp->work_cond);
 	x_cond_init(&tp->working_cond);
-	tp->work_first = NULL;
-	tp->work_last  = NULL;
 	thds = malloc(sizeof(x_thread *) * num);
 	if (!thds)
 		return -1;
 	for (int i = 0; i < num; i++) {
-		thds[i] = x_thread_create(tpool_worker, tp);
+		thds[i] = x_thread_create(tpool_worker, NULL, tp);
 		if (!thds[i]) {
 			for (int j = i - 1; j >= 0; j++) {
 				x_thread_kill(thds[j]);

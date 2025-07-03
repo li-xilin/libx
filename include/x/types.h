@@ -53,6 +53,11 @@ typedef struct x_tcolor_st x_tcolor;
 typedef struct x_thread_st x_thread;
 #endif
 
+#ifndef X_TSS_DEFINED
+#define X_TSS_DEFINED
+typedef struct x_tss_st x_tss;
+#endif
+
 #ifndef X_PIPE_DEFINED
 #define X_PIPE_DEFINED
 typedef struct x_pipe_st x_pipe;
@@ -131,6 +136,21 @@ typedef struct x_tpool_st x_tpool;
 #ifndef X_TPOOL_WORK_DEFINED
 #define X_TPOOL_WORK_DEFINED
 typedef struct x_tpool_work_st x_tpool_work;
+#endif
+
+#ifndef X_ONCE_DEFINED
+#define X_ONCE_DEFINED
+typedef struct x_once_st x_once;
+#endif
+
+#ifndef X_ONCE_FN_DEFINED
+#define X_ONCE_FN_DEFINED
+typedef void x_once_fn(void);
+#endif
+
+#ifndef X_MUTEX_DEFINED
+#define X_MUTEX_DEFINED
+typedef struct x_mutex_st x_mutex;
 #endif
 
 #endif

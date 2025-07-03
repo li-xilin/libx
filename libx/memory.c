@@ -109,6 +109,8 @@ void *x_realloc(void *ptr, size_t size)
 	}
 
 	struct block_st *new_blk = realloc(b, sizeof *b + size);
+	if (new_blk)
+		b = NULL;
 	while (!new_blk) {
 		x_thread_sleep(RETRY_INTERVAL);
 		struct block_st **bp = &b;

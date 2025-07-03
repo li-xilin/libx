@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li hsilin <lihsilyn@gmail.com>
+ * Copyright (c) 2022-2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,38 +20,31 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_COND_H
-#define X_COND_H
-
-#include "x/types.h"
-#include "x/detect.h"
+#include "x/once.h"
+#include "x/errno.h"
 
 #ifdef X_OS_WIN
-#include <synchapi.h>
-#define X_COND_INIT { .condvar = NULL }
-#else
-#include <pthread.h>
-#define X_COND_INIT { .cond = PTHREAD_COND_INITIALIZER }
+static BOOL CALLBACK __x_once_proc_win32(PINIT_ONCE InitOnce, PVOID pInitProc, PVOID *lpContext)
+{
+	((x_once_fn *)(uintptr_t)pInitProc)();
+	return TRUE;
+}
 #endif
 
-struct x_cond_st
+int x_once_init(x_once *once, x_once_fn *once_proc)
 {
 #ifdef X_OS_WIN
-	CONDITION_VARIABLE *condvar;
+	if (!InitOnceExecuteOnce(&once->InitOnce, __x_once_proc_win32, (PINIT_ONCE_FN *)(INT_PTR)once_proc, NULL)) {
+		x_eval_errno();
+		return -1;
+	}
 #else
-	pthread_cond_t cond;
+	int err = pthread_once(&once->once, once_proc);
+	if (err) {
+		errno = err;
+		x_eval_errno();
+		return -1;
+	}
 #endif
-};
-
-int x_cond_init(x_cond *cond);
-
-int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise);
-
-void x_cond_wake(x_cond *cond);
-
-void x_cond_wake_all(x_cond *cond);
-
-void x_cond_destroy(x_cond *cond);
-
-#endif
-
+	return 0;
+}

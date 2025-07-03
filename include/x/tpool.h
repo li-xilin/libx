@@ -25,6 +25,7 @@
 
 #include "x/types.h"
 #include "x/cond.h"
+#include "x/mutex.h"
 #include "x/thread.h"
 
 typedef void x_tpool_worker_f(void *arg);

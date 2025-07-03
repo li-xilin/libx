@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li hsilin <lihsilyn@gmail.com>
+ * Copyright (c) 2021-2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,38 +20,34 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_COND_H
-#define X_COND_H
+#ifndef X_TSS_H
+#define X_TSS_H
 
-#include "x/types.h"
-#include "x/detect.h"
+#include "detect.h"
+#include <errno.h>
+#include <assert.h>
+#include <stdint.h>
 
-#ifdef X_OS_WIN
-#include <synchapi.h>
-#define X_COND_INIT { .condvar = NULL }
-#else
-#include <pthread.h>
-#define X_COND_INIT { .cond = PTHREAD_COND_INITIALIZER }
+#ifndef X_TSS_DEFINED
+#define X_TSS_DEFINED
+typedef struct x_tss_st x_tss;
 #endif
 
-struct x_cond_st
+struct x_tss_st
 {
-#ifdef X_OS_WIN
-	CONDITION_VARIABLE *condvar;
-#else
-	pthread_cond_t cond;
-#endif
+	uint32_t key;
 };
 
-int x_cond_init(x_cond *cond);
+typedef void (x_tss_free_f)(void *ptr);
 
-int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise);
+int x_tss_init(x_tss *key, x_tss_free_f *free_cb);
 
-void x_cond_wake(x_cond *cond);
+void x_tss_remove(x_tss *key);
 
-void x_cond_wake_all(x_cond *cond);
+void *x_tss_get(x_tss *key);
 
-void x_cond_destroy(x_cond *cond);
+int x_tss_set(x_tss *key, void *value);
+
 
 #endif
 

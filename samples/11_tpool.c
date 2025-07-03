@@ -14,11 +14,11 @@ static void worker(void *arg)
 	int  old = *val;
 
 	*val *= -1;
-	x_thread self = x_thread_self();
+	int self = x_thread_native_id();
 	printf("hash(thread)=%zx old=%d, val=%d\n",x_memhash(&self, sizeof self) , old, *val);
 	fflush(stdout);
 
-	x_thread_sleep(100);
+	x_thread_sleep(300);
 }
 
 int main(int argc, char *argv[])
