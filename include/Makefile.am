@@ -4,6 +4,7 @@ xinclude_HEADERS = \
 	x/base64.h \
 	x/bitmap.h \
 	x/cond.h \
+	x/tss.h \
 	x/macros.h \
 	x/detect.h \
 	x/dump.h \
@@ -26,5 +27,6 @@ xinclude_HEADERS = \
 	x/rope.h \
 	x/btnode.h \
 	x/types.h \
+	x/unicode.h \
 	x/errno.h
 
