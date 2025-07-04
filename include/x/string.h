@@ -110,5 +110,11 @@ char *x_strnstr(const char *s, const char *find, size_t slen);
 
 int x_strnrcmp(const char *s1, const char *s2, size_t len);
 
+char **x_strargv(const char *cmdline, int* count);
+
+wchar_t **x_wcsargv(const wchar_t *cmdline, int* count);
+
+
+
 #endif
 
