@@ -28,5 +28,6 @@ xinclude_HEADERS = \
 	x/btnode.h \
 	x/types.h \
 	x/unicode.h \
+	x/test.h \
 	x/errno.h
 

@@ -85,7 +85,6 @@ void x_ini_free(x_ini * d)
 static struct x_ini_option_st *find_option(struct x_ini_section_st *sec, const char *key)
 {
 	size_t key_hash = x_strihash(key);
-	x_link *cur_opt;
 	x_list_foreach(cur_opt, &sec->opt_list) {
 		struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 		if (!opt->key)
@@ -106,7 +105,6 @@ static struct x_ini_section_st *find_section(const x_ini *d, const char *sec_nam
 
 	size_t sec_hash = x_strihash(sec_name);
 
-	x_link *cur_sec;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (sec_hash != sec->hash)
@@ -127,7 +125,6 @@ static struct x_ini_section_st *find_section_with_len(const x_ini *d, const char
 
 	size_t sec_hash = x_strnihash(sec_name, sec_name_len);
 
-	x_link *cur_sec;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (sec_hash != sec->hash)
@@ -342,7 +339,7 @@ static void print_comment(FILE *out, const char *comment)
 
 void x_ini_dump(const x_ini *d, FILE *out)
 {
-	x_link *cur_sec, *cur_opt;
+	// x_link *cur_sec, *cur_opt;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (&sec->link != d->sec_list.head.next || x_stricmp(sec->name, DEFAULT_SEC_NAME) != 0) {
@@ -715,13 +712,12 @@ void x_ini_pure(x_ini *d)
 {
 	if (!d)
 		return;
-	x_link *cur_sec, *cur_opt;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		free(sec->comment);
 		sec->comment = NULL;
 
-		for (cur_opt = x_list_first(&sec->opt_list); cur_opt != &sec->opt_list.head; ) {
+		for (x_link *cur_opt = x_list_first(&sec->opt_list); cur_opt != &sec->opt_list.head; ) {
 			struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 			cur_opt = cur_opt->next;
 			free(opt->comment);

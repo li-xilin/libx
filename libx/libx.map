@@ -1,5 +1,31 @@
 LIBX_1.0 {
 global:
+	__ut_assert;
+	__ut_assert_int_equal;
+	__ut_assert_mem_equal;
+	__ut_assert_str_equal;
+	__ut_assert_uint_equal;
+	__ut_fail;
+	__ut_printf;
+	__ut_term;
+	ut_case_add_text;
+	ut_case_copy;
+	ut_case_enum_text;
+	ut_case_free;
+	ut_case_init;
+	ut_case_dump_file;
+	ut_case_dump_rope;
+	ut_runner_add;
+	ut_runner_arg;
+	ut_runner_free;
+	ut_runner_init;
+	ut_runner_remove;
+	ut_runner_result;
+	ut_runner_run;
+	ut_runner_summary;
+	ut_suite_add_case;
+	ut_suite_free;
+	ut_suite_init;
 	__x_assert_fail;
 	x_base64_decode;
 	x_base64_encode;
