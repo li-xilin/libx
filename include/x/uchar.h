@@ -34,7 +34,6 @@
 #  include <windef.h>
 #  include <winbase.h>
 #  include <shellapi.h>
-#  define X_UCHAR_BYTES 2
 #  define __x_u(s) L##s
 #  define x_ustrlen wcslen
 #  define x_ustrcat wcscat
@@ -64,6 +63,7 @@
 #  define X_PRIs "hs"
 #  define X_PRIuc "lc"
 #  define X_PRIc "hc"
+#  define X_UCHAR_BYTES 2
 typedef WCHAR x_uchar;
 #else
 #  define __x_u(s) s
@@ -95,7 +95,7 @@ typedef WCHAR x_uchar;
 #  define X_PRIs "s"
 #  define X_PRIuc "c"
 #  define X_PRIc "c"
-#  define X_UCHAR_BTYES 1
+#  define X_UCHAR_BYTES 1
 typedef char x_uchar;
 #endif
 #define x_u(s) __x_u(s)
