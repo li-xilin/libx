@@ -29,5 +29,7 @@ xinclude_HEADERS = \
 	x/types.h \
 	x/unicode.h \
 	x/test.h \
+	x/file.h \
+	x/uchar.h \
 	x/errno.h
 
