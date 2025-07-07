@@ -31,5 +31,6 @@ xinclude_HEADERS = \
 	x/test.h \
 	x/file.h \
 	x/uchar.h \
+	x/tsignal.h \
 	x/errno.h
 

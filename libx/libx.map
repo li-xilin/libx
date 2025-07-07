@@ -231,6 +231,8 @@ global:
 	x_tpool_wait;
 	x_tpool_work_create;
 	x_tpool_work_free;
+	x_tsignal_set;
+	x_tsignal_unset;
 	x_tss_get;
 	x_tss_init;
 	x_tss_remove;
