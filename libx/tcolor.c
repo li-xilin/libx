@@ -22,6 +22,7 @@
 
 #include "x/tcolor.h"
 #include "x/detect.h"
+#include "x/file.h"
 #include <stdio.h>
 #include <assert.h>
 
@@ -114,19 +115,10 @@ static const char *s_bg_colors[] = {
 };
 #endif
 
-static int file_isatty(FILE *file)
-{
-#ifdef X_OS_WIN32
-	return _isatty(_fileno(file));
-#else
-	return isatty(fileno(file));
-#endif
-}
-
 void x_tcolor_set(FILE *file, x_tcolor *tc)
 {
 	assert(tc->fp == NULL);
-	if (!file_isatty(file)) {
+	if (!x_isatty(file)) {
 		tc->fp = NULL;
 		return;
 	}
