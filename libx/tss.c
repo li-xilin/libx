@@ -62,7 +62,6 @@ void x_tss_remove(x_tss *key)
 	assert(s_TlsContext != NULL);
 	EnterCriticalSection(&s_TlsContext->Lock);
 	TlsFree(key->key);
-	x_link *cur;
 	x_list_foreach(cur, &s_TlsContext->TlsList) {
 		PTLS_NODE pNode = x_container_of(cur, TLS_NODE, Link);
 		if (pNode->key == key->key) {
@@ -83,7 +82,6 @@ void __x_tss_free_all_win32(void)
 	LPVOID aArgList[1024];
 	DWORD dwCount = 0;
 	EnterCriticalSection(&s_TlsContext->Lock);
-	x_link *cur;
 	x_list_foreach(cur, &s_TlsContext->TlsList) {
 		PTLS_NODE pNode = x_container_of(cur, TLS_NODE, Link);
 		LPVOID pSlotValue = TlsGetValue(pNode->key);
