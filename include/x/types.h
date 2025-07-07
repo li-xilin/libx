@@ -23,10 +23,22 @@
 #ifndef X_TYPES_H
 #define X_TYPES_H
 
+#include "detect.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdarg.h>
+
+#ifdef X_OS_WIN
+typedef struct { uint8_t fileid[16]; } x_ino;
+typedef uint64_t x_dev;
+typedef uint32_t x_pid;
+#else
+#include <sys/types.h>
+typedef ino_t x_ino;
+typedef dev_t x_dev;
+typedef pid_t x_pid;
+#endif
 
 #ifndef X_ROPE_NODE_DEFINED
 #define X_ROPE_NODE_DEFINED

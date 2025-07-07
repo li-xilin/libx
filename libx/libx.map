@@ -11,7 +11,8 @@ global:
 	__x_assert_fail;
 	__x_log_print;
 	__x_log_vprint;
-	__x_tss_free_all_win32;
+	thread_exit_unexpected;
+	thread_proc;
 	ut_case_add_text;
 	ut_case_copy;
 	ut_case_dump_file;
@@ -53,6 +54,9 @@ global:
 	x_cond_sleep;
 	x_cond_wake;
 	x_cond_wake_all;
+	x_dir_close;
+	x_dir_open;
+	x_dir_read;
 	x_dump_bind;
 	x_dump_block;
 	x_dump_default_format;
@@ -129,6 +133,7 @@ global:
 	x_log_mode;
 	x_log_set_handler;
 	x_log_set_mode;
+	x_lstat;
 	x_malloc;
 	x_mattach;
 	x_mdetach;
@@ -231,8 +236,8 @@ global:
 	x_tpool_wait;
 	x_tpool_work_create;
 	x_tpool_work_free;
+	x_tsignal_reset;
 	x_tsignal_set;
-	x_tsignal_unset;
 	x_tss_get;
 	x_tss_init;
 	x_tss_remove;
