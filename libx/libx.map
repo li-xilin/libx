@@ -159,6 +159,12 @@ global:
 	x_pipe_read;
 	x_pipe_write;
 	x_printf;
+	x_proc_close;
+	x_proc_fclose;
+	x_proc_kill;
+	x_proc_open;
+	x_proc_pid;
+	x_proc_stdio;
 	x_putchar;
 	x_realloc;
 	x_rope_append;

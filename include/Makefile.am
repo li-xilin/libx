@@ -34,5 +34,6 @@ xinclude_HEADERS = \
 	x/tsignal.h \
 	x/dir.h \
 	x/stat.h \
+	x/proc.h \
 	x/errno.h
 
