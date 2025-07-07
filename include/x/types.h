@@ -153,5 +153,10 @@ typedef void x_once_fn(void);
 typedef struct x_mutex_st x_mutex;
 #endif
 
+#ifndef X_STRBUF_DEFINED
+#define X_STRBUF_DEFINED
+typedef struct x_strbuf_st x_strbuf;
+#endif
+
 #endif
 
