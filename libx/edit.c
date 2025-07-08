@@ -88,6 +88,7 @@
 #include <fcntl.h>
 #define USE_WINCONSOLE
 #ifdef __MINGW32__
+#undef HAVE_UNISTD_H
 #define HAVE_UNISTD_H
 #endif
 #else
@@ -95,6 +96,7 @@
 #include <sys/ioctl.h>
 #include <poll.h>
 #define USE_TERMIOS
+#undef HAVE_UNISTD_H
 #define HAVE_UNISTD_H
 #endif
 

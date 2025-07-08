@@ -38,5 +38,14 @@ xinclude_HEADERS = \
 	x/cliarg.h \
 	x/sys.h \
 	x/path.h \
-	x/errno.h
+	x/errno.h \
+	x/version.h
+
+x/version.h: x/version.h.in $(top_srcdir)/config.status
+	$(AM_V_GEN)$(SED) -e 's|@VERSION_MAJOR[@]|$(VERSION_MAJOR)|g' \
+	                  -e 's|@VERSION_MINOR[@]|$(VERSION_MINOR)|g' \
+	                  -e 's|@VERSION_PATCH[@]|$(VERSION_PATCH)|g' \
+	                  $< > $@
+CLEANFILES = x/version.h
+EXTRA_DIST = x/version.h.in
 
