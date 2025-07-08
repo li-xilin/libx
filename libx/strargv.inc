@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  */
 
+#include "x/assert.h"
+#include <stdlib.h>
+
 #ifdef WIDE_CHAR
 #define STRARGV x_wcsargv
 #define CHAR_TYPE wchar_t

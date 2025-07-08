@@ -78,4 +78,8 @@ int x_cliarg_getopt_long(x_cliarg *cliarg, const x_cliarg_long *longopts, int *l
  */
 x_uchar *x_cliarg_arg(x_cliarg *cliarg);
 
+char **x_strargv(const char *cmdline, int* count);
+
+wchar_t **x_wcsargv(const wchar_t *cmdline, int* count);
+
 #endif

@@ -283,3 +283,8 @@ int x_cliarg_getopt_long(x_cliarg *cliarg,
 	return parser_error(cliarg, OPT_MSG_INVALID, option);
 }
 
+#define WIDE_CHAR
+#include "strargv.inc"
+#undef WIDE_CHAR
+#include "strargv.inc"
+

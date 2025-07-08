@@ -472,8 +472,3 @@ int x_strnrcmp(const char *s1, const char *s2, size_t len)
 	}
 }
 
-#define WIDE_CHAR
-#include "strargv.inc"
-#undef WIDE_CHAR
-#include "strargv.inc"
-
