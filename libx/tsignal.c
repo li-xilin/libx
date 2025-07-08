@@ -121,11 +121,10 @@ int x_tsignal_set(x_tsignal_fn *proc)
 		errno = X_EINVAL;
 		return -1;
 	}
-
 	if (sg_user_handler == NULL) {
 		struct sigaction sa = {
 			.sa_handler = signal_handler,
-			.sa_flags = 0,
+			.sa_flags = SA_RESTART | SA_NODEFER,
 		};
 		if (sigaction(SIGINT, &sa, &sg_sigint_sa))
 			goto fail;
