@@ -38,6 +38,8 @@ xinclude_HEADERS = \
 	x/cliarg.h \
 	x/sys.h \
 	x/path.h \
+	x/edit.h \
+	x/strbuf.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
