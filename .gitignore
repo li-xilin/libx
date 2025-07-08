@@ -26,7 +26,7 @@ Makefile.in
 /libx.pc
 /stamp-h1
 /config.log
-
+/config.h*
 /autom4te.cache
 /build-aux
 /m4
