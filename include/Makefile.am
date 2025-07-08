@@ -37,5 +37,6 @@ xinclude_HEADERS = \
 	x/proc.h \
 	x/cliarg.h \
 	x/sys.h \
+	x/path.h \
 	x/errno.h
 
