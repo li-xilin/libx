@@ -224,6 +224,16 @@ global:
 	x_strsplit;
 	x_strtoargv;
 	x_strtrim;
+	x_sys_copy;
+	x_sys_getenv;
+	x_sys_link;
+	x_sys_mkdir;
+	x_sys_nprocs;
+	x_sys_rename;
+	x_sys_setenv;
+	x_sys_symlink;
+	x_sys_unlink;
+	x_sys_utime;
 	x_tcolor_bg;
 	x_tcolor_bold;
 	x_tcolor_fg;
