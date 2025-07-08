@@ -6,4 +6,8 @@ LDADD = $(top_builddir)/libx/libx.la
 #AM_LDFLAGS = -no-fast-install
 #endif
 
+DISTCLEANFILES = Makefile.in
 EXTRA_DIST = $(wildcard *.c) example.ini
+dist-hook:
+	$(RM) $(distdir)/Makefile.in
+

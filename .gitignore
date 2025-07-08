@@ -28,6 +28,6 @@ Makefile.in
 /config.log
 /config.h*
 /autom4te.cache
-/build-aux
 /m4
 /include/x/version.h
+config.guess

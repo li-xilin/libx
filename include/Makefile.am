@@ -43,11 +43,14 @@ xinclude_HEADERS = \
 nodist_xinclude_HEADERS = \
 	x/version.h
 
-x/version.h: x/version.h.in $(top_srcdir)/config.status
+x/version.h: x/version.h.in $(top_builddir)/config.status
 	$(AM_V_GEN)$(SED) -e 's|@VERSION_MAJOR[@]|$(VERSION_MAJOR)|g' \
 	                  -e 's|@VERSION_MINOR[@]|$(VERSION_MINOR)|g' \
 	                  -e 's|@VERSION_PATCH[@]|$(VERSION_PATCH)|g' \
 	                  $< > $@
 CLEANFILES = x/version.h
+DISTCLEANFILES = Makefile.in
 EXTRA_DIST = x/version.h.in
 
+dist-hook:
+	$(RM) $(distdir)/Makefile.in

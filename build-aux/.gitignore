@@ -1,0 +1,7 @@
+compile
+config.sub
+depcomp
+install-sh
+ltmain.sh
+Makefile
+missing
