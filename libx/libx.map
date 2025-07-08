@@ -49,6 +49,10 @@ global:
 	x_btnode_zigzag;
 	x_btnode_zigzig;
 	x_calloc;
+	x_cliarg_arg;
+	x_cliarg_getopt;
+	x_cliarg_getopt_long;
+	x_cliarg_init;
 	x_cond_destroy;
 	x_cond_init;
 	x_cond_sleep;

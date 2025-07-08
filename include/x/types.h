@@ -170,5 +170,15 @@ typedef struct x_mutex_st x_mutex;
 typedef struct x_strbuf_st x_strbuf;
 #endif
 
+#ifndef X_CLIARG_DEFINED
+#define X_CLIARG_DEFINED
+typedef struct x_cliarg_st x_cliarg;
+#endif
+
+#ifndef X_CLIARG_LONG_DEFINED
+#define X_CLIARG_LONG_DEFINED
+typedef struct x_cliarg_long_st x_cliarg_long;
+#endif
+
 #endif
 
