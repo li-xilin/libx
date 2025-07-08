@@ -1,7 +1,8 @@
-AC_INIT([libx], [1.1.0], [lixilin@gmx.com])
+AC_INIT([libx],[1.1.0],[lixilin@gmx.com])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CANONICAL_HOST
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign tar-pax no-dist-gzip dist-bzip2 1.6 subdir-objects])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -28,6 +29,5 @@ AC_SUBST([LT_VERSION_INFO], ["1:0:0"])
 AC_SUBST([VERSION_MAJOR], [`echo "$PACKAGE_VERSION" | cut -d. -f1`])
 AC_SUBST([VERSION_MINOR], [`echo "$PACKAGE_VERSION" | cut -d. -f2`])
 AC_SUBST([VERSION_PATCH], [`echo "$PACKAGE_VERSION" | cut -d. -f3`])
-AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile libx/Makefile libx.pc include/Makefile samples/Makefile])
 AC_OUTPUT

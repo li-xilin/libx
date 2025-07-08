@@ -38,7 +38,9 @@ xinclude_HEADERS = \
 	x/cliarg.h \
 	x/sys.h \
 	x/path.h \
-	x/errno.h \
+	x/errno.h
+
+nodist_xinclude_HEADERS = \
 	x/version.h
 
 x/version.h: x/version.h.in $(top_srcdir)/config.status
