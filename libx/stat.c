@@ -36,7 +36,9 @@
 
 typedef struct {
 	ULONGLONG   VolumeSerialNumber;
-	FILE_ID_128 FileId;
+	struct __FILE_ID_128 {
+		BYTE Identifier[16];
+	} FileId;
 } __FILE_ID_INFO;
 
 BOOL (__stdcall* _pfnGetFileInformationByHandleEx)(HANDLE hFile, int FileInformationClass,
