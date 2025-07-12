@@ -71,7 +71,7 @@ int x_sys_unlink(const x_uchar *path)
 int x_sys_rename(const x_uchar *path, const x_uchar *new_path)
 {
 #ifdef X_OS_WIN
-	if (!MoveFileW(path, new_path)) {
+	if (!MoveFileExW(path, new_path, MOVEFILE_REPLACE_EXISTING)) {
 #else
 	if (rename(path, new_path)) {
 #endif
