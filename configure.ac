@@ -21,7 +21,7 @@ LT_INIT([win32-dll pic-only])
 regular_CFLAGS="-Wall -Werror --pedantic -std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],
-	regular_CFLAGS="$regular_CFLAGS -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN -D__USE_MINGW_ANSI_STDIO",
+	regular_CFLAGS="$regular_CFLAGS -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN",
 	regular_CFLAGS="$regular_CFLAGS -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=500")
 
 AC_SUBST([regular_CFLAGS])

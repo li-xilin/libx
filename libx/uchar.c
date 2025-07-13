@@ -23,6 +23,7 @@
 #include "x/uchar.h"
 #include "x/detect.h"
 #include "x/unicode.h"
+#include "x/errno.h"
 
 #include <string.h>
 #include <errno.h>
@@ -81,8 +82,9 @@ int x_utf8_to_ustr(const char *from, x_uchar *us, size_t size)
 	int utf8_len = strlen(from);
 #ifdef X_OS_WIN
 	int utf16_len = x_utf8_to_utf16(from, utf8_len, us, size);
-	if (utf16_len == size) {
-		errno = ENOBUFS;
+	if (utf16_len == size * 2) {
+		us[size / 2 - 1] = L'\0';
+		errno = X_ERANGE;
 	}
 	else {
 		us[utf16_len] = x_u('\0');
@@ -91,7 +93,8 @@ int x_utf8_to_ustr(const char *from, x_uchar *us, size_t size)
 #else
 	if (utf8_len > size - 1) {
 		memcpy(us, from, size);
-		errno = ENOBUFS;
+		us[size- 1] = '\0';
+		errno = X_ERANGE;
 	}
 	else {
 		memcpy(us, from, utf8_len);
@@ -116,9 +119,10 @@ int x_utf16_to_ustr(const uint16_t *from, x_uchar *us, size_t size)
 	int retval = -1;
 	int utf16_len = x_utf16_strlen(from);
 #ifdef X_OS_WIN
-	if (utf16_len > size / 2 - 2) {
-		memcpy(us, from, size);
-		errno = ENOBUFS;
+	if (utf16_len > size / 2 - 1) {
+		memcpy(us, from, utf16_len * 2);
+		us[size / 2 - 1] = L'\0';
+		errno = X_ERANGE;
 	}
 	else {
 		memcpy(us, from, (utf16_len + 1) * 2);
@@ -127,7 +131,8 @@ int x_utf16_to_ustr(const uint16_t *from, x_uchar *us, size_t size)
 #else
 	int utf8_len = x_utf16_to_utf8(from, utf16_len, us, size);
 	if (utf8_len == size) {
-		errno = ENOBUFS;
+		us[size - 1] = '\0';
+		errno = X_ERANGE;
 	}
 	else {
 		us[utf16_len] = x_u('\0');
@@ -141,12 +146,14 @@ int x_ustr_to_utf8(const x_uchar *us, char *to, size_t size)
 {
 #ifdef X_OS_WIN
 	int retval = -1;
-	int utf16_len = x_ustrlen(us);
-	if (x_utf16_to_utf8(us, utf16_len, to, size) != utf16_len)
-		errno = ENOBUFS;
+	int utf8_len = x_utf16_to_utf8(us, x_ustrlen(us), to, size);
+	if (utf8_len == size) {
+		to[size - 1] = '0';
+		errno = X_ERANGE;
+	}
 	else {
-		to[utf16_len] = '\0';
-		retval = utf16_len;
+		to[utf8_len] = '\0';
+		retval = utf8_len;
 	}
 	return retval;
 #else
@@ -169,13 +176,14 @@ int x_ustr_to_utf16(const x_uchar *us, uint16_t *to, size_t size)
 	return x_utf16_to_ustr(us, to, size);
 #else
 	int retval = -1;
-	int utf8_len = strlen(us);
-	if (x_utf8_to_utf16(us, utf8_len, to, size) != utf8_len) {
-		errno = ENOBUFS;
+	int utf16_len = x_utf8_to_utf16(us, = strlen(us), to, size);
+	if (utf16_len == size / 2) {
+		to[size / 2 - 1] = L'\0';
+		errno = X_ERANGE;
 	}
 	else {
-		to[utf8_len] = x_u('\0');
-		retval = utf8_len;
+		to[utf16_len] = x_u('\0');
+		retval = utf16_len;
 	}
 	return retval;
 #endif

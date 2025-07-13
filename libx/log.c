@@ -21,8 +21,11 @@
  */
 
 #include "x/log.h"
+#include "x/uchar.h"
 #include "x/tcolor.h"
 #include "x/mutex.h"
+#include "x/file.h"
+#include "x/macros.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,10 +34,10 @@
 #include <limits.h>
 
 static int s_mode = 0;
-static x_log_handler_f *s_handler = NULL;
+static x_log_handler_fn *s_handler = NULL;
 static void *s_handler_arg = NULL;
 static x_mutex s_lock = X_MUTEX_INIT;
-	
+
 int x_log_mode(void)
 {
 	return s_mode;
@@ -45,7 +48,7 @@ void x_log_set_mode(int mode)
 	s_mode = mode;
 }
 
-void x_log_set_handler(x_log_handler_f *f, void *arg)
+void x_log_set_handler(x_log_handler_fn *f, void *arg)
 {
 	s_handler = f;
 	s_handler_arg = arg;
@@ -58,18 +61,146 @@ static inline const char *__basename(const char *path)
 #ifdef X_OS_WIN
 		if (path[i] == '\\')
 #else
-		if (path[i] == '/')
+			if (path[i] == '/')
 #endif
-			c = i + 1;
+				c = i + 1;
 	return path + c;
 }
 
-int x_log_default_handler(const x_location *loc, void *arg, int level, const char* text)
+int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uchar* text)
 {
 	int retval = -1;
 	char time_buf[64];
 	char loc_buf[512];
 	char level_buf[32];
+	x_uchar buffer[1024];
+	const char *type;
+	int mode = x_log_mode();
+	FILE *fp = arg ? arg : stderr;
+	x_tcolor tc = { 0 };
+
+	time_buf[0] = '\0';
+	loc_buf[0] = '\0';
+
+	if (!(mode & X_LM_NOTIME)) {
+		time_t tim = time(NULL);
+		struct tm *t = localtime(&tim);
+		snprintf(time_buf, sizeof time_buf, "%4d-%02d-%02d %02d:%02d:%02d",
+				t->tm_year + 1900, t->tm_mon + 1,
+				t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+	}
+
+	if (!(mode & X_LM_NOLOC)) {
+		snprintf(loc_buf, sizeof loc_buf, "%s:%s:%d", __basename(loc->file), loc->func, loc->line);
+	}
+
+	x_mutex_lock(&s_lock);
+
+	if (x_fputc(x_u('['), fp) < 0)
+		goto out;
+
+	x_tcolor_set(fp, &tc);
+	switch(level) {
+		case X_LL_TRACE:
+			type = "TRACE";
+			x_tcolor_fg(&tc, X_TCOLOR_BBLUE);
+			break;
+		case X_LL_DEBUG:
+			type = "DEBUG";
+			x_tcolor_fg(&tc, X_TCOLOR_BLUE);
+			break;
+		case X_LL_INFO:
+			type = "INFO";
+			x_tcolor_fg(&tc, X_TCOLOR_GREEN);
+			break;
+		case X_LL_WARN:
+			type = "WARN";
+			x_tcolor_fg(&tc, X_TCOLOR_YELLOW);
+			break;
+		case X_LL_ERROR:
+			type = "ERROR";
+			x_tcolor_fg(&tc, X_TCOLOR_RED);
+			break;
+		case X_LL_FATAL:
+			type = "FATAL";
+			x_tcolor_fg(&tc, X_TCOLOR_BRED);
+			break;
+		default:
+			snprintf(level_buf, sizeof level_buf, "%d", level);
+			type = level_buf;
+			x_tcolor_fg(&tc, X_TCOLOR_GREEN);
+	}
+	if (x_ansi_to_ustr(type, buffer, sizeof buffer) == -1) {
+		x_tcolor_reset(&tc);
+		goto out;
+	}
+	if (x_fprintf(fp, x_u("%-5s"), buffer) < 0) {
+		x_tcolor_reset(&tc);
+		goto out;
+	}
+	x_tcolor_reset(&tc);
+	if (x_fputc(x_u(']'), fp) < 0)
+		goto out;
+
+	if (time_buf[0]) {
+		if (x_fputc(x_u('['), fp) < 0)
+			goto out;
+		if (x_ansi_to_ustr(time_buf, buffer, sizeof buffer) == -1)
+			goto out;
+		x_tcolor_set(fp, &tc);
+		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
+		if (x_fprintf(fp, x_u("%" X_PRIus), buffer) < 0) {
+			x_tcolor_reset(&tc);
+			goto out;
+		}
+		x_tcolor_reset(&tc);
+		if (x_fputc(x_u(']'), fp) < 0) {
+			goto out;
+		}
+	}
+
+	if (loc_buf[0]) {
+		if (x_fputc(x_u('['), fp) < 0)
+			goto out;
+		if (x_ansi_to_ustr(loc_buf, buffer, sizeof buffer) == -1)
+			goto out;
+		x_tcolor_set(fp, &tc);
+		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
+		if (x_fprintf(fp, x_u("%" X_PRIus), buffer) < 0) {
+			x_tcolor_reset(&tc);
+			goto out;
+		}
+		x_tcolor_reset(&tc);
+		if (x_fputc(x_u(']'), fp) < 0) {
+			goto out;
+		}
+	}
+
+	if (x_fputc(x_u(' '), fp) == EOF)
+		goto out;
+
+	if (x_fputs(text, fp) == EOF)
+		goto out;
+
+	if (!text[0] || text[x_ustrlen(text) - 1] != x_u('\n'))
+		if (x_fputc(x_u('\n'), fp) == EOF)
+			goto out;
+
+	if (fflush(fp))
+		goto out;
+	retval = 0;
+out:
+	x_mutex_unlock(&s_lock);
+	return retval;
+}
+
+int x_log_handler_utf8(const x_location *loc, void *arg, int level, const x_uchar* text)
+{
+	int retval = -1;
+	char time_buf[64];
+	char loc_buf[512];
+	char level_buf[32];
+	char utf8_buf[1024];
 	const char *type;
 	int mode = x_log_mode();
 	FILE *fp = arg ? arg : stderr;
@@ -154,6 +285,7 @@ int x_log_default_handler(const x_location *loc, void *arg, int level, const cha
 			goto out;
 		x_tcolor_set(fp, &tc);
 		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
+		// FIXME: __FILE__ or __func__ are sometimes not utf-8
 		if (fprintf(fp, "%s", loc_buf) < 0) {
 			x_tcolor_reset(&tc);
 			goto out;
@@ -167,22 +299,25 @@ int x_log_default_handler(const x_location *loc, void *arg, int level, const cha
 	if (fputc(' ', fp) == EOF)
 		goto out;
 
-	if (fputs(text, fp) == EOF)
+	if (x_ustr_to_utf8(text, utf8_buf, sizeof utf8_buf) == -1)
+		goto out;
+	if (fputs(utf8_buf, fp) == EOF)
 		goto out;
 
-	if (!text[0] || text[strlen(text) - 1] != '\n')
+	if (!utf8_buf[0] || text[strlen(utf8_buf) - 1] != '\n')
 		if (fputc('\n', fp) == EOF)
 			goto out;
 
-	if (fflush(fp))
-		goto out;
 	retval = 0;
 out:
+
+	if (fflush(fp))
+		goto out;
 	x_mutex_unlock(&s_lock);
 	return retval;
 }
 
-int __x_log_print(const x_location *loc, int level, const char* fmt, ...)
+int __x_log_print(const x_location *loc, int level, const x_uchar* fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -191,7 +326,7 @@ int __x_log_print(const x_location *loc, int level, const char* fmt, ...)
 	return retval;
 }
 
-int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap)
+int __x_log_vprint(const x_location *loc, int level, const x_uchar* fmt, va_list ap)
 {
 	int mode = x_log_mode();
 	switch(level)
@@ -223,12 +358,12 @@ int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap
 			break;
 	}
 
-	char ms_buf[X_LOG_MX];
-	if (vsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
+	x_uchar ms_buf[X_LOG_MX];
+	if (x_uvsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)
-		: x_log_default_handler(loc, s_handler_arg, level, ms_buf);
+		: x_log_handler_utf8(loc, s_handler_arg, level, ms_buf);
 	return ret;
 }
 

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "x/file.h"
 #include "x/log.h"
 
 int main(void)
@@ -39,4 +39,6 @@ int main(void)
 	x_pwarn("Warn message with location and time");
 	x_perror("Error message with location and time");
 	x_pfatal("Fatal message with location and time");
+
+	x_log(X_LL_INFO, "输出一条中文日志");
 }

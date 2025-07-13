@@ -24,6 +24,7 @@
 #define X_LOG_H
 
 #include "assert.h"
+#include "uchar.h"
 #include <stdarg.h>
 
 #define X_LL_FATAL    0
@@ -57,15 +58,16 @@
 
 #define X_LOG_MX 8192
 
-typedef int x_log_handler_f(const x_location *loc, void *arg, int level, const char *text);
-int __x_log_print(const x_location *loc, int level, const char* fmt, ...);
-int __x_log_vprint(const x_location *loc, int level, const char* fmt, va_list ap);
+typedef int x_log_handler_fn(const x_location *loc, void *arg, int level, const x_uchar *text);
+int __x_log_print(const x_location *loc, int level, const x_uchar* fmt, ...);
+int __x_log_vprint(const x_location *loc, int level, const x_uchar* fmt, va_list ap);
 void x_log_set_mode(int mode);
 int x_log_mode(void);
-x_log_handler_f x_log_default_handler;
-void x_log_set_handler(x_log_handler_f *f, void *arg);
+x_log_handler_fn x_log_handler_native;
+x_log_handler_fn x_log_handler_utf8;
+void x_log_set_handler(x_log_handler_fn *f, void *arg);
 
-#define x_log(level, ...) __x_log_print(X_WHERE, level, __VA_ARGS__)
+#define x_log(level, ...) __x_log_print(X_WHERE, level, x_u("") __VA_ARGS__)
 #define x_ptrace(...) x_log(X_LL_TRACE, __VA_ARGS__)
 #define x_pdebug(...) x_log(X_LL_DEBUG, __VA_ARGS__)
 #define x_pinfo(...) x_log(X_LL_INFO, __VA_ARGS__)

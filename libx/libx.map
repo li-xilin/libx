@@ -133,7 +133,8 @@ global:
 	x_ini_strerror;
 	x_ini_unset;
 	x_isatty;
-	x_log_default_handler;
+	x_log_handler_native;
+	x_log_handler_utf8;
 	x_log_mode;
 	x_log_set_handler;
 	x_log_set_mode;
