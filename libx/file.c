@@ -60,7 +60,7 @@ FILE* x_fdopen(intptr_t handle, const x_uchar *mode)
 #endif
 }
 
-int x_setinput(FILE *stream)
+int x_setmode_utf8(FILE *stream)
 {
 	fflush(stream);
 #ifdef X_OS_WIN
@@ -71,12 +71,23 @@ int x_setinput(FILE *stream)
 #endif
 }
 
-int x_setoutput(FILE *stream)
+int x_setmode_utf16(FILE *stream)
 {
 	fflush(stream);
 #ifdef X_OS_WIN
 	fflush(stream);
 	return _setmode(fileno(stream), _O_U16TEXT);
+#else
+	return 0;
+#endif
+}
+
+int x_setmode_binary(FILE *stream)
+{
+	fflush(stream);
+#ifdef X_OS_WIN
+	fflush(stream);
+	return _setmode(fileno(stream), _O_BINARY);
 #else
 	return 0;
 #endif
