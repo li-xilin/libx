@@ -207,8 +207,9 @@ global:
 	x_rope_swap;
 	x_rope_vprintf;
 	x_scanf;
-	x_setinput;
-	x_setoutput;
+	x_setmode_binary;
+	x_setmode_utf16;
+	x_setmode_utf8;
 	x_splay_find;
 	x_splay_find_or_insert;
 	x_splay_remove;

@@ -31,8 +31,9 @@ FILE* x_fdopen(intptr_t handle, const x_uchar *mode);
 FILE *x_fopen(const x_uchar *path, const x_uchar *mode);
 FILE *x_freopen(const x_uchar *path, const x_uchar *mode, FILE *stream);
 
-int x_setinput(FILE *stream);
-int x_setoutput(FILE *stream);
+int x_setmode_utf8(FILE *stream);
+int x_setmode_utf16(FILE *stream);
+int x_setmode_binary(FILE *stream);
 int x_isatty(FILE *file);
 
 int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap);
