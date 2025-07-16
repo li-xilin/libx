@@ -210,6 +210,7 @@ global:
 	x_setmode_binary;
 	x_setmode_utf16;
 	x_setmode_utf8;
+	x_snprintf;
 	x_splay_find;
 	x_splay_find_or_insert;
 	x_splay_remove;
@@ -285,6 +286,7 @@ global:
 	x_ucode_utf8len;
 	x_ucode_width;
 	x_umain;
+	x_vsnprintf;
 	x_ustr_to_ansi;
 	x_ustr_to_utf16;
 	x_ustr_to_utf8;
@@ -306,6 +308,7 @@ global:
 	x_utf8_to_ustr;
 	x_utf8_to_utf16;
 	x_vfprintf;
+	x_vfctprintf;
 	x_vfscanf;
 	x_vprintf;
 	x_vscanf;

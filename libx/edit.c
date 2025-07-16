@@ -80,8 +80,9 @@
 #include "x/file.h"
 #include "x/unicode.h"
 #include "x/string.h"
-#include "uchar.h"
+#include "x/uchar.h"
 #include "x/strbuf.h"
+#include "x/printf.h"
 
 #ifdef _WIN32 /* Windows platform, either MinGW or Visual Studio (MSVC) */
 #include <windows.h>
@@ -321,10 +322,12 @@ static void DRL_CHAR(int ch)
 }
 static void DRL_STR(const x_uchar *str)
 {
+	size_t len = x_ustrlen(str);
 	while (*str) {
 		uint32_t ch;
-		int n = x_ustr_to_ucode(str, &ch);
+		int n = x_ustr_to_ucode(str, len, &ch);
 		str += n;
+		len -= n;
 		DRL_CHAR(ch);
 	}
 }
@@ -544,7 +547,7 @@ static int fd_read(struct current *current)
 		}
 	}
 	/* decode and return the character */
-	x_ustr_to_ucode(buf, &c);
+	x_ustr_to_ucode(buf, n, &c);
 	return c;
 }
 
@@ -731,13 +734,13 @@ static void output_control_char(struct current *current, x_uchar ch)
  */
 static int get_char(struct current *current, int pos)
 {
-	if (pos >= 0 && pos < x_strbuf_chars(current->buf)) {
-		uint32_t c;
-		int i = x_ustr_index(x_strbuf_str(current->buf), pos);
-		(void)x_ustr_to_ucode(x_strbuf_str(current->buf) + i, &c);
-		return c;
-	}
-	return -1;
+	if (pos < 0 || pos >= x_strbuf_chars(current->buf))
+		return -1;
+	uint32_t c;
+	int i = x_ustr_index(x_strbuf_str(current->buf), pos);
+	if (x_ustr_to_ucode(x_strbuf_str(current->buf) + i, x_strbuf_chars(current->buf) - i, &c) == 0)
+		return -1;
+	return c;
 }
 
 static int char_display_width(int ch)
@@ -868,10 +871,12 @@ static const x_uchar *reduce_single_buf(const x_uchar *buf, int availcols, int *
 
 	DRL(x_u("reduce_single_buf: availcols=%d, cursor_pos=%d\n"), availcols, *cursor_pos);
 
+	size_t buf_len = x_ustrlen(buf);
 	while (*pt) {
 		uint32_t ch;
-		int n = x_ustr_to_ucode(pt, &ch);
+		int n = x_ustr_to_ucode(pt, buf_len, &ch);
 		pt += n;
+		buf_len -= n;
 
 		needcols += char_display_width(ch);
 
@@ -882,7 +887,7 @@ static const x_uchar *reduce_single_buf(const x_uchar *buf, int availcols, int *
 		 * can't be used.
 		 */
 		while (needcols >= availcols - 3) {
-			n = x_ustr_to_ucode(buf, &ch);
+			n = x_ustr_to_ucode(buf, buf_len -= n, &ch);
 			buf += n;
 			needcols -= char_display_width(ch);
 			DRL_CHAR(ch);
@@ -942,9 +947,10 @@ static int refresh_show_hints(struct current *current, const x_uchar *buf, int a
 				}
 				DRL(x_u("<hint bold=%d,color=%d>"), bold, color);
 				pt = hint;
+				size_t len = x_ustrlen(hint);
 				while (*pt) {
 					uint32_t ch;
-					int n = x_ustr_to_ucode(pt, &ch);
+					int n = x_ustr_to_ucode(pt, len, &ch);
 					int width = char_display_width(ch);
 					if (width >= availcols) {
 						DRL(x_u("<hinteol>"));
@@ -955,6 +961,7 @@ static int refresh_show_hints(struct current *current, const x_uchar *buf, int a
 					availcols -= width;
 					output_chars(current, pt, n);
 					pt += n;
+					len -= n;
 				}
 				if (bold || color > 0) {
 					clear_output_hightlight(current);
@@ -1007,6 +1014,7 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 	int displaycol, displayrow, visible, currentpos,
 			notecursor, cursorcol = 0, cursorrow = 0, hint;
 	struct esc_parser parser;
+	size_t len;
 #ifdef DEBUG_REFRESHLINE
 	dfh = fopen("linenoise.debuglog", "a");
 #endif
@@ -1042,6 +1050,7 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 	DRL(x_u("\n"));
 	/* (d) First output the prompt. control sequences don't take up display space */
 	pt = prompt;
+	len = x_ustrlen(pt);
 	displaycol = 0; /* current display column */
 	displayrow = 0; /* current display row */
 	visible = 1;
@@ -1049,7 +1058,7 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 	while (*pt) {
 		int width;
 		uint32_t ch;
-		int n = x_ustr_to_ucode(pt, &ch);
+		int n = x_ustr_to_ucode(pt, len, &ch);
 		if (visible && ch == CHAR_ESCAPE) {
 			/* The start of an escape sequence, so not visible */
 			visible = 0;
@@ -1084,6 +1093,7 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 #endif
 		}
 		pt += n;
+		len -= n;
 		if (!visible) {
 			switch (parse_escape_sequence(&parser, ch)) {
 				case EP_END:
@@ -1113,9 +1123,10 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 	}
 	currentpos = 0;
 	notecursor = -1;
+	len = x_ustrlen(pt);
 	while (*pt) {
 		uint32_t ch;
-		int n = x_ustr_to_ucode(pt, &ch);
+		int n = x_ustr_to_ucode(pt, len, &ch);
 		int width = char_display_width(ch);
 		if (currentpos == cursor_pos) {
 			/* (e') wherever we output this character is where we want the cursor */
@@ -1153,6 +1164,7 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 		}
 
 		pt += n;
+		len -= n;
 		currentpos++;
 	}
 	/* If we didn't see the cursor, it is at the current location */
@@ -1349,15 +1361,17 @@ static int remove_chars(struct current *current, int pos, int n)
 static int insert_chars(struct current *current, int pos, const x_uchar *chars)
 {
 	int inserted = 0;
+	size_t len = x_ustrlen(chars);
 	while (*chars) {
 		uint32_t ch;
-		int n = x_ustr_to_ucode(chars, &ch);
+		int n = x_ustr_to_ucode(chars, len, &ch);
 		if (insert_char(current, pos, ch) == 0) {
 			break;
 		}
 		inserted++;
 		pos++;
 		chars += n;
+		len -= n;
 	}
 	return inserted;
 }
@@ -1422,7 +1436,7 @@ static int reverse_incremental_search(struct current *current)
 		const x_uchar *p = NULL;
 		int skipsame = 0;
 		int searchdir = -1;
-		x_usnprintf(rprompt, x_arrlen(rprompt), x_u("(reverse-i-search)'%" X_PRIus "': "), rbuf);
+		x_snprintf(rprompt, x_arrlen(rprompt), x_u("(reverse-i-search)'%" X_PRIus "': "), rbuf);
 		refresh_line_alt(current, rprompt, x_strbuf_str(current->buf), current->pos);
 		c = fd_read(current);
 		if (c == ctrl('H') || c == CHAR_DELETE) {

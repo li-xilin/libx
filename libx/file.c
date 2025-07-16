@@ -21,19 +21,11 @@
  */
 
 #include "x/detect.h"
-#if defined(X_OS_WIN) && defined(X_CC_MINGW)
-/* https://sourceforge.net/p/mingw-w64/bugs/846/ */
-#  ifdef _INC_STDIO
-#    error "x/file.h should be placed before stdandard stdio.h"
-#  else
-#    undef __USE_MINGW_ANSI_STDIO
-#    define __USE_MINGW_ANSI_STDIO 0
-#  endif
-#endif
 #include "x/file.h"
 #include "x/errno.h"
 #include "x/detect.h"
 #include "x/uchar.h"
+#include "x/printf.h"
 #include <stdio.h>
 #include <fcntl.h>
 #ifdef X_OS_WIN
@@ -130,13 +122,21 @@ FILE *x_freopen(const x_uchar *path, const x_uchar *mode, FILE *stream)
 #endif
 }
 
+struct putchar_ctx
+{
+	FILE *fp;
+};
+
+static int file_putchar(x_uchar ch, void *arg)
+{
+	struct putchar_ctx *ctx = arg;
+	return x_fputc(ch, ctx->fp);
+}
+
 int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap)
 {
-#ifdef X_OS_WIN
-	return vfwprintf(stream, format, ap);
-#else
-	return vfprintf(stream, format, ap);
-#endif
+	struct putchar_ctx ctx = { .fp = stream, };
+	return x_vfctprintf(file_putchar, &ctx, format, ap);
 }
 
 int x_fprintf(FILE *stream, const x_uchar *format, ...)
@@ -150,11 +150,7 @@ int x_fprintf(FILE *stream, const x_uchar *format, ...)
 
 int x_vprintf(const x_uchar *format, va_list ap)
 {
-#ifdef X_OS_WIN
-	return vwprintf(format, ap);
-#else
-	return vprintf(format, ap);
-#endif
+	return x_vfprintf(stdout, format, ap);
 }
 
 int x_printf(const x_uchar *format, ...)

@@ -26,6 +26,7 @@
 #include "x/mutex.h"
 #include "x/file.h"
 #include "x/macros.h"
+#include "x/printf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -359,7 +360,7 @@ int __x_log_vprint(const x_location *loc, int level, const x_uchar* fmt, va_list
 	}
 
 	x_uchar ms_buf[X_LOG_MX];
-	if (x_uvsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
+	if (x_vsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)

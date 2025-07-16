@@ -176,7 +176,7 @@ int x_ustr_to_utf16(const x_uchar *us, uint16_t *to, size_t size)
 	return x_utf16_to_ustr(us, to, size);
 #else
 	int retval = -1;
-	int utf16_len = x_utf8_to_utf16(us, = strlen(us), to, size);
+	int utf16_len = x_utf8_to_utf16(us, strlen(us), to, size);
 	if (utf16_len == size / 2) {
 		to[size / 2 - 1] = L'\0';
 		errno = X_ERANGE;

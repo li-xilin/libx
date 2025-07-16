@@ -46,10 +46,9 @@
 #  define x_ustricmp _wcsicmp
 #  define x_ustrnicmp _wcsnicmp
 #  define x_ustrncmp wcsncmp
+
 #  define x_usscanf swscanf
-#  define x_usnprintf swprintf
-#  define x_usprintf _swprintf
-#  define x_uvsnprintf vsnwprintf
+
 #  define x_ustrhash x_wcshash
 #  define x_ustrargv x_wcsargv
 #  define x_ustrtrim x_wcstrim
@@ -78,10 +77,9 @@ typedef WCHAR x_uchar;
 #  define x_ustrncmp strncmp
 #  define x_ustricmp strcasecmp
 #  define x_ustrnicmp strncasecmp
+
 #  define x_usscanf sscanf
-#  define x_usprintf sprintf
-#  define x_usnprintf snprintf
-#  define x_uvsnprintf vsnprintf
+
 #  define x_ustrhash x_strhash
 #  define x_ustrargv x_strargv
 #  define x_ustrtrim x_strtrim
@@ -98,6 +96,7 @@ typedef WCHAR x_uchar;
 #  define X_UCHAR_BYTES 1
 typedef char x_uchar;
 #endif
+
 #define x_u(s) __x_u(s)
 
 #define x_main \
@@ -119,6 +118,7 @@ x_uchar *x_ustrsplit(x_uchar **s, x_uchar ch);
 x_uchar *x_ustrdup(const x_uchar *s);
 size_t x_ustrihash(const x_uchar *s);
 size_t x_ustrnihash(const x_uchar *s, size_t len);
+
 int x_umain(x_umain_fn *umain, int argc, char *argv[]);
 
 #endif

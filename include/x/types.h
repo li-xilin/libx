@@ -28,6 +28,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #ifdef X_OS_WIN
 typedef struct { uint8_t fileid[16]; } x_ino;
@@ -39,6 +40,17 @@ typedef ino_t x_ino;
 typedef dev_t x_dev;
 typedef pid_t x_pid;
 #endif
+
+#if SIZE_MAX == UINT16_MAX
+typedef int16_t x_ssize ;
+#elif SIZE_MAX == UINT32_MAX
+typedef int32_t x_ssize ;
+#elif SIZE_MAX == UINT64_MAX
+typedef int64_t x_ssize ;
+#else
+#error "Unknown the size of size_t"
+#endif
+
 
 #ifndef X_ROPE_NODE_DEFINED
 #define X_ROPE_NODE_DEFINED
@@ -178,6 +190,11 @@ typedef struct x_cliarg_st x_cliarg;
 #ifndef X_CLIARG_LONG_DEFINED
 #define X_CLIARG_LONG_DEFINED
 typedef struct x_cliarg_long_st x_cliarg_long;
+#endif
+
+#ifndef X_FILE_DEFINED
+#define X_FILE_DEFINED
+typedef struct x_file_st x_file;
 #endif
 
 #endif

@@ -90,7 +90,7 @@ size_t x_utf8_index(const char *str, int charindex);
  *
  * Does not support unicode code points > \u1fffff
  */
-size_t x_utf8_to_ucode(const char *str, uint32_t *uc);
+size_t x_utf8_to_ucode(const char *str, size_t utf8_len, uint32_t *uc);
 
 size_t x_utf8_to_utf16(const char *utf8, size_t utf8_len, uint16_t* utf16, size_t utf16_len);
 
@@ -118,9 +118,13 @@ size_t x_ucode_utf16len(uint32_t codepoint);
 
 size_t x_utf16_charcnt(const uint16_t* str, int bytelen);
 
-size_t x_utf16_to_ucode(const uint16_t* utf16, uint32_t *codepoint);
+size_t x_utf16_to_ucode(const uint16_t* utf16, size_t utf16_len, uint32_t *codepoint);
 
 size_t x_utf16_to_utf8(const uint16_t *utf16, size_t utf16_len, char* utf8, size_t utf8_len);
+
+size_t x_utf8_min_strlen(const char *str);
+
+size_t x_utf16_min_strlen(const uint16_t *str);
 
 inline static size_t x_utf16_strlen(const uint16_t *str)
 {
