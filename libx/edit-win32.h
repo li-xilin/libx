@@ -148,7 +148,7 @@ static void add_ubuf(struct current *current, int ch)
 
 static int flush_output(struct current *current)
 {
-	const uint16_t *pt = x_strbuf_data(&current->output);
+	const uint16_t *pt = x_strbuf_str(&current->output);
 	int len = x_strbuf_len(&current->output);
 
 	/* convert utf8 in current->output into utf16 in current->ubuf

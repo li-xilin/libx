@@ -7,6 +7,7 @@
 int main(void)
 {
 	x_uchar *str = NULL;
+	x_setmode_utf8(stdout);
 	x_printf(x_u("type 'exit' to quit program\n"));
 	while (1) {
 		x_free(str);
