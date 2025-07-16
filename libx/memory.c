@@ -88,6 +88,13 @@ void *x_malloc(x_mset *mset, size_t size)
 	return b->data;
 }
 
+void *x_zalloc(x_mset *mset, size_t size)
+{
+	void *p = x_malloc(mset, size);
+	memset(p, 0, size);
+	return p;
+}
+
 void *x_calloc(x_mset *mset, size_t nmemb, size_t size)
 {
 	void *p = x_malloc(mset, nmemb * size);
@@ -128,6 +135,8 @@ void *x_realloc(void *ptr, size_t size)
 
 void x_free(void *ptr)
 {
+	if (!ptr)
+		return;
 	struct block_st *b = x_container_of(ptr, struct block_st, data);
 	if (b->mset) {
 		x_mutex_lock(&b->mset->lock);

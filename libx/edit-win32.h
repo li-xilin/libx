@@ -23,9 +23,10 @@ static void refresh_end(struct current *current)
 
 static void refresh_start_chars(struct current *current)
 {
-	assert(current->output == NULL);
+	assert(current->use_output == false);
 	/* We accumulate all output here */
-	current->output = x_strbuf_alloc();
+	x_strbuf_init(&current->output);
+	current->use_output = true;
 	current->ubuflen = 0;
 }
 
@@ -37,10 +38,10 @@ static void refresh_new_line(struct current *current)
 
 static void refresh_end_chars(struct current *current)
 {
-	assert(current->output);
+	assert(current->use_output);
 	flush_output(current);
-	x_strbuf_free(current->output);
-	current->output = NULL;
+	x_strbuf_free(&current->output);
+	current->use_output = false;
 }
 
 static int enable_raw_mode(struct current *current) {
@@ -147,8 +148,8 @@ static void add_ubuf(struct current *current, int ch)
 
 static int flush_output(struct current *current)
 {
-	const uint16_t *pt = x_strbuf_str(current->output);
-	int len = x_strbuf_len(current->output);
+	const uint16_t *pt = x_strbuf_data(&current->output);
+	int len = x_strbuf_len(&current->output);
 
 	/* convert utf8 in current->output into utf16 in current->ubuf
 	*/
@@ -163,7 +164,7 @@ static int flush_output(struct current *current)
 	}
 	flush_ubuf(current);
 
-	x_strbuf_clear(current->output);
+	x_strbuf_clear(&current->output);
 
 	return 0;
 }
@@ -173,9 +174,9 @@ static int output_chars(struct current *current, const uint16_t *buf, int len)
 	if (len < 0) {
 		len = wcslen(buf);
 	}
-	assert(current->output);
+	assert(current->use_output);
 
-	x_strbuf_append_len(current->output, buf, len);
+	x_strbuf_append_len(&current->output, buf, len);
 
 	return 0;
 }

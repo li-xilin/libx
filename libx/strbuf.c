@@ -24,43 +24,31 @@
 #include "x/strbuf.h"
 #include "x/unicode.h"
 #include "x/string.h"
+#include "x/memory.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
 
-#define SB_INCREMENT 256
+#define SB_INCREMENT 4096
 
-struct x_strbuf_st
+void x_strbuf_init(x_strbuf *sb)
 {
-	int remaining;
-	int last;
-	int chars;
-	x_uchar *data;
-};
-
-x_strbuf *x_strbuf_alloc(void)
-{
-	x_strbuf *sb = (x_strbuf *)malloc(sizeof(*sb));
 	sb->remaining = 0;
 	sb->last = 0;
 	sb->chars = 0;
 	sb->data = NULL;
-	return sb;
 }
 
 void x_strbuf_free(x_strbuf *sb)
 {
-	if (!sb)
-		return;
-	free(sb->data);
-	free(sb);
+	x_free(sb->data);
 }
 
 static void strbuf_realloc(x_strbuf *sb, int newlen)
 {
-	sb->data = (x_uchar *)realloc(sb->data, newlen * sizeof(x_uchar));
+	sb->data = (x_uchar *)x_realloc(sb->data, newlen * sizeof(x_uchar));
 	sb->remaining = newlen - sb->last;
 }
 
@@ -80,18 +68,13 @@ void x_strbuf_append_len(x_strbuf *sb, const x_uchar *str, int len)
 	sb->chars += x_ustr_charcnt(str, len);
 }
 
-x_uchar *x_strbuf_to_string(x_strbuf *sb)
+x_uchar *x_strbuf_data(x_strbuf *sb)
 {
-	if (!sb->data) {
-		/* Return an allocated empty string, not null */
-		return x_ustrdup(x_u(""));
-	}
-	else {
-		/* Just return the data and free the x_strbuf structure */
-		x_uchar *pt = sb->data;
-		free(sb);
-		return pt;
-	}
+	if (!sb->data)
+		sb->data = x_zalloc(NULL, sizeof(x_uchar));
+	x_uchar *data = sb->data;
+	x_strbuf_init(sb);
+	return data;
 }
 
 /* Moves up all the data at position 'pos' and beyond by 'len' bytes

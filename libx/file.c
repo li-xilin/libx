@@ -122,21 +122,14 @@ FILE *x_freopen(const x_uchar *path, const x_uchar *mode, FILE *stream)
 #endif
 }
 
-struct putchar_ctx
+static int file_puts(x_uchar *s, size_t len, void *arg)
 {
-	FILE *fp;
-};
-
-static int file_putchar(x_uchar ch, void *arg)
-{
-	struct putchar_ctx *ctx = arg;
-	return x_fputc(ch, ctx->fp);
+	return x_fputs(s, arg);
 }
 
 int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap)
 {
-	struct putchar_ctx ctx = { .fp = stream, };
-	return x_vfctprintf(file_putchar, &ctx, format, ap);
+	return x_vstprintf(file_puts, stream, format, ap);
 }
 
 int x_fprintf(FILE *stream, const x_uchar *format, ...)

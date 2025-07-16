@@ -153,7 +153,7 @@ static x_uchar **history = NULL;
 
 /* Structure to contain the status of the current (being edited) line */
 struct current {
-	x_strbuf *buf; /* Current buffer. Always null terminated */
+	x_strbuf buf; /* Current buffer. Always null terminated */
 	int pos;    /* Cursor position, measured in chars */
 	int cols;   /* Size of the window, in chars */
 	int nrows;  /* How many rows are being used in multiline mode (>= 1) */
@@ -161,8 +161,9 @@ struct current {
 	int colsright; /* refresh_line() cached cols for insert_char() optimisation */
 	int colsleft;  /* refresh_line() cached cols for remove_char() optimisation */
 	const x_uchar *prompt;
-	x_strbuf *capture; /* capture buffer, or NULL for none. Always null terminated */
-	x_strbuf *output;  /* used only during refresh_line() - output accumulator */
+	x_strbuf capture; /* capture buffer, or NULL for none. Always null terminated */
+	x_strbuf output;  /* used only during refresh_line() - output accumulator */
+	bool use_capture, use_output;
 #if defined(USE_TERMIOS)
 	int fd;     /* Terminal fd */
 #elif defined(USE_WINCONSOLE)
@@ -428,8 +429,8 @@ static void output_chars(struct current *current, const x_uchar *buf, int len)
 	if (len < 0) {
 		len = x_ustrlen(buf);
 	}
-	if (current->output) {
-		x_strbuf_append_len(current->output, buf, len);
+	if (current->use_output) {
+		x_strbuf_append_len(&current->output, buf, len);
 	}
 	else {
 		IGNORE_RC(write(current->fd, buf, len));
@@ -561,7 +562,7 @@ static int query_cursor(struct current *current, int* cols)
 	int ch;
 
 	/* Should not be buffering this output, it needs to go immediately */
-	assert(current->output == NULL);
+	assert(current->use_output == false);
 
 	/* control sequence - report cursor location */
 	output_chars(current, "\x1b[6n", -1);
@@ -734,11 +735,11 @@ static void output_control_char(struct current *current, x_uchar ch)
  */
 static int get_char(struct current *current, int pos)
 {
-	if (pos < 0 || pos >= x_strbuf_chars(current->buf))
+	if (pos < 0 || pos >= x_strbuf_chars(&current->buf))
 		return -1;
 	uint32_t c;
-	int i = x_ustr_index(x_strbuf_str(current->buf), pos);
-	if (x_ustr_to_ucode(x_strbuf_str(current->buf) + i, x_strbuf_chars(current->buf) - i, &c) == 0)
+	int i = x_ustr_index(x_strbuf_str(&current->buf), pos);
+	if (x_ustr_to_ucode(x_strbuf_str(&current->buf) + i, x_strbuf_chars(&current->buf) - i, &c) == 0)
 		return -1;
 	return c;
 }
@@ -781,7 +782,7 @@ static int completeLine(struct current *current) {
 	x_edit_completions lc = { 0, NULL };
 	int c = 0;
 
-	completionCallback(x_strbuf_str(current->buf),&lc,completionUserdata);
+	completionCallback(x_strbuf_str(&current->buf),&lc,completionUserdata);
 	if (lc.len == 0) {
 		beep();
 	} else {
@@ -978,16 +979,16 @@ static int refresh_show_hints(struct current *current, const x_uchar *buf, int a
 static void refresh_start(struct current *current)
 {
 	/* We accumulate all output here */
-	assert(current->output == NULL);
-	current->output = x_strbuf_alloc();
+	assert(current->use_output == false);
+	x_strbuf_init(&current->output);
 }
 
 static void refresh_end(struct current *current)
 {
 	/* Output everything at once */
-	IGNORE_RC(write(current->fd, x_strbuf_str(current->output), x_strbuf_len(current->output)));
-	x_strbuf_free(current->output);
-	current->output = NULL;
+	IGNORE_RC(write(current->fd, x_strbuf_str(&current->output), x_strbuf_len(&current->output)));
+	x_strbuf_free(&current->output);
+	current->use_output = false;
 }
 
 static void refresh_start_chars(struct current *current)
@@ -1205,14 +1206,14 @@ static void refresh_line_alt(struct current *current, const x_uchar *prompt, con
 
 static void refresh_line(struct current *current)
 {
-	refresh_line_alt(current, current->prompt, x_strbuf_str(current->buf), current->pos);
+	refresh_line_alt(current, current->prompt, x_strbuf_str(&current->buf), current->pos);
 }
 
 static void set_current(struct current *current, const x_uchar *str)
 {
-	x_strbuf_clear(current->buf);
-	x_strbuf_append(current->buf, str);
-	current->pos = x_strbuf_chars(current->buf);
+	x_strbuf_clear(&current->buf);
+	x_strbuf_append(&current->buf, str);
+	current->pos = x_strbuf_chars(&current->buf);
 }
 
 /**
@@ -1223,9 +1224,9 @@ static void set_current(struct current *current, const x_uchar *str)
  */
 static int remove_char(struct current *current, int pos)
 {
-	if (pos >= 0 && pos < x_strbuf_chars(current->buf)) {
-		int offset = x_ustr_index(x_strbuf_str(current->buf), pos);
-		int nchars = x_ustr_index(x_strbuf_str(current->buf) + offset, 1);
+	if (pos >= 0 && pos < x_strbuf_chars(&current->buf)) {
+		int offset = x_ustr_index(x_strbuf_str(&current->buf), pos);
+		int nchars = x_ustr_index(x_strbuf_str(&current->buf) + offset, 1);
 		int rc = 1;
 
 		/* Now we try to optimise in the simple but very common case that:
@@ -1236,9 +1237,9 @@ static int remove_char(struct current *current, int pos)
 		 * - the char being deleted is not a wide or utf-8 character
 		 * - no hints are being shown
 		 */
-		if (current->output && current->pos == pos + 1 && current->pos == x_strbuf_chars(current->buf) && pos > 0) {
+		if (current->use_output && current->pos == pos + 1 && current->pos == x_strbuf_chars(&current->buf) && pos > 0) {
 			/* Could implement x_utf8_prev_len() but simplest just to not optimise this case */
-			x_uchar last = x_strbuf_str(current->buf)[offset];
+			x_uchar last = x_strbuf_str(&current->buf)[offset];
 			if (current->colsleft > 0 && (last & 0x80) == 0) {
 				/* Have cols on the left and not a UTF-8 char or continuation */
 				/* Yes, can optimise */
@@ -1247,12 +1248,12 @@ static int remove_char(struct current *current, int pos)
 				rc = 2;
 			}
 		}
-		x_strbuf_delete(current->buf, offset, nchars);
+		x_strbuf_delete(&current->buf, offset, nchars);
 		if (current->pos > pos) {
 			current->pos--;
 		}
 		if (rc == 2) {
-			if (refresh_show_hints(current, x_strbuf_str(current->buf), current->colsright, 0)) {
+			if (refresh_show_hints(current, x_strbuf_str(&current->buf), current->colsright, 0)) {
 				/* A hint needs to be shown, so can't optimise after all */
 				rc = 1;
 			}
@@ -1275,9 +1276,9 @@ static int remove_char(struct current *current, int pos)
  */
 static int insert_char(struct current *current, int pos, int ch)
 {
-	if (pos >= 0 && pos <= x_strbuf_chars(current->buf)) {
+	if (pos >= 0 && pos <= x_strbuf_chars(&current->buf)) {
 		x_uchar buf[MAX_UTF8_LEN + 1];
-		int offset = x_ustr_index(x_strbuf_str(current->buf), pos);
+		int offset = x_ustr_index(x_strbuf_str(&current->buf), pos);
 		int n = x_ucode_to_ustr(ch, buf);
 		int rc = 1;
 		/* null terminate since x_strbuf_insert() requires it */
@@ -1288,7 +1289,7 @@ static int insert_char(struct current *current, int pos, int ch)
 		 * - there are enough columns available
 		 * - no hints are being shown
 		 */
-		if (current->output && pos == current->pos && pos == x_strbuf_chars(current->buf)) {
+		if (current->use_output && pos == current->pos && pos == x_strbuf_chars(&current->buf)) {
 			int width = char_display_width(ch);
 			if (current->colsright > width) {
 				/* Yes, can optimise */
@@ -1297,12 +1298,12 @@ static int insert_char(struct current *current, int pos, int ch)
 				rc = 2;
 			}
 		}
-		x_strbuf_insert(current->buf, offset, buf);
+		x_strbuf_insert(&current->buf, offset, buf);
 		if (current->pos >= pos) {
 			current->pos++;
 		}
 		if (rc == 2) {
-			if (refresh_show_hints(current, x_strbuf_str(current->buf), current->colsright, 0)) {
+			if (refresh_show_hints(current, x_strbuf_str(&current->buf), current->colsright, 0)) {
 				/* A hint needs to be shown, so can't optimise after all */
 				rc = 1;
 			}
@@ -1323,17 +1324,18 @@ static int insert_char(struct current *current, int pos, int ch)
  */
 static void capture_chars(struct current *current, int pos, int nchars)
 {
-	if (pos >= 0 && (pos + nchars - 1) < x_strbuf_chars(current->buf)) {
-		int offset = x_ustr_index(x_strbuf_str(current->buf), pos);
-		int nbytes = x_ustr_index(x_strbuf_str(current->buf) + offset, nchars);
+	if (pos >= 0 && (pos + nchars - 1) < x_strbuf_chars(&current->buf)) {
+		int offset = x_ustr_index(x_strbuf_str(&current->buf), pos);
+		int nbytes = x_ustr_index(x_strbuf_str(&current->buf) + offset, nchars);
 		if (nbytes > 0) {
-			if (current->capture) {
-				x_strbuf_clear(current->capture);
+			if (current->use_capture) {
+				x_strbuf_clear(&current->capture);
 			}
 			else {
-				current->capture = x_strbuf_alloc();
+				x_strbuf_init(&current->capture);
+				current->use_capture = true;
 			}
-			x_strbuf_append_len(current->capture, x_strbuf_str(current->buf) + offset, nbytes);
+			x_strbuf_append_len(&current->capture, x_strbuf_str(&current->buf) + offset, nbytes);
 		}
 	}
 }
@@ -1380,7 +1382,7 @@ static int skip_space_nonspace(struct current *current, int dir, int check_is_sp
 {
 	int moved = 0;
 	int checkoffset = (dir < 0) ? -1 : 0;
-	int limit = (dir < 0) ? 0 : x_strbuf_chars(current->buf);
+	int limit = (dir < 0) ? 0 : x_strbuf_chars(&current->buf);
 	while (current->pos != limit && (get_char(current, current->pos + checkoffset) == ' ') == check_is_space) {
 		current->pos += dir;
 		moved++;
@@ -1404,7 +1406,7 @@ static void set_history_index(struct current *current, int new_index)
 		/* Update the current history entry before to
 		 * overwrite it with the next one. */
 		free(history[history_len - 1 - history_index]);
-		history[history_len - 1 - history_index] = x_ustrdup(x_strbuf_str(current->buf));
+		history[history_len - 1 - history_index] = x_ustrdup(x_strbuf_str(&current->buf));
 		/* Show the new entry */
 		history_index = new_index;
 		if (history_index < 0) {
@@ -1437,7 +1439,7 @@ static int reverse_incremental_search(struct current *current)
 		int skipsame = 0;
 		int searchdir = -1;
 		x_snprintf(rprompt, x_arrlen(rprompt), x_u("(reverse-i-search)'%s': "), rbuf);
-		refresh_line_alt(current, rprompt, x_strbuf_str(current->buf), current->pos);
+		refresh_line_alt(current, rprompt, x_strbuf_str(&current->buf), current->pos);
 		c = fd_read(current);
 		if (c == ctrl('H') || c == CHAR_DELETE) {
 			if (rchars) {
@@ -1503,7 +1505,7 @@ static int reverse_incremental_search(struct current *current)
 			p = x_ustrstr(history[searchpos], rbuf);
 			if (p) {
 				/* Found a match */
-				if (skipsame && x_ustrcmp(history[searchpos], x_strbuf_str(current->buf)) == 0) {
+				if (skipsame && x_ustrcmp(history[searchpos], x_strbuf_str(&current->buf)) == 0) {
 					/* But it is identical, so skip it */
 					continue;
 				}
@@ -1547,7 +1549,7 @@ static int edit_line(struct current *current)
 		/* Only autocomplete when the callback is set. It returns < 0 when
 		 * there was an error reading from fd. Otherwise it will return the
 		 * character that should be handled next. */
-		if (c == '\t' && current->pos == x_strbuf_chars(current->buf) && completionCallback != NULL) {
+		if (c == '\t' && current->pos == x_strbuf_chars(&current->buf) && completionCallback != NULL) {
 			c = completeLine(current);
 		}
 #endif
@@ -1564,7 +1566,7 @@ static int edit_line(struct current *current)
 #endif
 		if (c == -1) {
 			/* Return on errors */
-			return x_strbuf_len(current->buf);
+			return x_strbuf_len(&current->buf);
 		}
 
 		switch(c) {
@@ -1574,13 +1576,13 @@ static int edit_line(struct current *current)
 			case '\n':    /* LF */
 				history_len--;
 				free(history[history_len]);
-				current->pos = x_strbuf_chars(current->buf);
+				current->pos = x_strbuf_chars(&current->buf);
 				if (mlmode || hints_cb) {
 					showhints = 0;
 					refresh_line(current);
 					showhints = 1;
 				}
-				return x_strbuf_len(current->buf);
+				return x_strbuf_len(&current->buf);
 			case ctrl('C'):     /* ctrl-c */
 				errno = EAGAIN;
 				return -1;
@@ -1601,7 +1603,7 @@ static int edit_line(struct current *current)
 				}
 				break;
 			case ctrl('D'):     /* ctrl-d */
-				if (x_strbuf_len(current->buf) == 0) {
+				if (x_strbuf_len(&current->buf) == 0) {
 					/* Empty line, so EOF */
 					history_len--;
 					free(history[history_len]);
@@ -1656,9 +1658,9 @@ static int edit_line(struct current *current)
 				}
 				break;
 			case ctrl('T'):    /* ctrl-t */
-				if (current->pos > 0 && current->pos <= x_strbuf_chars(current->buf)) {
+				if (current->pos > 0 && current->pos <= x_strbuf_chars(&current->buf)) {
 					/* If cursor is at end, transpose the previous two chars */
-					int fixer = (current->pos == x_strbuf_chars(current->buf));
+					int fixer = (current->pos == x_strbuf_chars(&current->buf));
 					c = get_char(current, current->pos - fixer);
 					remove_char(current, current->pos - fixer);
 					insert_char(current, current->pos - 1, c);
@@ -1690,7 +1692,7 @@ static int edit_line(struct current *current)
 				break;
 			case ctrl('F'):
 			case SPECIAL_RIGHT:
-				if (current->pos < x_strbuf_chars(current->buf)) {
+				if (current->pos < x_strbuf_chars(&current->buf)) {
 					current->pos++;
 					refresh_line(current);
 				}
@@ -1716,7 +1718,7 @@ static int edit_line(struct current *current)
 				break;
 			case ctrl('E'): /* ctrl+e, go to the end of the line */
 			case SPECIAL_END:
-				current->pos = x_strbuf_chars(current->buf);
+				current->pos = x_strbuf_chars(&current->buf);
 				refresh_line(current);
 				break;
 			case ctrl('U'): /* Ctrl+u, delete to beginning of line, save deleted chars. */
@@ -1725,12 +1727,12 @@ static int edit_line(struct current *current)
 				}
 				break;
 			case ctrl('K'): /* Ctrl+k, delete from current to end of line, save deleted chars. */
-				if (remove_chars(current, current->pos, x_strbuf_chars(current->buf) - current->pos)) {
+				if (remove_chars(current, current->pos, x_strbuf_chars(&current->buf) - current->pos)) {
 					refresh_line(current);
 				}
 				break;
 			case ctrl('Y'): /* Ctrl+y, insert saved chars at current position */
-				if (current->capture && insert_chars(current, current->pos, x_strbuf_str(current->capture))) {
+				if (current->use_capture && insert_chars(current, current->pos, x_strbuf_str(&current->capture))) {
 					refresh_line(current);
 				}
 				break;
@@ -1755,13 +1757,13 @@ static int edit_line(struct current *current)
 				break;
 		}
 	}
-	return x_strbuf_len(current->buf);
+	return x_strbuf_len(&current->buf);
 }
 
 int x_edit_columns(void)
 {
 	struct current current;
-	current.output = NULL;
+	current.use_output = false;
 	enable_raw_mode (&current);
 	get_window_size (&current);
 	disable_raw_mode (&current);
@@ -1776,11 +1778,11 @@ int x_edit_columns(void)
  * Note that the character count will *not* be correct for lines containing
  * utf8 sequences. Do not rely on the character count.
  */
-static x_strbuf *x_strbuf_getline(FILE *fh)
+int x_strbuf_getline(FILE *fh, x_strbuf *sb)
 {
-	x_strbuf *sb = x_strbuf_alloc();
 	int c;
 	int n = 0;
+	x_strbuf_init(sb);
 
 	while ((c = getc(fh)) != EOF) {
 		x_uchar ch;
@@ -1798,28 +1800,27 @@ static x_strbuf *x_strbuf_getline(FILE *fh)
 	}
 	if (n == 0 || x_strbuf_str(sb) == NULL) {
 		x_strbuf_free(sb);
-		return NULL;
+		return -1;
 	}
-	return sb;
+	return 0;
 }
 
 x_uchar *x_edit_readline2(const x_uchar *prompt, const x_uchar *initial)
 {
 	int count;
 	struct current current;
-	x_strbuf *sb;
+	x_strbuf sb;
 	memset(&current, 0, sizeof(current));
 	if (enable_raw_mode(&current) == -1) {
 		x_printf(x_u("%s"), prompt);
 		fflush(stdout);
-		sb = x_strbuf_getline(stdin);
-		if (sb && !fd_isatty(&current)) {
-			x_printf(x_u("%s\n"), x_strbuf_str(sb));
+		if (x_strbuf_getline(stdin, &sb) && !fd_isatty(&current)) {
+			x_printf(x_u("%s\n"), x_strbuf_str(&sb));
 			fflush(stdout);
 		}
 	}
 	else {
-		current.buf = x_strbuf_alloc();
+		x_strbuf_init(&current.buf);
 		current.pos = 0;
 		current.nrows = 1;
 		current.prompt = prompt;
@@ -1833,14 +1834,14 @@ x_uchar *x_edit_readline2(const x_uchar *prompt, const x_uchar *initial)
 		disable_raw_mode(&current);
 		x_printf(x_u("\n"));
 
-		x_strbuf_free(current.capture);
+		x_strbuf_free(&current.capture);
 		if (count == -1) {
-			x_strbuf_free(current.buf);
+			x_strbuf_free(&current.buf);
 			return NULL;
 		}
 		sb = current.buf;
 	}
-	return sb ? x_strbuf_to_string(sb) : NULL;
+	return x_strbuf_data(&sb);
 }
 
 x_uchar *x_edit_readline(const x_uchar *prompt)
@@ -1942,12 +1943,12 @@ int x_edit_history_save(const x_uchar *filename) {
 int x_edit_history_load(const x_uchar *filename)
 {
 	FILE *fp = x_fopen(filename, x_u("r"));
-	x_strbuf *sb;
+	x_strbuf sb;
 	if (!fp)
 		return -1;
-	while ((sb = x_strbuf_getline(fp)) != NULL) {
+	while (!x_strbuf_getline(fp, &sb)) {
 		/* Take the x_strbuf and decode backslash escaped values */
-		x_uchar *buf = x_strbuf_to_string(sb);
+		x_uchar *buf = x_strbuf_data(&sb);
 		x_uchar *dest = buf;
 		const x_uchar *src;
 		for (src = buf; *src; src++) {
