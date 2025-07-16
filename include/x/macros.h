@@ -52,10 +52,10 @@
 #define __X_SIZEOF(i, type) + sizeof(type)
 #define x_sizeof(...) (X_TRANSFORM(__X_SIZEOF, __VA_ARGS__))
 
-#ifdef X_CC_CLANG
+#if !defined(X_OS_WIN) && defined(X_CC_CLANG)
 #  define X_ATTR_PRINTF(one_based_format_index, first_arg) __attribute__((format(printf, (one_based_format_index), (first_arg))))
 #  define X_ATTR_VPRINTF(one_based_format_index) X_ATTR_PRINTF((one_based_format_index), 0)
-#elif defined(X_CC_GNU)
+#elif !defined(X_OS_WIN) && defined(X_CC_GNU)
 #  if ((__GNUC__ == 4 && __GNUC_MINOR__>= 4) || __GNUC__ > 4)
 #    define X_ATTR_PRINTF(one_based_format_index, first_arg) __attribute__((format(gnu_printf, (one_based_format_index), (first_arg))))
 #  else

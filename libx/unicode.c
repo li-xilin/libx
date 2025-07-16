@@ -210,8 +210,10 @@ size_t x_utf16_index(const uint16_t *str, int index)
 size_t x_utf8_to_ucode(const char *str, size_t n, uint32_t *uc)
 {
 	const uint8_t *s = (void *)str;
-	if (n == 0)
+	if (n == 0) {
+		*uc = 0;
 		return 0;
+	}
 	if (s[0] < 0xc0) {
 		if (n < 1) {
 			*uc = INVALID_CODEPOINT;
@@ -416,36 +418,40 @@ out:
 }
 #endif
 
-size_t x_utf16_to_ucode(uint16_t const* utf16, size_t utf16_len, uint32_t *codepoint)
+size_t x_utf16_to_ucode(uint16_t const* utf16, size_t utf16_len, uint32_t *uc)
 {
 	uint16_t high = utf16[0], low = utf16[1];
-	if (utf16_len == 0)
+	if (utf16_len == 0) {
+		*uc = 0;
 		return 0;
+	}
 
 	if ((high & GENERIC_SURROGATE_MASK) != GENERIC_SURROGATE_VALUE) {
-		*codepoint = high; 
+		*uc = high; 
 		return 1;
 	}
 	if ((high & SURROGATE_MASK) != HIGH_SURROGATE_VALUE) {
-		*codepoint = INVALID_CODEPOINT;
+		*uc = INVALID_CODEPOINT;
 		return 1;
 	}
 	if (utf16_len >= 2 && (low & SURROGATE_MASK) != LOW_SURROGATE_VALUE) {
-		*codepoint = INVALID_CODEPOINT;
+		*uc = INVALID_CODEPOINT;
 		return 1;
 	}
 
-	if (utf16_len < 2)
-		return 0;
+	if (utf16_len < 2) {
+		*uc = INVALID_CODEPOINT;
+		return 1;
+	}
 	/*
-	 * The high bits of the codepoint are the value bits of the high surrogate
-	 * The low bits of the codepoint are the value bits of the low surrogate
+	 * The high bits of the uc are the value bits of the high surrogate
+	 * The low bits of the uc are the value bits of the low surrogate
 	 */
 	uint32_t result = high & SURROGATE_CODEPOINT_MASK;
 	result <<= SURROGATE_CODEPOINT_BITS;
 	result |= low & SURROGATE_CODEPOINT_MASK;
 	result += SURROGATE_CODEPOINT_OFFSET;
-	*codepoint = result;
+	*uc = result;
 	return 2;
 }
 

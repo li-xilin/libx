@@ -154,7 +154,7 @@ static int flush_output(struct current *current)
 	*/
 	while (len) {
 		uint32_t ch;
-		int n = x_utf16_to_ucode(pt, &ch);
+		int n = x_utf16_to_ucode(pt, len, &ch);
 
 		pt += n;
 		len -= n;

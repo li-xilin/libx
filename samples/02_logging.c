@@ -3,6 +3,7 @@
 
 int main(void)
 {
+	x_setmode_utf8(stderr);
 	x_log_set_mode(X_LM_NOLOC | X_LM_NOTIME);
 
 	x_log(X_LL_TRACE, "trace message");
@@ -15,7 +16,7 @@ int main(void)
 
 	x_log_set_mode(X_LM_NOLOC);
 
-	x_pinfo("Info message without location: %s", "[test string]");
+	x_pinfo("Info message without location: %s", x_u("[test string]"));
 	x_ptrace("Trace message without location");
 	x_pdebug("Debug message without location");
 	x_pwarn("Warn message without location");

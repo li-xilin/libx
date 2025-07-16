@@ -1436,7 +1436,7 @@ static int reverse_incremental_search(struct current *current)
 		const x_uchar *p = NULL;
 		int skipsame = 0;
 		int searchdir = -1;
-		x_snprintf(rprompt, x_arrlen(rprompt), x_u("(reverse-i-search)'%" X_PRIus "': "), rbuf);
+		x_snprintf(rprompt, x_arrlen(rprompt), x_u("(reverse-i-search)'%s': "), rbuf);
 		refresh_line_alt(current, rprompt, x_strbuf_str(current->buf), current->pos);
 		c = fd_read(current);
 		if (c == ctrl('H') || c == CHAR_DELETE) {
@@ -1810,11 +1810,11 @@ x_uchar *x_edit_readline2(const x_uchar *prompt, const x_uchar *initial)
 	x_strbuf *sb;
 	memset(&current, 0, sizeof(current));
 	if (enable_raw_mode(&current) == -1) {
-		x_printf(x_u("%" X_PRIus), prompt);
+		x_printf(x_u("%s"), prompt);
 		fflush(stdout);
 		sb = x_strbuf_getline(stdin);
 		if (sb && !fd_isatty(&current)) {
-			x_printf(x_u("%" X_PRIus "\n"), x_strbuf_str(sb));
+			x_printf(x_u("%s\n"), x_strbuf_str(sb));
 			fflush(stdout);
 		}
 	}

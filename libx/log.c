@@ -150,7 +150,7 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 			goto out;
 		x_tcolor_set(fp, &tc);
 		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
-		if (x_fprintf(fp, x_u("%" X_PRIus), buffer) < 0) {
+		if (x_fprintf(fp, x_u("%s"), buffer) < 0) {
 			x_tcolor_reset(&tc);
 			goto out;
 		}
@@ -167,7 +167,7 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 			goto out;
 		x_tcolor_set(fp, &tc);
 		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
-		if (x_fprintf(fp, x_u("%" X_PRIus), buffer) < 0) {
+		if (x_fprintf(fp, x_u("%s"), buffer) < 0) {
 			x_tcolor_reset(&tc);
 			goto out;
 		}
@@ -364,7 +364,7 @@ int __x_log_vprint(const x_location *loc, int level, const x_uchar* fmt, va_list
 		return -1;
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)
-		: x_log_handler_utf8(loc, s_handler_arg, level, ms_buf);
+		: x_log_handler_native(loc, s_handler_arg, level, ms_buf);
 	return ret;
 }
 
