@@ -6,7 +6,7 @@
 int main(void)
 {
 	x_uchar *str = NULL;
-	x_printf(x_u("Press CTRL+C to exit\n"));
+	x_printf(x_u("type 'exit' to quit program\n"));
 	while (1) {
 		free(str);
 		str = x_edit_readline("Input> ");
