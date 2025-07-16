@@ -53,6 +53,7 @@ global:
 	x_cliarg_getopt;
 	x_cliarg_getopt_long;
 	x_cliarg_init;
+	x_ctprintf;
 	x_cond_destroy;
 	x_cond_init;
 	x_cond_sleep;
@@ -216,6 +217,7 @@ global:
 	x_splay_remove;
 	x_splay_replace;
 	x_splay_replace_or_insert;
+	x_stprintf;
 	x_strargv;
 	x_strbaseconv;
 	x_strbuf_alloc;
@@ -223,12 +225,12 @@ global:
 	x_strbuf_append_len;
 	x_strbuf_chars;
 	x_strbuf_clear;
+	x_strbuf_data;
 	x_strbuf_delete;
 	x_strbuf_free;
 	x_strbuf_insert;
 	x_strbuf_len;
 	x_strbuf_str;
-	x_strbuf_to_string;
 	x_strdup2;
 	x_strdup;
 	x_strhash;
@@ -286,7 +288,9 @@ global:
 	x_ucode_utf8len;
 	x_ucode_width;
 	x_umain;
+	x_vctprintf;
 	x_vsnprintf;
+	x_vstprintf;
 	x_ustr_to_ansi;
 	x_ustr_to_utf16;
 	x_ustr_to_utf8;
@@ -308,7 +312,6 @@ global:
 	x_utf8_to_ustr;
 	x_utf8_to_utf16;
 	x_vfprintf;
-	x_vfctprintf;
 	x_vfscanf;
 	x_vprintf;
 	x_vscanf;

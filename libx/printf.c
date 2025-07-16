@@ -47,11 +47,13 @@
 
 #include "x/printf.h"
 #include "x/uchar.h"
+#include "x/strbuf.h"
 
 #include <stdint.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <assert.h>
 
 
 #define PRINTF_INTEGER_BUFFER_SIZE    32
@@ -301,11 +303,19 @@ static inline int get_exp2(floating_point_with_bit_access x)
 //
 // ... otherwise bad things will happen.
 typedef struct {
+	enum {
+		GADGET_CALLBACK,
+		GADGET_MEMORY,
+		GADGET_STRBUF,
+	} type;
 	int (*function)(x_uchar c, void* extra_arg);
 	void* extra_function_arg;
+
 	x_uchar* buffer;
 	size_t pos;
 	size_t max_chars;
+
+	x_strbuf *sbuf;
 } output_gadget_t;
 
 // Note: This function currently assumes it is not passed a '\0' c,
@@ -314,20 +324,20 @@ typedef struct {
 // assumes that the output gadget has been properly initialized.
 static inline int putchar_via_gadget(output_gadget_t* gadget, x_uchar c)
 {
-	size_t write_pos = gadget->pos++;
 	// We're _always_ increasing pos, so as to count how may characters
-	// _would_ have been written if not for the max_chars limitation
-	if (write_pos >= gadget->max_chars) {
-		return -1;
-	}
-	if (gadget->function != NULL) {
-		// No check for c == '\0' .
-		gadget->function(c, gadget->extra_function_arg);
-	}
-	else {
-		// it must be the case that gadget->buffer != NULL , due to the constraint
-		// on output_gadget_t ; and note we're relying on write_pos being non-negative.
-		gadget->buffer[write_pos] = c;
+	size_t write_pos = gadget->pos++; //FIXME
+	switch (gadget->type) {
+		case GADGET_CALLBACK:
+			gadget->function(c, gadget->extra_function_arg);
+			break;
+		case GADGET_MEMORY:
+			if (write_pos >= gadget->max_chars) {
+				return -1;
+			}
+			gadget->buffer[write_pos] = c;
+			break;
+		case GADGET_STRBUF:
+			x_strbuf_append_len(gadget->sbuf, &c, 1);
 	}
 	return 0;
 }
@@ -335,14 +345,13 @@ static inline int putchar_via_gadget(output_gadget_t* gadget, x_uchar c)
 // Possibly-write the string-terminating '\0' character
 static inline void append_termination_with_gadget(output_gadget_t* gadget)
 {
-	if (gadget->function != NULL || gadget->max_chars == 0) {
-		return;
+	if (gadget->type == GADGET_MEMORY) {
+		size_t null_char_pos = gadget->pos < gadget->max_chars ? gadget->pos : gadget->max_chars - 1;
+		gadget->buffer[null_char_pos] = x_u('\0');
 	}
-	if (gadget->buffer == NULL) {
-		return;
+	else if (gadget->type == GADGET_MEMORY) {
+		x_strbuf_append_len(gadget->sbuf, x_u("\0"), 1);
 	}
-	size_t null_char_pos = gadget->pos < gadget->max_chars ? gadget->pos : gadget->max_chars - 1;
-	gadget->buffer[null_char_pos] = '\0';
 }
 
 // We can't use putchar_ as is, since our output gadget
@@ -352,32 +361,29 @@ static inline int putchar_wrapper(x_uchar c, void* unused)
 	return x_putchar(c);
 }
 
-static inline output_gadget_t discarding_gadget(void)
-{
-	output_gadget_t gadget;
-	gadget.function = NULL;
-	gadget.extra_function_arg = NULL;
-	gadget.buffer = NULL;
-	gadget.pos = 0;
-	gadget.max_chars = 0;
-	return gadget;
-}
-
 static inline output_gadget_t buffer_gadget(x_uchar* buffer, size_t buffer_size)
 {
 	size_t usable_buffer_size = (buffer_size > PRINTF_MAX_POSSIBLE_BUFFER_SIZE) ?
 		PRINTF_MAX_POSSIBLE_BUFFER_SIZE : (size_t) buffer_size;
-	output_gadget_t result = discarding_gadget();
-	if (buffer != NULL) {
-		result.buffer = buffer;
-		result.max_chars = usable_buffer_size;
-	}
+	output_gadget_t result = { 0 };
+	result.type = GADGET_MEMORY;
+	result.buffer = buffer;
+	result.max_chars = usable_buffer_size;
+	return result;
+}
+
+static inline output_gadget_t strbuf_gadget(x_strbuf *sb)
+{
+	output_gadget_t result = { 0 };
+	result.type = GADGET_STRBUF;
+	result.sbuf = sb;
 	return result;
 }
 
 static inline output_gadget_t function_gadget(int (*function)(x_uchar, void*), void* extra_arg)
 {
-	output_gadget_t result = discarding_gadget();
+	output_gadget_t result = { 0 };
+	result.type = GADGET_CALLBACK;
 	result.function = function;
 	result.extra_function_arg = extra_arg;
 	result.max_chars = PRINTF_MAX_POSSIBLE_BUFFER_SIZE;
@@ -1406,11 +1412,28 @@ int x_vsprintf(x_uchar* s, const x_uchar* format, va_list arg)
 	return x_vsnprintf(s, PRINTF_MAX_POSSIBLE_BUFFER_SIZE, format, arg);
 }
 
-int x_vfctprintf(int (*out)(x_uchar c, void* extra_arg), void* extra_arg, const x_uchar* format, va_list arg)
+int x_vctprintf(int (*out)(x_uchar c, void* extra_arg), void* extra_arg, const x_uchar* format, va_list arg)
 {
-	if (out == NULL) { return 0; }
+	if (!out)
+		return 0;
 	output_gadget_t gadget = function_gadget(out, extra_arg);
 	return vsnprintf_impl(&gadget, format, arg);
+}
+
+int x_vstprintf(int (*out_fn)(x_uchar *c, size_t len, void* extra_arg), void* extra_arg, const x_uchar* format, va_list arg)
+{
+	assert(out_fn != NULL);
+	x_strbuf sb;
+	x_strbuf_init(&sb);
+	output_gadget_t gadget = strbuf_gadget(&sb);
+	int ret = vsnprintf_impl(&gadget, format, arg);
+	if (ret == -1) {
+		x_strbuf_free(&sb);
+		return -1;
+	}
+	ret = out_fn(sb.data, x_strbuf_len(&sb), extra_arg);
+	x_strbuf_free(&sb);
+	return ret;
 }
 
 int x_sprintf(x_uchar* s, const x_uchar* format, ...)
@@ -1431,11 +1454,20 @@ int x_snprintf(x_uchar* s, size_t n, const x_uchar* format, ...)
 	return ret;
 }
 
-int x_fctprintf(int (*out)(x_uchar c, void* extra_arg), void* extra_arg, const x_uchar* format, ...)
+int x_ctprintf(int (*out)(x_uchar c, void* extra_arg), void* extra_arg, const x_uchar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	const int ret = x_vfctprintf(out, extra_arg, format, args);
+	const int ret = x_vctprintf(out, extra_arg, format, args);
+	va_end(args);
+	return ret;
+}
+
+int x_stprintf(int (*out)(x_uchar *c, size_t len, void* extra_arg), void* extra_arg, const x_uchar* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	const int ret = x_vstprintf(out, extra_arg, format, args);
 	va_end(args);
 	return ret;
 }
