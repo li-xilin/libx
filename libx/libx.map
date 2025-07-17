@@ -134,6 +134,7 @@ global:
 	x_ini_strerror;
 	x_ini_unset;
 	x_isatty;
+	x_last_error;
 	x_log_handler_native;
 	x_log_handler_utf8;
 	x_log_mode;

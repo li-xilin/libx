@@ -21,12 +21,16 @@
  */
 
 #include "x/errno.h"
-#include <x/detect.h>
+#include "x/detect.h"
+#include "x/once.h"
+#include "x/tss.h"
+#include "x/memory.h"
+#include "x/file.h"
 #include <stdlib.h>
 
 #ifdef X_OS_WIN
 #include <errhandlingapi.h>
-#include <windows.h>
+#include <strsafe.h>
 #endif
 
 #ifndef X_OS_WIN
@@ -291,3 +295,54 @@ int x_eval_errno(void)
 	return error;
 }
 
+#ifdef X_OS_WIN
+static x_once s_strerror_once = X_ONCE_INIT;
+static x_tss s_errbuf;
+
+static void free_errbuf(void *p)
+{
+	char *buf = x_tss_get(&s_errbuf);
+	free(buf);
+}
+
+static void init_strerror(void)
+{
+	x_tss_init(&s_errbuf, free_errbuf);
+}
+
+DWORD GetWin32LastErrorTextW(DWORD dwError, LPWSTR wbuf, DWORD cchBuf)
+{
+    DWORD cch = FormatMessageW( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), wbuf, cchBuf, NULL);
+    if (cch == 0) {
+        return StringCchPrintfW(wbuf, cchBuf, L"Error 0x%08X", dwError);
+    }
+
+    while (cch > 0 && (wbuf[cch-1] == L'\r' || wbuf[cch-1] == L'\n'))
+        wbuf[--cch] = L'\0';
+
+    return cch;
+}
+#endif
+
+const x_uchar *x_last_error(int err)
+{
+#ifdef X_OS_WIN
+	if (err >= 0)
+		return _wcserror(err);
+	x_once_init(&s_strerror_once, init_strerror);
+	LPWSTR buf = x_tss_get(&s_errbuf);
+	if (!buf) {
+		buf = x_malloc(NULL, 512);
+		x_tss_set(&s_errbuf, buf);
+	}
+	DWORD dwLen = GetWin32LastErrorTextW(-err, buf, 512 - 2);
+	buf[dwLen] = L'\0';
+	return buf;
+#else
+	if (err >= 0)
+		return strerror(err);
+	else
+		return strerror(-err);
+#endif
+}

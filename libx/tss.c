@@ -2,6 +2,7 @@
 #include "x/errno.h"
 #include "x/detect.h"
 #include "x/list.h"
+#include "x/assert.h"
 #include "x/memory.h"
 #ifdef X_OS_WIN
 #include <windows.h>

@@ -24,8 +24,7 @@
 #define X_ERROR_H
 
 #include "x/detect.h"
-#include "x/log.h"
-#include "x/errno.h"
+#include "x/uchar.h"
 #include <stddef.h>
 #include <errno.h>
 
@@ -114,6 +113,7 @@
 #define X_EDQUOT __X_EBASE + 1
 
 int x_eval_errno(void);
+const x_uchar *x_last_error(int xerr);
 
 #endif
 
