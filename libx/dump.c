@@ -24,6 +24,7 @@
 #include "x/string.h"
 #include "x/assert.h"
 #include "x/uchar.h"
+#include "x/file.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -275,7 +276,7 @@ int x_dump_set_name(x_dump *dmp, const x_uchar *sym)
 	struct value_block_st *block = (void *) dmp->value;
 	free(block->name);
 	block->name = x_ustrdup(sym);
-	if (!block->name ) {
+	if (!block->name) {
 		free(dmp);
 		return true;
 	}
@@ -384,9 +385,7 @@ void x_dump_free(x_dump *dmp)
 static int write_file_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	FILE *fp = ctx;
-	if (fwrite(buf, 1, len, fp) != len)
-		return -1;
-	return 0;
+	return x_fprintf(fp, x_u("%.*s"), len, buf);
 }
 
 static int indent_check_cb(const x_uchar *buf, size_t len, void *ctx)
