@@ -434,7 +434,7 @@ static void print_tree(x_rope_node *n, char *prefix, size_t len, bool is_left, b
 	int prefix_inc_len = 0;
     if (!n)
 		return;
-	fprintf(fp, "%-9zu %s", n->weight, prefix);
+	fprintf(fp, "%-9p %s", (void *)(uintptr_t)n->weight, prefix);
 	if (n->node.parent) {
 		fprintf(fp, "%s", is_left ? PREFIX_LEFT : PREFIX_RIGHT);
 		dump_ptr(n, 50, fp);

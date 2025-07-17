@@ -25,42 +25,41 @@
 
 #include "macros.h"
 #include "types.h"
+#include "uchar.h"
 #include <stdio.h>
 
-typedef int x_dump_out_cb_f(const char *str, size_t len, void *ctx);
+typedef int x_dump_out_cb_f(const x_uchar *str, size_t len, void *ctx);
 
 struct x_dump_format_st
 {
-	int (*snumber)(intmax_t value, x_dump_out_cb_f *out_cb, void *ctx);
-	int (*unumber)(uintmax_t value, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*snumber)(int64_t value, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*unumber)(uint64_t value, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*fnumber)(double value, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*pointer)(const void *value, x_dump_out_cb_f *out_cb, void *ctx);
-	int (*string)(const char *value, size_t length, x_dump_out_cb_f *out_cb, void *ctx);
-	int (*wstring)(const wchar_t *value, size_t length, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*string)(const x_uchar *value, size_t length, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*memory)(const uint8_t *value, size_t size, x_dump_out_cb_f *out_cb, void *ctx);
-	int (*symbol)(const char *name, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*symbol)(const x_uchar *name, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*pair_left)(x_dump_out_cb_f *out_cb, void *ctx);
 	int (*pair_midst)(x_dump_out_cb_f *out_cb, void *ctx);
 	int (*pair_right)(x_dump_out_cb_f *out_cb, void *ctx);
-	int (*block_left)(const char *label, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*block_left)(const x_uchar *label, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*block_midst)(size_t index, x_dump_out_cb_f *out_cb, void *ctx);
-	int (*block_right)(const char *label, x_dump_out_cb_f *out_cb, void *ctx);
+	int (*block_right)(const x_uchar *label, x_dump_out_cb_f *out_cb, void *ctx);
 	int (*nomem)(x_dump_out_cb_f *out_cb, void *ctx);
 	int (*indent)(int depth, x_dump_out_cb_f *out_cb, void *ctx);
 };
 
-x_dump *x_dump_int(intmax_t val);
-x_dump *x_dump_uint(uintmax_t val);
+x_dump *x_dump_int(int64_t val);
+x_dump *x_dump_uint(uint64_t val);
 x_dump *x_dump_float(double val);
 x_dump *x_dump_ptr(const void *val);
-x_dump *x_dump_str(const char *val);
-x_dump *x_dump_wcs(const wchar_t *val);
+x_dump *x_dump_str(const x_uchar *val);
 x_dump *x_dump_mem(const void *ptr, size_t size);
-x_dump *x_dump_symbol(const char *sym);
+x_dump *x_dump_symbol(const x_uchar *sym);
 x_dump *x_dump_pair(x_dump *d1, x_dump *d2);
-x_dump *x_dump_empty_block(const char* sym, size_t elem_cnt);
-x_dump *x_dump_block(const char *sym, ...);
-int x_dump_set_name(x_dump *dmp, const char *sym);
+x_dump *x_dump_empty_block(const x_uchar* sym, size_t elem_cnt);
+x_dump *x_dump_block(const x_uchar *sym, ...);
+int x_dump_set_name(x_dump *dmp, const x_uchar *sym);
 void x_dump_bind(x_dump *dmp, int index, x_dump* binding);
 void x_dump_free(x_dump *dmp);
 int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp);
@@ -68,7 +67,7 @@ int x_dump_serialize(const x_dump *dmp, const x_dump_format *format, x_dump_out_
 const x_dump_format *x_dump_default_format(void);
 const x_dump_format *x_dump_pretty_format(void);
 
-inline static void x_dump_named_bind(x_dump *dmp, int index, const char *name, x_dump* binding)
+inline static void x_dump_named_bind(x_dump *dmp, int index, const x_uchar *name, x_dump* binding)
 {
 	x_dump_bind(dmp, index, x_dump_pair(x_dump_symbol(name), binding));
 }

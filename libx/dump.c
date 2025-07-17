@@ -23,6 +23,7 @@
 #include "x/dump.h"
 #include "x/string.h"
 #include "x/assert.h"
+#include "x/uchar.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -55,7 +56,6 @@ enum dump_type {
 	DTYPE_FNUM,
 	DTYPE_PTR,
 	DTYPE_STR,
-	DTYPE_WCS,
 	DTYPE_MEM,
 	DTYPE_SYM,
 	DTYPE_PAIR,
@@ -83,7 +83,7 @@ union value_u
 	struct value_mem_st {
 		const void *maddr;
 		size_t size;
-		char data[];
+		x_uchar data[];
 	} mem, str, wcs, sym;
 
 	struct value_pair_st {
@@ -93,7 +93,7 @@ union value_u
 
 	struct value_block_st {
 		size_t len;
-		char *name;
+		x_uchar *name;
 		x_dump *dumps[];
 	} block;
 };
@@ -101,7 +101,7 @@ union value_u
 struct x_dump_st
 {
 	enum dump_type type;
-	char value[];
+	x_uchar value[];
 };
 
 struct x_dump_st g_dmp_nomem = { .type = DTYPE_NOMEM };
@@ -166,12 +166,12 @@ x_dump *x_dump_ptr(const void *val)
 
 }
 
-x_dump *x_dump_str(const char *val)
+x_dump *x_dump_str(const x_uchar *val)
 {
 	if (val == NULL)
-		return x_dump_symbol("NULL");
-	size_t len = strlen(val);
-	size_t siz = (len + 1) * sizeof(char);
+		return x_dump_symbol(x_u("NULL"));
+	size_t len = x_ustrlen(val);
+	size_t siz = (len + 1) * sizeof(x_uchar);
 	x_dump *dmp = malloc(sizeof(x_dump) + sizeof(struct value_mem_st) + siz);
 	if (!dmp)
 		return NOMEM_DMP;
@@ -185,29 +185,10 @@ x_dump *x_dump_str(const char *val)
 	return dmp;
 }
 
-x_dump *x_dump_wcs(const wchar_t *val)
-{
-	if (val == NULL)
-		return x_dump_symbol("NULL");
-	size_t len = wcslen(val);
-	size_t siz = (len + 1) * sizeof(wchar_t);
-	x_dump *dmp = malloc(sizeof(x_dump) + sizeof(struct value_mem_st) + siz);
-	if (!dmp)
-		return NOMEM_DMP;
-
-	dmp->type = DTYPE_WCS;
-	union value_u *value = (void *)dmp->value;
-	value->wcs.size = len;
-	value->str.maddr = val;
-	memcpy(value->wcs.data, val, siz);
-
-	return dmp;
-}
-
 x_dump *x_dump_mem(const void *ptr, size_t size)
 {
 	if (ptr == NULL)
-		return x_dump_symbol("NULL");
+		return x_dump_symbol(x_u("NULL"));
 
 	x_dump *dmp = malloc(sizeof(x_dump) + sizeof(struct value_mem_st) + size);
 	if (!dmp)
@@ -223,12 +204,12 @@ x_dump *x_dump_mem(const void *ptr, size_t size)
 }
 
 
-x_dump *x_dump_symbol(const char *sym)
+x_dump *x_dump_symbol(const x_uchar *sym)
 {
 	check_symbol(sym);
 
-	size_t len = strlen(sym);
-	size_t siz = (len + 1) * sizeof(char);
+	size_t len = x_ustrlen(sym);
+	size_t siz = (len + 1) * sizeof(x_uchar);
 	x_dump *dmp = malloc(sizeof(x_dump) + sizeof(struct value_mem_st) + siz);
 	if (!dmp)
 		return NOMEM_DMP;
@@ -264,7 +245,7 @@ x_dump *x_dump_pair(x_dump *d1, x_dump *d2)
 	return dmp;
 }
 
-x_dump *x_dump_empty_block(const char *sym, size_t len)
+x_dump *x_dump_empty_block(const x_uchar *sym, size_t len)
 {
 	check_symbol(sym);
 
@@ -275,7 +256,7 @@ x_dump *x_dump_empty_block(const char *sym, size_t len)
 	dmp->type = DTYPE_BLOCK;
 	struct value_block_st *block = (void *) dmp->value;
 	block->len = len;
-	block->name = x_strdup(sym);
+	block->name = x_ustrdup(sym);
 	if (!block->name ) {
 		free(dmp);
 		return NOMEM_DMP;
@@ -287,13 +268,13 @@ x_dump *x_dump_empty_block(const char *sym, size_t len)
 	return dmp;
 }
 
-int x_dump_set_name(x_dump *dmp, const char *sym)
+int x_dump_set_name(x_dump *dmp, const x_uchar *sym)
 {
 	check_symbol(sym);
 	x_assert(dmp->type == DTYPE_BLOCK, "unsupported dump type");
 	struct value_block_st *block = (void *) dmp->value;
 	free(block->name);
-	block->name = x_strdup(sym);
+	block->name = x_ustrdup(sym);
 	if (!block->name ) {
 		free(dmp);
 		return true;
@@ -336,7 +317,7 @@ void x_dump_bind(x_dump *dmp, int index, x_dump* binding)
 	}
 }
 
-x_dump *x_dump_block(const char *sym, ...)
+x_dump *x_dump_block(const x_uchar *sym, ...)
 {
 	size_t n = 0;
 	va_list ap;
@@ -367,7 +348,6 @@ static void dump_rec_free(x_dump *dmp)
 		case DTYPE_FNUM:
 		case DTYPE_PTR:
 		case DTYPE_STR:
-		case DTYPE_WCS:
 		case DTYPE_MEM:
 		case DTYPE_SYM:
 			break;
@@ -401,7 +381,7 @@ void x_dump_free(x_dump *dmp)
 	dump_rec_free(dmp);
 }
 
-static int write_file_cb(const char *buf, size_t len, void *ctx)
+static int write_file_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	FILE *fp = ctx;
 	if (fwrite(buf, 1, len, fp) != len)
@@ -409,7 +389,7 @@ static int write_file_cb(const char *buf, size_t len, void *ctx)
 	return 0;
 }
 
-static int indent_check_cb(const char *buf, size_t len, void *ctx)
+static int indent_check_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	struct search_args *args = ctx;
 	for (size_t i = 0; i < len; i++)
@@ -417,7 +397,7 @@ static int indent_check_cb(const char *buf, size_t len, void *ctx)
 	return args->out_cb(buf, len, args->ctx);
 }
 
-static int filter_cb(const char *buf, size_t len, void *ctx)
+static int filter_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 
 	struct search_args *args = ctx;
@@ -435,7 +415,7 @@ static int filter_cb(const char *buf, size_t len, void *ctx)
 			case '\0':
 				if (args->out_cb(buf + start, end - start, args->ctx))
 					return -1;
-				if (args->out_cb("\\0", 2, args->ctx))
+				if (args->out_cb(x_u("\\0"), 2, args->ctx))
 					return -1;
 				end += 1;
 				goto end_for;
@@ -461,7 +441,7 @@ static int dump_out_dfs(const x_dump *dmp, int depth, struct search_args *args)
 {
 	int ret;
 	if (!dmp) {
-		if (args->format->symbol("NOT_BIND", args->filter_cb, args))
+		if (args->format->symbol(x_u("NOT_BIND"), args->filter_cb, args))
 			return -1;
 		return 0;
 	}
@@ -485,10 +465,6 @@ static int dump_out_dfs(const x_dump *dmp, int depth, struct search_args *args)
 			break;
 		case DTYPE_STR:
 			if (args->format->string(value->str.maddr, value->str.size, args->filter_cb, args))
-				return -1;
-			break;
-		case DTYPE_WCS:
-			if (args->format->wstring(value->wcs.maddr, value->wcs.size, args->filter_cb, args))
 				return -1;
 			break;
 		case DTYPE_MEM:

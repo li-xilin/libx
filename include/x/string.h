@@ -84,8 +84,6 @@ char *x_strrepl(const char *orig, const char *rep, const char *with);
 
 wchar_t *x_wcsrepl(const wchar_t *orig, const wchar_t *rep, const wchar_t *with);
 
-char *x_memtoustr(const void *p, size_t size, char *buf);
-
 char *x_memtohex(const void *p, size_t size, char *out);
 
 void x_membyhex(const char *text, void *out);

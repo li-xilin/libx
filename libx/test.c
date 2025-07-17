@@ -310,10 +310,10 @@ void __ut_assert_mem_equal(ut_runner *r, const void *ex, size_t exsize, const vo
 	size_t left = x_max(index - 16, 0);
 	size_t right = x_min((index + 1) + 16, exsize);
 	x_memtohex(exp + left, index - left, ex_buf);
-	sprintf(ex_buf + (index - left) * 2, "[%hhX]", exp[index]);
+	sprintf(ex_buf + (index - left) * 2, "[%" PRIx8 "]", exp[index]);
 	x_memtohex(exp + index + 1, right - (index + 1), ex_buf + (index - left) * 2 + 4);
 	x_memtohex(acp + left, index - left, ac_buf);
-	sprintf(ac_buf + (index - left) * 2, "[%hhX]", acp[index]);
+	sprintf(ac_buf + (index - left) * 2, "[%" PRIx8 "]", acp[index]);
 	x_memtohex(acp + index + 1, right - (index + 1), ac_buf + (index - left) * 2 + 4);
 	__ut_fail(r, file, line, "test failed: at offset +%d\n"
 			"\texpect: '%s'\n"
