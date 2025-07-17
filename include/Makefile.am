@@ -40,6 +40,7 @@ xinclude_HEADERS = \
 	x/path.h \
 	x/edit.h \
 	x/strbuf.h \
+	x/printf.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
