@@ -24,6 +24,9 @@
 #include "x/detect.h"
 #include "x/unicode.h"
 #include "x/errno.h"
+#include "x/memory.h"
+#include "x/tss.h"
+#include "x/once.h"
 
 #include <string.h>
 #include <errno.h>
@@ -238,6 +241,58 @@ size_t x_ustrihash(const x_uchar *s)
 		h = (h ^ (h << 5)) ^ tolower(c);
 	}
 	return h;
+}
+
+static x_once s_convbuf_once = X_ONCE_INIT;
+static x_tss s_convbuf_tss;
+
+static void free_errbuf(void *p)
+{
+	void *buf = x_tss_get(&s_convbuf_tss);
+	x_free(buf);
+}
+
+static void init_errbuf(void)
+{
+	x_tss_init(&s_convbuf_tss, free_errbuf);
+}
+
+x_uchar *x_utss_utf8(char *utf8)
+{
+#ifdef X_OS_WIN
+	if (x_once_init(&s_convbuf_once, init_errbuf))
+		return NULL;
+	wchar_t *buf = x_tss_get(&s_convbuf_tss);
+	x_free(buf);
+	size_t utf8_len = strlen(utf8);
+	size_t utf16_len = x_utf8_to_utf16(utf8, utf8_len, NULL, 0);
+	buf = x_malloc(NULL, (utf16_len + 1) * sizeof(uint16_t));
+	x_utf8_to_utf16(utf8, utf8_len, buf, utf16_len + 1);
+	buf[utf16_len] = '\0';
+	x_tss_set(&s_convbuf_tss, buf);
+	return buf;
+#else
+	return utf8;
+#endif
+}
+
+x_uchar *x_utss_utf16(wchar_t *utf16)
+{
+#ifdef X_OS_WIN
+	return utf16;
+#else
+	if (x_once_init(&s_convbuf_once, init_errbuf))
+		return NULL;
+	char *buf = x_tss_get(&s_convbuf_tss);
+	x_free(buf);
+	size_t utf16_len = x_utf16_strlen((uint16_t *)utf16);
+	size_t utf8_len = x_utf16_to_utf8((uint16_t *)utf16, utf16_len, NULL, 0);
+	buf = x_malloc(NULL, utf8_len + 1);
+	x_utf16_to_utf8((uint16_t *)utf16, utf16_len, buf, utf8_len + 1);
+	buf[utf8_len] = '\0';
+	x_tss_set(&s_convbuf_tss, buf);
+	return buf;
+#endif
 }
 
 int x_umain(x_umain_fn *umain, int argc, char *argv[])

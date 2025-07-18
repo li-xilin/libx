@@ -25,6 +25,7 @@
 
 #include "detect.h"
 #include "unicode.h"
+#include "assert.h"
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -106,6 +107,8 @@ typedef char x_uchar;
 	} \
 	extern int x_main
 
+#define x_uconv(s) __x_uconv(sizeof s[0], s, s[0])
+
 typedef int x_umain_fn(int argc, x_uchar *argv[]);
 
 int x_utf8_to_ustr(const char *from, x_uchar *us, size_t size);
@@ -118,8 +121,20 @@ x_uchar *x_ustrsplit(x_uchar **s, x_uchar ch);
 x_uchar *x_ustrdup(const x_uchar *s);
 size_t x_ustrihash(const x_uchar *s);
 size_t x_ustrnihash(const x_uchar *s, size_t len);
-
+x_uchar *x_utss_utf8(char *utf8);
+x_uchar *x_utss_utf16(wchar_t *utf16);
 int x_umain(x_umain_fn *umain, int argc, char *argv[]);
+
+struct __x_check_bytesize { int i1: 1, i2: 2, i4: 4, i8: 8; };
+static inline x_uchar *__x_uconv(int char_size, void *s, wchar_t test)
+{
+	x_static_assert(char_size == 1 || char_size == 2);
+	switch (char_size) {
+		case 1: return x_utss_utf8((char *)s);
+		case 2: return x_utss_utf16((wchar_t *)s);
+		default: return NULL;
+	}
+}
 
 #endif
 

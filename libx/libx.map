@@ -313,6 +313,8 @@ global:
 	x_utf8_to_ucode;
 	x_utf8_to_ustr;
 	x_utf8_to_utf16;
+	x_utss_utf16;
+	x_utss_utf8;
 	x_vfprintf;
 	x_vfscanf;
 	x_vprintf;
