@@ -125,8 +125,7 @@ x_uchar *x_utss_utf8(char *utf8);
 x_uchar *x_utss_utf16(wchar_t *utf16);
 int x_umain(x_umain_fn *umain, int argc, char *argv[]);
 
-struct __x_check_bytesize { int i1: 1, i2: 2, i4: 4, i8: 8; };
-static inline x_uchar *__x_uconv(int char_size, void *s, wchar_t test)
+static inline x_uchar *__x_uconv(int char_size, const void *s, wchar_t test)
 {
 	x_static_assert(char_size == 1 || char_size == 2);
 	switch (char_size) {
