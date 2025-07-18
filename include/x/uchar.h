@@ -107,7 +107,7 @@ typedef char x_uchar;
 	} \
 	extern int x_main
 
-#define x_uconv(s) __x_uconv(sizeof s[0], s, s[0])
+#define x_uconv(s) __x_uconv(sizeof (s)[0], (s), (s)[0])
 
 typedef int x_umain_fn(int argc, x_uchar *argv[]);
 
