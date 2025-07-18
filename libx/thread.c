@@ -349,3 +349,10 @@ void *x_thread_data(void)
 	return thread->data;
 }
 
+void x_thread_cleanup(void)
+{
+#ifdef X_OS_WIN
+	void __x_tss_free_all_win32(void);
+	__x_tss_free_all_win32();
+#endif
+}

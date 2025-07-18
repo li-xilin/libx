@@ -56,5 +56,7 @@ void *x_thread_data(void);
 
 uint32_t x_thread_native_id(void);
 
+void x_thread_cleanup(void);
+
 #endif
 
