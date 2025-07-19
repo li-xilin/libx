@@ -41,6 +41,7 @@ xinclude_HEADERS = \
 	x/edit.h \
 	x/strbuf.h \
 	x/printf.h \
+	x/hmap.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

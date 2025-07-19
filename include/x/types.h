@@ -197,5 +197,10 @@ typedef struct x_cliarg_long_st x_cliarg_long;
 typedef struct x_file_st x_file;
 #endif
 
+#ifndef X_HMAP_DEFINED
+#define X_HMAP_DEFINED
+typedef struct x_hmap_st x_hmap;
+#endif
+
 #endif
 

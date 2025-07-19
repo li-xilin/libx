@@ -47,6 +47,40 @@ inline static void x_link_init(x_link *link)
 	link->prev = link->next = NULL;
 }
 
+inline static void x_list_swap(x_link *link1, x_link *link2)
+{
+	x_link *p = NULL, *q;
+	if (link1->next == link2)
+		p = link1, q = link2;
+	else if (link2->next == link1)
+		p = link2, q = link1;
+
+	if (p) {
+		q->next->prev = p;
+		p->prev->next = q;
+		p->next = q->next;
+		q->prev = p->prev;
+		p->prev = p;
+		q->next = q;
+	}
+	else {
+		x_link tmp = *link1;
+		link1->prev->next = link2;
+		link1->next->prev = link2;
+		link2->prev->next = link1;
+		link1->next->prev = link1;
+		*link1 = *link2;
+		*link2 = tmp;
+	}
+}
+
+inline static void x_list_replace(x_link *link, x_link *new_link)
+{
+		link->prev->next = new_link;
+		link->next->prev = new_link;
+		*new_link = *link;
+}
+
 inline static void x_list_clear(x_list *list)
 {
 	list->head.next = list->head.prev = NULL;
