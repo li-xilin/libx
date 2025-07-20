@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022 Armon Dadgar
- * Copyright (c) 2022 Li hsilin <lihsilyn@gmail.com>
+ * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,11 @@
 
 #include "types.h"
 
-typedef bool x_heap_cmp_f(const void *, const void *, void *ctx);
+typedef bool x_heap_cmp_fn(const void *, const void *, void *ctx);
 
 struct x_heap_st
 {
-	x_heap_cmp_f *cmp;
+	x_heap_cmp_fn *cmp;
 	size_t entry_cnt;
 	size_t min_page_cnt;
 	size_t page_cnt;
@@ -39,13 +39,13 @@ struct x_heap_st
 	void *ctx;
 };
 
-int x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_f *cmp, void *ctx);
+void x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_fn *cmp, void *ctx);
 
 void x_heap_free(x_heap* h);
 
 const void *x_heap_top(const x_heap* h);
 
-int x_heap_push(x_heap* h, const void *key);
+void x_heap_push(x_heap* h, const void *key);
 
 void x_heap_pop(x_heap* h);
 

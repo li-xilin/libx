@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@
 
 #include "x/heap.h"
 #include "x/assert.h"
+#include "x/memory.h"
 #include "x/string.h"
 #include <stdlib.h>
 
@@ -32,7 +33,7 @@
 #define RIGHT_CHILD(i)  (((i)<<1)+2)
 #define PARENT_ENTRY(i) (((i)-1)>>1)
 
-int x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_f *cmp, void *ctx)
+void x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_fn *cmp, void *ctx)
 {
 	x_assert_not_null(h);
 	x_assert_not_null(cmp);
@@ -44,17 +45,14 @@ int x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_f *cm
 	h->entry_size = entry_size;
 	h->min_page_cnt = h->page_cnt;
 	h->ctx = ctx;
-	h->table = (uint8_t *)malloc(h->page_cnt * PAGE_SIZE);
-	if (!h->table)
-		return -1;
-	return 0;
+	h->table = (uint8_t *)x_malloc(NULL, h->page_cnt * PAGE_SIZE);
 }
 
 void x_heap_free(x_heap* h)
 {
 	if (!h)
 		return;
-	free(h->table);
+	x_free(h->table);
 	h->entry_cnt = 0;
 	h->page_cnt = 0;
 	h->table = NULL;
@@ -72,16 +70,14 @@ const void *x_heap_top(const x_heap* h)
 	return (void *)ENTRY_AT(h, 0);
 }
 
-int x_heap_push(x_heap* h, const void *key)
+void x_heap_push(x_heap* h, const void *key)
 {
 	assert(h->table);
 
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);
 	if (h->entry_cnt + 1 > mx_entries) {
 		int new_size = h->page_cnt * 2;
-		uint8_t *new_table = (uint8_t *)realloc(h->table, new_size * PAGE_SIZE);
-		if (!new_table)
-			return -1;
+		uint8_t *new_table = (uint8_t *)x_realloc(h->table, new_size * PAGE_SIZE);
 		h->table = new_table;
 		h->page_cnt = new_size;
 	}
@@ -105,7 +101,6 @@ int x_heap_push(x_heap* h, const void *key)
 	}
 	memcpy(current, key, h->entry_size);
 	h->entry_cnt++;
-	return 0;
 }
 
 void x_heap_pop(x_heap* h)
