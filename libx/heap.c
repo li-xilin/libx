@@ -27,25 +27,20 @@
 #include <stdlib.h>
 
 #define PAGE_SIZE  4096
-#define ENTRY_AT(h, index) (h->table + (index) * h->entry_size)
-#define ENTRIES_PER_PAGE(h) (PAGE_SIZE / h->entry_size)
+#define ENTRIES_PER_PAGE(h) (PAGE_SIZE / sizeof(void *))
 #define LEFT_CHILD(i)   (((i)<<1)+1)
 #define RIGHT_CHILD(i)  (((i)<<1)+2)
 #define PARENT_ENTRY(i) (((i)-1)>>1)
 
-void x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_fn *cmp, void *ctx)
+void x_heap_init(x_heap* h, x_heap_ordered_fn *cmp)
 {
-	x_assert_not_null(h);
-	x_assert_not_null(cmp);
-	assert(min_pages > 0);
-
+	assert(h != NULL);
+	assert(cmp != NULL);
 	h->cmp = cmp;
 	h->entry_cnt = 0;
-	h->page_cnt = min_pages;
-	h->entry_size = entry_size;
+	h->page_cnt = 1;
 	h->min_page_cnt = h->page_cnt;
-	h->ctx = ctx;
-	h->table = (uint8_t *)x_malloc(NULL, h->page_cnt * PAGE_SIZE);
+	h->table = x_malloc(NULL, h->page_cnt * PAGE_SIZE);
 }
 
 void x_heap_free(x_heap* h)
@@ -53,9 +48,6 @@ void x_heap_free(x_heap* h)
 	if (!h)
 		return;
 	x_free(h->table);
-	h->entry_cnt = 0;
-	h->page_cnt = 0;
-	h->table = NULL;
 }
 
 inline static size_t x_heap_size(const x_heap* h)
@@ -63,68 +55,61 @@ inline static size_t x_heap_size(const x_heap* h)
 	return h->entry_cnt;
 }
 
-const void *x_heap_top(const x_heap* h)
+void *x_heap_top(const x_heap* h)
 {
 	if (h->entry_cnt == 0)
 		return 0;
-	return (void *)ENTRY_AT(h, 0);
+	return h->table[0];
 }
 
-void x_heap_push(x_heap* h, const void *key)
+void x_heap_push(x_heap* h, void *p)
 {
 	assert(h->table);
 
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);
 	if (h->entry_cnt + 1 > mx_entries) {
 		int new_size = h->page_cnt * 2;
-		uint8_t *new_table = (uint8_t *)x_realloc(h->table, new_size * PAGE_SIZE);
+		void **new_table = x_realloc(h->table, new_size * PAGE_SIZE);
 		h->table = new_table;
 		h->page_cnt = new_size;
 	}
-
-	int current_index = h->entry_cnt;
-	uint8_t *current = ENTRY_AT(h, current_index);
-
-	int parent_index;
-	uint8_t *parent;
-
+	int current_index = h->entry_cnt, parent_index;
+	void **current = h->table + current_index, **parent;
 	while (current_index > 0) {
 		parent_index = PARENT_ENTRY(current_index);
-		parent = ENTRY_AT(h, parent_index);
-		if (h->cmp(key, parent, h->ctx)) {
-			memcpy(current, parent, h->entry_size);
+		parent = h->table + parent_index;
+		if (h->cmp(p, *parent)) {
+			*current = *parent;
 			current_index = parent_index;
 			current = parent;
-
 		} else
 			break;
 	}
-	memcpy(current, key, h->entry_size);
+	*current = p;
 	h->entry_cnt++;
 }
 
-void x_heap_pop(x_heap* h)
+void * x_heap_pop(x_heap* h)
 {
-	assert(h->entry_cnt);
-
-	int current_index = 0;
-	uint8_t *current = ENTRY_AT(h, current_index);
+	if (!h->entry_cnt)
+		return NULL;
 	h->entry_cnt--;
+
+	void *top_value = h->table[0];
+	int current_index = 0;
+	void **current = h->table + current_index;
 	int entries = h->entry_cnt;
 	if (h->entry_cnt > 0) {
-		uint8_t *last = ENTRY_AT(h, entries);
-		memcpy(current, last, h->entry_size);
-
-		uint8_t *left_child, *right_child;
+		*current = h->table[entries];
+		void **left_child, **right_child;
 		int left_child_index;
 		while (left_child_index = LEFT_CHILD(current_index), left_child_index < entries) {
-			left_child = ENTRY_AT(h, left_child_index);
-
+			left_child = h->table + left_child_index;
 			if (left_child_index+ 1 < entries) {
-				right_child = ENTRY_AT(h, left_child_index+1);
-				if (!h->cmp(right_child, left_child, h->ctx)) {
-					if (h->cmp(left_child, current, h->ctx)) {
-						x_memswp(current, left_child, h->entry_size);
+				right_child = h->table + left_child_index + 1;
+				if (!h->cmp(*right_child, *left_child)) {
+					if (h->cmp(*left_child, *current)) {
+						x_swap(current, left_child, void *);
 						current_index = left_child_index;
 						current = left_child;
 					}
@@ -132,8 +117,8 @@ void x_heap_pop(x_heap* h)
 						break;
 				}
 				else {
-					if (h->cmp(right_child, current, h->ctx)) {
-						x_memswp(current, right_child, h->entry_size);
+					if (h->cmp(*right_child, *current)) {
+						x_swap(current, right_child, void *);
 						current_index = left_child_index+1;
 						current = right_child;
 					}
@@ -141,26 +126,21 @@ void x_heap_pop(x_heap* h)
 						break;
 				}
 			}
-			else if (h->cmp(left_child, current, h->ctx)) {
-				x_memswp(current, left_child, h->entry_size);
+			else if (h->cmp(*left_child, *current)) {
+				x_swap(current, left_child, void *);
 				current_index = left_child_index;
 				current = left_child;
-
 			}
-		       	else
+			else
 				break;
 		}
 	}
-
 	int used_pages = entries / ENTRIES_PER_PAGE(h) + ((entries % ENTRIES_PER_PAGE(h) > 0) ? 1 : 0);
 	if (h->page_cnt / 2 > used_pages + 1 && h->page_cnt / 2 >= h->min_page_cnt) {
 		int new_size = h->page_cnt / 2;
-		uint8_t *new_table = (uint8_t *)realloc(h->table, new_size * PAGE_SIZE);
-		if (new_table)
-			h->table = new_table;
-
-		h->table = new_table;
+		h->table = x_realloc(h->table, new_size * PAGE_SIZE);
 		h->page_cnt = new_size;
 	}
+	return top_value;
 }
 

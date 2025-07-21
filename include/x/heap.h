@@ -26,28 +26,22 @@
 
 #include "types.h"
 
-typedef bool x_heap_cmp_fn(const void *, const void *, void *ctx);
+typedef bool x_heap_ordered_fn(const void *, const void *);
 
 struct x_heap_st
 {
-	x_heap_cmp_fn *cmp;
+	x_heap_ordered_fn *cmp;
 	size_t entry_cnt;
 	size_t min_page_cnt;
 	size_t page_cnt;
-	size_t entry_size;
-	uint8_t *table;
-	void *ctx;
+	void **table;
 };
 
-void x_heap_init(x_heap* h, size_t entry_size, size_t min_pages, x_heap_cmp_fn *cmp, void *ctx);
-
+void x_heap_init(x_heap* h, x_heap_ordered_fn *cmp);
 void x_heap_free(x_heap* h);
-
-const void *x_heap_top(const x_heap* h);
-
-void x_heap_push(x_heap* h, const void *key);
-
-void x_heap_pop(x_heap* h);
+void x_heap_push(x_heap* h, void *p);
+void *x_heap_top(const x_heap* h);
+void *x_heap_pop(x_heap* h);
 
 #endif
 

@@ -1,28 +1,37 @@
+#include "x/trick.h"
 #include "x/heap.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-static bool cmp(const void *p1, const void *p2, void *ctx)
+static bool less_then(const void *p1, const void *p2)
 {
 	return *(int *)p1 < *(int *)p2;
 }
 
 int main(void)
 {
+	int arr[100];
+
 	x_heap h;
-	x_heap_init(&h, sizeof(int), 1, cmp, NULL);
+	x_heap_init(&h, less_then);
 
-	for (int i = 0; i < 100; i++) {
-		int rnd = rand() % 100;
-		x_heap_push(&h, &rnd); 
+	{
+		printf("origin: ");
+		for (int i = 0; i < 100; i++) {
+			arr[i] = rand() % 100;
+			x_heap_push(&h, arr + i); 
+			printf("%d ", arr[i]);
+		}
+		putchar('\n');
 	}
 
-	const int *top;
-	while ((top = x_heap_top(&h))) {
-		printf("%d ", *top);
-		x_heap_pop(&h);
+	{
+		int *top;
+		printf("sorted: ");
+		while ((top = x_heap_pop(&h)))
+			printf("%d ", *top);
+		putchar('\n');
 	}
-	putchar('\n');
 
 	x_heap_free(&h);
 }
