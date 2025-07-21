@@ -26,7 +26,12 @@
 
 #include "types.h"
 
-typedef bool x_heap_ordered_fn(const void *, const void *);
+struct x_ranode_st
+{
+	size_t index;
+};
+
+typedef bool x_heap_ordered_fn(const x_ranode *, const x_ranode *);
 
 struct x_heap_st
 {
@@ -34,14 +39,15 @@ struct x_heap_st
 	size_t entry_cnt;
 	size_t min_page_cnt;
 	size_t page_cnt;
-	void **table;
+	x_ranode **table;
 };
 
-void x_heap_init(x_heap* h, x_heap_ordered_fn *cmp);
-void x_heap_free(x_heap* h);
-void x_heap_push(x_heap* h, void *p);
-void *x_heap_top(const x_heap* h);
-void *x_heap_pop(x_heap* h);
+void x_heap_init(x_heap *h, x_heap_ordered_fn *cmp);
+void x_heap_free(x_heap *h);
+void x_heap_push(x_heap *h, x_ranode *n);
+x_ranode *x_heap_top(const x_heap *h);
+x_ranode *x_heap_pop(x_heap *h);
+void x_heap_remove(x_heap *h, x_ranode *n);
 
 #endif
 

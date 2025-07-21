@@ -202,5 +202,10 @@ typedef struct x_file_st x_file;
 typedef struct x_hmap_st x_hmap;
 #endif
 
+#ifndef X_RANODE_DEFINED
+#define X_RANODE_DEFINED
+typedef struct x_ranode_st x_ranode;
+#endif
+
 #endif
 

@@ -112,6 +112,7 @@ global:
 	x_heap_init;
 	x_heap_pop;
 	x_heap_push;
+	x_heap_remove;
 	x_heap_top;
 	x_hmap_find;
 	x_hmap_find_or_insert;
