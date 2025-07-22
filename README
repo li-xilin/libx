@@ -1,30 +1,65 @@
-基于POSIX的轻量级C标准库扩展库
+基于POSIX和WIN32的轻量级跨平台C扩展库
 
-x/macros.h       宏函数
-x/types.h        类型定义
-x/errno.h        错误处理
-x/rope.h         绳索，快速编辑超长字符串
-x/assert.h       静态断言和动态断言
-x/base64.h       Base64编解码
-x/bitmap.h       位图
-x/cond.h         条件变量
-x/detect.h       操作系统、编译器、硬件架构探测
-x/dump.h         复杂数据结构可视化转储
-x/flowctl.h      流程控制语句
-x/heap.h         堆，可构造优先队列
-x/list.h         侵入式链表
-x/splay.h        侵入式伸展树
-x/btnode.h       二叉树
-x/log.h          日志打印
-x/memory.h       内存管理
-x/mutex.h        互斥量
-x/narg.h         参数数量计算
-x/once.h         原子初始化
-x/pipe.h         FIFO队列
-x/string.h       串操作
-x/tcolor.h       终端颜色支持
-x/thread.h       线程操作
-x/tpool.h        线程池
-x/trick.h        魔法宏
-x/ini.h          配置文件读写
+基础头文件：
+    x/macros.h       宏函数
+    x/types.h        类型定义
+    x/errno.h        错误处理
+    x/assert.h       静态断言和动态断言
+    x/detect.h       编译环境探测宏
+    x/dump.h         数据结构可视化转储
+    x/flowctl.h      流程控制语句
+    x/memory.h       内存分配
+    x/narg.h         参数数量计算
+    x/trick.h        魔法宏
+    x/time.h         高精度时间计算
+    x/test.h         单元测试
+
+文件操作：
+    x/path.h         路径操作
+    x/file.h         文件操作
+    x/file.h         文件操作
+    x/log.h          日志打印
+    x/sys.h          系统接口
+    x/ini.h          读写INI配置文件
+    x/stat.h         获取文件元数据
+    x/dir.h          读取文件夹
+
+字符串操作：
+    x/unicode.h      UNICODE操作
+    x/uchar.h        跨平台字符串
+    x/rope.h         绳索（编辑超长字符串）
+    x/strbuf.h       动态连续字符串缓冲区
+    x/string.h       串操作函数
+    x/printf.h       字符串格式化打印
+    x/cliarg.h       CLI参数解析
+    x/base64.h       Base64编解码
+
+数据容器：
+    x/btnode.h       二叉树
+    x/bitmap.h       位图
+    x/heap.h         堆（优先队列）
+    x/hmap.h         散列表
+    x/list.h         链表
+    x/splay.h        伸展树
+    x/pipe.h         FIFO队列
+
+多线程：
+    x/cond.h         条件变量
+    x/mutex.h        互斥量
+    x/once.h         原子初始化
+    x/thread.h       线程操作
+    x/tss.h          线程本地存储
+    x/tpool.h        线程池
+    x/proc.h         进程执行
+
+终端操作：
+    x/tsignal.h      进程/终端信号
+    x/tcolor.h       终端颜色支持
+    x/edit.h         终端行编辑器
+
+网络操作：
+    x/event.h        事件操作
+    x/reactor.h      响应器模式
+    x/socket.h       套接字操作
+    x/sockmux.h      套接字多路复用
 
