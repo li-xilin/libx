@@ -74,66 +74,79 @@ void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_hash_fn *hash_fn, x_hmap_
 	ht->load_factor = load_factor;
 	ht->elem_cnt = 0;
 	ht->slot_cnt = s_primes[idx];
+	ht->hash = hash_fn;
+	ht->equal = equal_fn;
 
 	ht->table = x_malloc(NULL, ht->slot_cnt * sizeof(x_link));
 	for(size_t i = 0; i < ht->slot_cnt; ++i)
 		x_list_init(ht->table + i);
 }
 
-static x_link *hmap_locate(x_hmap *ht, x_link *node, size_t *slot)
+static x_link *hmap_locate(x_hmap *ht, const x_link *link, size_t *slot)
 {
-	*slot = ht->hash(node) % ht->slot_cnt;
+	*slot = ht->hash(link) % ht->slot_cnt;
 	x_list_foreach(cur, ht->table + *slot)
-		if (ht->equal(node, cur))
+		if (ht->equal(link, cur))
 			return cur;
 	return NULL;
 }
 
-x_link *x_hmap_find(x_hmap *ht, x_link *node)
+x_link *x_hmap_find(x_hmap *ht, const x_link *link)
 {
 	size_t slot;
-	return hmap_locate(ht, node, &slot);
+	assert(link->prev == NULL && link->prev == NULL);
+	return hmap_locate(ht, link, &slot);
 }
 
-x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *node)
+x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *link)
 {
 	size_t slot;
-	x_link *result = hmap_locate(ht, node, &slot);
+	assert(link->prev == NULL && link->prev == NULL);
+	x_link *result = hmap_locate(ht, link, &slot);
 	if (result)
 		return result;
 
 	if(ht->elem_cnt >= ht->load_limit)
 		x_hmap_expand(ht, ht->elem_cnt + 1);
 
-	x_list_add_back(ht->table + slot, node);
+	x_list_add_back(ht->table + slot, link);
 	ht->elem_cnt++;
 	return 0;
 }
 
-x_link *x_hmap_replace_or_insert(x_hmap *ht, x_link *node)
+x_link *x_hmap_replace_or_insert(x_hmap *ht, x_link *link)
 {
 	size_t slot;
-	x_link *result = hmap_locate(ht, node, &slot);
+	assert(link->prev == NULL && link->prev == NULL);
+	x_link *result = hmap_locate(ht, link, &slot);
 	if (result) {
-		x_list_replace(result, node);
+		x_list_replace(result, link);
 		return result;
 	}
 	if(ht->elem_cnt >= ht->load_limit)
 		x_hmap_expand(ht, ht->elem_cnt + 1);
 
-	x_list_add_back(ht->table + slot, node);
+	x_list_add_back(ht->table + slot, link);
 	ht->elem_cnt++;
 	return 0;
 }
 
-x_link *x_hmap_remove(x_hmap *ht, x_link *node)
+x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link)
 {
 	size_t slot;
-	x_link *result = hmap_locate(ht, node, &slot);
+	x_link *result = hmap_locate(ht, link, &slot);
 	if (!result)
 		return NULL;
+	x_list_del(result);
 	ht->elem_cnt--;
 	return result;
+}
+
+void x_hmap_remove(x_hmap *ht, x_link *link)
+{
+	assert(link->prev != NULL && link->prev != NULL);
+	x_list_del(link);
+	ht->elem_cnt--;
 }
 
 void x_hmap_free(x_hmap * ht)

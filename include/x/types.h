@@ -207,5 +207,35 @@ typedef struct x_hmap_st x_hmap;
 typedef struct x_ranode_st x_ranode;
 #endif
 
+#ifndef X_EVENT_DEFINED
+#define X_EVENT_DEFINED
+typedef struct x_event_st x_event;
+#endif
+
+#ifndef X_EVSOCKET_DEFINED
+#define X_EVSOCKET_DEFINED
+typedef struct x_evsocket_st x_evsocket;
+#endif
+
+#ifndef X_EVTIMER_DEFINED
+#define X_EVTIMER_DEFINED
+typedef struct x_evtimer_st x_evtimer;
+#endif
+
+#ifndef X_EVOBJECT_DEFINED
+#define X_EVOBJECT_DEFINED
+typedef struct x_evobject_st x_evobject;
+#endif
+
+#ifndef X_REACTOR_DEFINED
+#define X_REACTOR_DEFINED
+typedef struct x_reactor_st x_reactor;
+#endif
+
+#ifndef X_SOCKMUX_DEFINED
+#define X_SOCKMUX_DEFINED
+typedef struct x_sockmux_st x_sockmux;
+#endif
+
 #endif
 

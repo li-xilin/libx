@@ -64,7 +64,7 @@ x_ranode *x_heap_top(const x_heap* h)
 
 void x_heap_push(x_heap* h, x_ranode *p)
 {
-	assert(h->table != NULL);
+	assert(h != NULL);
 	assert(p != NULL);
 
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);

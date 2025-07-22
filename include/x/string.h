@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,8 @@
 
 #define x_swap(a, b, type) \
 do { \
-	type *x = a, *y = b; \
+	type *x = (a); \
+	type *y = (b); \
 	type tmp = *x; \
 	*(x) = *(y); \
 	*(y) = tmp; \
@@ -57,55 +58,30 @@ inline static uint64_t x_hash64(const void *key, size_t size)
 }
 
 void x_memswp(void *p1, void *p2, size_t size);
-
 char *x_strdup(const char *str);
-
 char *x_strdup2(const char *s, size_t *lenp);
-
 wchar_t *x_wcsdup(const wchar_t *str);
-
 void *x_memdup(const void *p, size_t size);
-
 size_t x_strhash(const char *s);
-
 size_t x_wcshash(const wchar_t *s);
-
 size_t x_memhash(const void *p, size_t size);
-
 size_t x_strnihash(const char *s, size_t len);
-
 size_t x_strihash(const char *s);
-
 char *x_strsplit(char **s, char ch);
-
 size_t x_strtoargv(char *s, char *argv[], size_t len);
-
 char *x_strrepl(const char *orig, const char *rep, const char *with);
-
 wchar_t *x_wcsrepl(const wchar_t *orig, const wchar_t *rep, const wchar_t *with);
-
 char *x_memtohex(const void *p, size_t size, char *out);
-
 void x_membyhex(const char *text, void *out);
-
 char **x_strargv(const char *cmdline, int *count);
-
 wchar_t **x_wcsargv(const wchar_t *cmdline, int *count);
-
 void x_memxor(void *a, const void *b, size_t size);
-
 char *x_strbaseconv(char *s, char *buf, size_t size, int old_base, int new_base);
-
 char *x_strtrim(char *s);
-
 wchar_t *x_wcstrim(wchar_t *s);
-
 int x_stricmp(const char *s1, const char *s2);
-
 int x_strnicmp(const char *s1, const char *s2, size_t len);
-
 char *x_strnstr(const char *s, const char *find, size_t slen);
-
 int x_strnrcmp(const char *s1, const char *s2, size_t len);
 
 #endif

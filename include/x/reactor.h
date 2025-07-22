@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,43 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_HMAP_H
-#define X_HMAP_H
+#ifndef X_REACTOR_H
+#define X_REACTOR_H
 
-#include "types.h"
-#include <stdint.h>
+#include "socket.h"
+#include "event.h"
+#include "list.h"
+#include "heap.h"
+#include "hmap.h"
+#include "mutex.h"
+#include "socket.h"
+#include "event.h"
 
-typedef size_t x_hmap_hash_fn(const x_link *node);
-typedef bool x_hmap_equal_fn(const x_link *node1, const x_link *node2);
+struct x_reactor_st
+{
+	x_list pending_list;
+	x_mutex lock;
+	x_evsocket io_event;
+	x_sock io_pipe[2];
 
-struct x_hmap_st {
-	x_list *table;
-	size_t load_limit;
-	size_t elem_cnt;
-	size_t slot_cnt;
-	float load_factor;
-	uint8_t prime_idx;
-	x_hmap_hash_fn *hash;
-	x_hmap_equal_fn *equal;
+	const struct x_sockmux_ops_st *mux_ops;
+	x_sockmux *mux;
+	x_hmap sock_ht;
+
+	x_heap timer_heap;
+	struct timeval last_wait;
+
+	x_list obj_list;
 };
 
-uint32_t x_hmap_hash(unsigned key);
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_hash_fn *hash_fn, x_hmap_equal_fn *equal_fn);
-x_link *x_hmap_find(x_hmap *ht, const x_link *node);
-x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *node);
-x_link *x_hmap_insert_or_replace(x_hmap *ht, x_link *node);
-x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link);
-void x_hmap_remove(x_hmap *ht, x_link *link);
-void x_hmap_free(x_hmap *ht);
+void x_reactor_break(x_reactor *r);
+int x_reactor_init(x_reactor *r);
+void x_reactor_clear(x_reactor *r);
+void x_reactor_free(x_reactor *r);
+int x_reactor_add(x_reactor *r, x_event *e);
+void x_reactor_pend(x_reactor *r, x_event *e, short res_flags);
+int x_reactor_remove(x_reactor *r, x_event *e);
+int x_reactor_wait(x_reactor *r);
+x_event *x_reactor_pop_event(x_reactor *r);
 
 #endif

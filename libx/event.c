@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2025 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,33 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_HMAP_H
-#define X_HMAP_H
+#include "x/event.h"
+#include <stdio.h>
 
-#include "types.h"
-#include <stdint.h>
+void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, void *data)
+{
+	memset(event, 0, sizeof *event);
+	event->sock = sock;
+	event->base.ev_flags = flags;
+	event->base.type = X_EVENT_SOCKET;
+	event->base.data = data;
+}
 
-typedef size_t x_hmap_hash_fn(const x_link *node);
-typedef bool x_hmap_equal_fn(const x_link *node1, const x_link *node2);
 
-struct x_hmap_st {
-	x_list *table;
-	size_t load_limit;
-	size_t elem_cnt;
-	size_t slot_cnt;
-	float load_factor;
-	uint8_t prime_idx;
-	x_hmap_hash_fn *hash;
-	x_hmap_equal_fn *equal;
-};
+void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, void *data)
+{
+	memset(event, 0, sizeof *event);
+	event->interval = interval_ms;
+	event->base.ev_flags = flags;
+	event->base.type = X_EVENT_TIMER;
+	event->base.data = data;
+}
 
-uint32_t x_hmap_hash(unsigned key);
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_hash_fn *hash_fn, x_hmap_equal_fn *equal_fn);
-x_link *x_hmap_find(x_hmap *ht, const x_link *node);
-x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *node);
-x_link *x_hmap_insert_or_replace(x_hmap *ht, x_link *node);
-x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link);
-void x_hmap_remove(x_hmap *ht, x_link *link);
-void x_hmap_free(x_hmap *ht);
+void x_evobject_init(x_evobject *event, short flags, void *data)
+{
+	memset(event, 0, sizeof *event);
+	event->base.ev_flags = flags;
+	event->base.type = X_EVENT_OBJECT;
+	event->base.data = data;
+}
 
-#endif

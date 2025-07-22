@@ -33,14 +33,13 @@
 
 #define x_time_diff(tv1, tv2, tv_out) \
 	do { \
-		(tv_out)->tv_sec = (tv1)->tv_sec - (tv2)->tv_sec; \
-		(tv_out)->tv_usec = (tv1)->tv_usec - (tv2)->tv_usec; \
+		(tv_out)->tv_sec = (tv1).tv_sec - (tv2).tv_sec; \
+		(tv_out)->tv_usec = (tv1).tv_usec - (tv2).tv_usec; \
 		if ((tv_out)->tv_usec < 0) { \
 			(tv_out)->tv_usec += 1000000; \
 			(tv_out)->tv_sec--; \
 		} \
-	} while(0);
-
+	} while(0)
 #define x_time_forward(tv, msec) \
 	do { \
 		(tv).tv_sec += (msec) / 1000; \
@@ -49,8 +48,7 @@
 			(tv).tv_usec -= 1000000; \
 			(tv).tv_sec++; \
 		} \
-	} while(0);
-
+	} while(0)
 #define x_time_rewind(tv, msec) \
 	do { \
 		(tv).tv_sec -= (msec) / 1000; \
@@ -59,25 +57,20 @@
 			(tv).tv_usec += 1000000; \
 			(tv).tv_sec--; \
 		} \
-	} while(0);
-
-#define x_time_set(tv, msec) \
+	} while(0)
+#define x_time_set_msec(tv, msec) \
 	do { \
 		(tv).tv_sec = (msec) / 1000; \
 		(tv).tv_usec = ((msec) % 1000) * 1000; \
-	} while(0);	
-#define x_time_to_ms(tv) \
+	} while(0)
+#define x_time_to_msec(tv) \
 	((tv).tv_sec * 1000 + (tv).tv_usec / 1000)
-
 #define x_time_ge(t1, t2) \
 	((t1).tv_sec > (t2).tv_sec || ((t1).tv_sec == (t2).tv_sec && (t1).tv_usec >= (t2).tv_usec))
-
 #define x_time_le(t1, t2) \
 	((t1).tv_sec < (t2).tv_sec || ((t1).tv_sec == (t2).tv_sec && (t1).tv_usec <= (t2).tv_usec))
-
 #define x_time_gt(t1, t2) \
 	((t1).tv_sec > (t2).tv_sec || ((t1).tv_sec == (t2).tv_sec && (t1).tv_usec > (t2).tv_usec))
-
 #define x_time_lt(t1, t2) \
 	((t1).tv_sec < (t2).tv_sec || ((t1).tv_sec == (t2).tv_sec && (t1).tv_usec < (t2).tv_usec))
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2025 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,64 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_HMAP_H
-#define X_HMAP_H
+#ifndef X_EVENT_H
+#define X_EVENT_H
 
-#include "types.h"
-#include <stdint.h>
+#include "socket.h"
+#include "time.h"
+#include "list.h"
+#include "heap.h"
 
-typedef size_t x_hmap_hash_fn(const x_link *node);
-typedef bool x_hmap_equal_fn(const x_link *node1, const x_link *node2);
+#define X_EV_REACTING (1 << 0)
+#define X_EV_ERROR    (1 << 1)
+#define X_EV_ONCE     (1 << 2)
 
-struct x_hmap_st {
-	x_list *table;
-	size_t load_limit;
-	size_t elem_cnt;
-	size_t slot_cnt;
-	float load_factor;
-	uint8_t prime_idx;
-	x_hmap_hash_fn *hash;
-	x_hmap_equal_fn *equal;
+#define X_EV_READ     (1 << 3)
+#define X_EV_WRITE    (1 << 4)
+#define X_EV_ACCURATE (1 << 3)
+
+enum {
+	X_EVENT_SOCKET,
+	X_EVENT_TIMER,
+	X_EVENT_OBJECT,
 };
 
-uint32_t x_hmap_hash(unsigned key);
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_hash_fn *hash_fn, x_hmap_equal_fn *equal_fn);
-x_link *x_hmap_find(x_hmap *ht, const x_link *node);
-x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *node);
-x_link *x_hmap_insert_or_replace(x_hmap *ht, x_link *node);
-x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link);
-void x_hmap_remove(x_hmap *ht, x_link *link);
-void x_hmap_free(x_hmap *ht);
+struct x_event_st
+{
+	short type;
+	short ev_flags;
+	short res_flags;
+	x_link event_link;
+	x_link pending_link;
+	x_reactor *reactor;
+	void *data;
+};
+
+struct x_evsocket_st
+{
+	x_event base;
+	x_link hash_link;
+	x_sock sock;
+};
+
+struct x_evtimer_st
+{
+	x_event base;
+	x_ranode node;
+	struct timeval expiration;
+	size_t interval;
+	size_t index;
+};
+
+struct x_evobject_st
+{
+	x_event base;
+	x_link link;
+	size_t index;
+};
+
+void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, void *data);
+void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, void *data);
+void x_evobject_init(x_evobject *event, short flags, void *data);
 
 #endif

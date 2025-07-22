@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,7 +76,7 @@ void *x_malloc(x_mset *mset, size_t size)
 	memset(b->data, 0, size);
 	while (!b) {
 		x_thread_sleep(RETRY_INTERVAL);
-		b = malloc(size);
+		b = malloc(size ? size : 1);
 	}
 
 	b->mset = mset;
