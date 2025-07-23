@@ -37,10 +37,10 @@ int x_setmode_utf16(FILE *stream);
 int x_setmode_binary(FILE *stream);
 int x_isatty(FILE *file);
 
-int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap) X_ATTR_VPRINTF(2);
-int x_fprintf(FILE *stream, const x_uchar *format, ...) X_ATTR_PRINTF(2, 3);
-int x_vprintf(const x_uchar *format, va_list ap) X_ATTR_VPRINTF(1);
-int x_printf(const x_uchar *format, ...) X_ATTR_PRINTF(1, 2);
+int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap);
+int x_fprintf(FILE *stream, const x_uchar *format, ...);
+int x_vprintf(const x_uchar *format, va_list ap);
+int x_printf(const x_uchar *format, ...);
 int x_fputs(const x_uchar *ws, FILE *stream);
 int x_fputc(x_uchar c, FILE *stream);
 int x_putchar(x_uchar c);

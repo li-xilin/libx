@@ -46,6 +46,7 @@
 #endif
 
 #include "x/printf.h"
+#include "x/detect.h"
 #include "x/uchar.h"
 #include "x/strbuf.h"
 
@@ -54,6 +55,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+
+#ifdef X_OS_WIN
+#include <winuser.h>
+#include <stringapiset.h>
+#endif
 
 
 #define PRINTF_INTEGER_BUFFER_SIZE    32
@@ -393,9 +399,16 @@ static inline output_gadget_t function_gadget(int (*function)(x_uchar, void*), v
 // internal secure strlen
 // @return The length of the string (excluding the terminating 0) limited by 'maxsize'
 // variables - hence the signature.
-static inline size_t strnlen_s_(const x_uchar* str, size_t maxsize)
+static inline size_t ustrnlen_s_(const x_uchar* str, size_t maxsize)
 {
 	const x_uchar* s;
+	for (s = str; *s && maxsize--; ++s);
+	return (size_t)(s - str);
+}
+
+static inline size_t strnlen_s_(const char* str, size_t maxsize)
+{
+	const char* s;
 	for (s = str; *s && maxsize--; ++s);
 	return (size_t)(s - str);
 }
@@ -1304,9 +1317,42 @@ static inline int format_string_loop(output_gadget_t* output, const x_uchar* for
 					format++;
 					break;
 				}
-			case 's' :
+			case 'S' :
 				{
 					const x_uchar* p = va_arg(args, x_uchar*);
+					if (p == NULL) {
+						if (out_rev_(output, x_u(")llun("), 6, width, flags))
+							return -1;
+					}
+					else {
+						size_t l = ustrnlen_s_(p, precision ? precision : PRINTF_MAX_POSSIBLE_BUFFER_SIZE);
+						// pre padding
+						if (flags & FLAGS_PRECISION) {
+							l = (l < precision ? l : precision);
+						}
+						if (!(flags & FLAGS_LEFT)) {
+							while (l++ < width) {
+								putchar_via_gadget(output, ' ');
+							}
+						}
+						// string output
+						while ((*p != 0) && (!(flags & FLAGS_PRECISION) || precision)) {
+							putchar_via_gadget(output, *(p++));
+							--precision;
+						}
+						// post padding
+						if (flags & FLAGS_LEFT) {
+							while (l++ < width) {
+								putchar_via_gadget(output, ' ');
+							}
+						}
+					}
+					format++;
+					break;
+				}
+			case 's' :
+				{
+					const char* p = va_arg(args, char*);
 					if (p == NULL) {
 						if (out_rev_(output, x_u(")llun("), 6, width, flags))
 							return -1;
@@ -1323,9 +1369,16 @@ static inline int format_string_loop(output_gadget_t* output, const x_uchar* for
 							}
 						}
 						// string output
-						while ((*p != 0) && (!(flags & FLAGS_PRECISION) || precision)) {
-							putchar_via_gadget(output, *(p++));
-							--precision;
+						uint16_t utf16[2];
+						size_t mbs_len = l, i = 0;
+						while (i < mbs_len) {
+							uint32_t codepoint;
+							i += x_utf8_to_ucode((char *)p + i, mbs_len - i, &codepoint);
+							size_t u16len = x_ucode_to_utf16(codepoint, utf16);
+							for (int j = 0; j < u16len && (!(flags & FLAGS_PRECISION) || precision); j++) {
+								putchar_via_gadget(output, utf16[j]);
+								--precision;
+							}
 						}
 						// post padding
 						if (flags & FLAGS_LEFT) {

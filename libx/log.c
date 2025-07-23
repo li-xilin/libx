@@ -21,6 +21,7 @@
  */
 
 #include "x/log.h"
+#include "x/detect.h"
 #include "x/uchar.h"
 #include "x/tcolor.h"
 #include "x/mutex.h"
@@ -135,7 +136,7 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 		x_tcolor_reset(&tc);
 		goto out;
 	}
-	if (x_fprintf(fp, x_u("%-5s"), buffer) < 0) {
+	if (x_fprintf(fp, x_u("%-5S"), buffer) < 0) {
 		x_tcolor_reset(&tc);
 		goto out;
 	}
@@ -150,7 +151,7 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 			goto out;
 		x_tcolor_set(fp, &tc);
 		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
-		if (x_fprintf(fp, x_u("%s"), buffer) < 0) {
+		if (x_fprintf(fp, x_u("%S"), buffer) < 0) {
 			x_tcolor_reset(&tc);
 			goto out;
 		}
@@ -167,7 +168,7 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 			goto out;
 		x_tcolor_set(fp, &tc);
 		x_tcolor_fg(&tc, X_TCOLOR_GREEN);
-		if (x_fprintf(fp, x_u("%s"), buffer) < 0) {
+		if (x_fprintf(fp, x_u("%S"), buffer) < 0) {
 			x_tcolor_reset(&tc);
 			goto out;
 		}
@@ -183,9 +184,13 @@ int x_log_handler_native(const x_location *loc, void *arg, int level, const x_uc
 	if (x_fputs(text, fp) == EOF)
 		goto out;
 
-	if (!text[0] || text[x_ustrlen(text) - 1] != x_u('\n'))
-		if (x_fputc(x_u('\n'), fp) == EOF)
-			goto out;
+#ifdef X_OS_WIN
+	if (x_fputc(x_u('\r'), fp) == EOF)
+		goto out;
+#endif
+
+	if (x_fputc(x_u('\n'), fp) == EOF)
+		goto out;
 
 	if (fflush(fp))
 		goto out;
@@ -362,6 +367,16 @@ int __x_log_vprint(const x_location *loc, int level, const x_uchar* fmt, va_list
 	x_uchar ms_buf[X_LOG_MX];
 	if (x_vsnprintf(ms_buf, sizeof ms_buf, fmt, ap) < 0)
 		return -1;
+
+	for (int len = x_ustrlen(ms_buf); len; len--) {
+		if (ms_buf[len - 1] == x_u('\n') || ms_buf[len - 1] == x_u('\r') || ms_buf[len - 1] == x_u('\t')
+				|| ms_buf[len - 1] == x_u(' ')) {
+			ms_buf[len - 1] = x_u('\0');
+			continue;
+		}
+		else
+			break;
+	}
 
 	int ret = s_handler ? s_handler(loc, s_handler_arg, level, ms_buf)
 		: x_log_handler_native(loc, s_handler_arg, level, ms_buf);

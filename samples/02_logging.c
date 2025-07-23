@@ -16,7 +16,7 @@ int main(void)
 
 	x_log_set_mode(X_LM_NOLOC);
 
-	x_pinfo("Info message without location: %s", x_u("[test string]"));
+	x_pinfo("Info message without location: %S", x_u("[test string]"));
 	x_ptrace("Trace message without location");
 	x_pdebug("Debug message without location");
 	x_pwarn("Warn message without location");
@@ -41,5 +41,6 @@ int main(void)
 	x_perror("Error message with location and time");
 	x_pfatal("Fatal message with location and time");
 
-	x_log(X_LL_INFO, "输出一条中文日志");
+	x_log(X_LL_INFO, "打印uchar类型 %S", x_u("中文消息"));
+	x_log(X_LL_INFO, "打印utf-8类型 %s", "中文消息");
 }

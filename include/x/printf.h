@@ -52,16 +52,16 @@ extern "C" {
 #  include <stddef.h>
 #endif
 
-int x_printf(const x_uchar* format, ...) X_ATTR_PRINTF(1, 2);
-int x_vprintf(const x_uchar* format, va_list arg) X_ATTR_VPRINTF(1);
-int x_sprintf(x_uchar* s, const x_uchar* format, ...) X_ATTR_PRINTF(2, 3);
-int x_vsprintf(x_uchar* s, const x_uchar* format, va_list arg) X_ATTR_VPRINTF(2);
-int x_snprintf(x_uchar* s, size_t count, const x_uchar* format, ...) X_ATTR_PRINTF(3, 4);
-int x_vsnprintf(x_uchar* s, size_t count, const x_uchar* format, va_list arg) X_ATTR_VPRINTF(3);
-int x_ctprintf(int (*out)(x_uchar c, void* ctx), void* ctx, const x_uchar* format, ...) X_ATTR_PRINTF(3, 4);
-int x_vctprintf(int (*out)(x_uchar c, void* ctx), void* ctx, const x_uchar* format, va_list arg) X_ATTR_VPRINTF(3);
-int x_stprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x_uchar* format, ...) X_ATTR_PRINTF(3, 4);
-int x_vstprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x_uchar* format, va_list arg) X_ATTR_VPRINTF(3);
+int x_printf(const x_uchar* format, ...);
+int x_vprintf(const x_uchar* format, va_list arg);
+int x_sprintf(x_uchar* s, const x_uchar* format, ...);
+int x_vsprintf(x_uchar* s, const x_uchar* format, va_list arg);
+int x_snprintf(x_uchar* s, size_t count, const x_uchar* format, ...);
+int x_vsnprintf(x_uchar* s, size_t count, const x_uchar* format, va_list arg);
+int x_ctprintf(int (*out)(x_uchar c, void* ctx), void* ctx, const x_uchar* format, ...);
+int x_vctprintf(int (*out)(x_uchar c, void* ctx), void* ctx, const x_uchar* format, va_list arg);
+int x_stprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x_uchar* format, ...);
+int x_vstprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x_uchar* format, va_list arg);
 int x_putchar(x_uchar ch);
 
 #ifdef __cplusplus
