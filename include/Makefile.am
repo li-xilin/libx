@@ -43,6 +43,10 @@ xinclude_HEADERS = \
 	x/printf.h \
 	x/hmap.h \
 	x/time.h \
+	x/event.h \
+	x/sockmux.h \
+	x/socket.h \
+	x/reactor.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
