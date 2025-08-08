@@ -1317,6 +1317,46 @@ static inline int format_string_loop(output_gadget_t* output, const x_uchar* for
 					format++;
 					break;
 				}
+			case 's' :
+#ifdef X_OS_WIN
+				{
+					const char* p = va_arg(args, char*);
+					if (p == NULL) {
+						if (out_rev_(output, x_u(")llun("), 6, width, flags))
+							return -1;
+					}
+					else {
+						size_t l = strnlen_s_(p, precision ? precision : PRINTF_MAX_POSSIBLE_BUFFER_SIZE);
+						// pre padding
+						if (flags & FLAGS_PRECISION) {
+							l = (l < precision ? l : precision);
+						}
+						size_t mbs_len = l, i = 0;
+						if (!(flags & FLAGS_LEFT)) {
+							while (l++ < width) {
+								putchar_via_gadget(output, ' ');
+							}
+						}
+						// string output
+						uint16_t utf16[2];
+						while (i < mbs_len) {
+							uint32_t codepoint;
+							i += x_utf8_to_ucode((char *)p + i, mbs_len - i, &codepoint);
+							size_t u16len = x_ucode_to_utf16(codepoint, utf16);
+							for (int j = 0; j < u16len; j++)
+								putchar_via_gadget(output, utf16[j]);
+						}
+						// post padding
+						if (flags & FLAGS_LEFT) {
+							while (l++ < width) {
+								putchar_via_gadget(output, ' ');
+							}
+						}
+					}
+					format++;
+					break;
+				}
+#endif
 			case 'S' :
 				{
 					const x_uchar* p = va_arg(args, x_uchar*);
@@ -1339,46 +1379,6 @@ static inline int format_string_loop(output_gadget_t* output, const x_uchar* for
 						while ((*p != 0) && (!(flags & FLAGS_PRECISION) || precision)) {
 							putchar_via_gadget(output, *(p++));
 							--precision;
-						}
-						// post padding
-						if (flags & FLAGS_LEFT) {
-							while (l++ < width) {
-								putchar_via_gadget(output, ' ');
-							}
-						}
-					}
-					format++;
-					break;
-				}
-			case 's' :
-				{
-					const char* p = va_arg(args, char*);
-					if (p == NULL) {
-						if (out_rev_(output, x_u(")llun("), 6, width, flags))
-							return -1;
-					}
-					else {
-						size_t l = strnlen_s_(p, precision ? precision : PRINTF_MAX_POSSIBLE_BUFFER_SIZE);
-						// pre padding
-						if (flags & FLAGS_PRECISION) {
-							l = (l < precision ? l : precision);
-						}
-						if (!(flags & FLAGS_LEFT)) {
-							while (l++ < width) {
-								putchar_via_gadget(output, ' ');
-							}
-						}
-						// string output
-						uint16_t utf16[2];
-						size_t mbs_len = l, i = 0;
-						while (i < mbs_len) {
-							uint32_t codepoint;
-							i += x_utf8_to_ucode((char *)p + i, mbs_len - i, &codepoint);
-							size_t u16len = x_ucode_to_utf16(codepoint, utf16);
-							for (int j = 0; j < u16len && (!(flags & FLAGS_PRECISION) || precision); j++) {
-								putchar_via_gadget(output, utf16[j]);
-								--precision;
-							}
 						}
 						// post padding
 						if (flags & FLAGS_LEFT) {
