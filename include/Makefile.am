@@ -47,6 +47,7 @@ xinclude_HEADERS = \
 	x/sockmux.h \
 	x/socket.h \
 	x/reactor.h \
+	x/json.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

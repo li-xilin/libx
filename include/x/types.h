@@ -237,5 +237,10 @@ typedef struct x_reactor_st x_reactor;
 typedef struct x_sockmux_st x_sockmux;
 #endif
 
+#ifndef X_JSON_DEFINED
+#define X_JSON_DEFINED
+typedef struct x_json_st x_json;
+#endif
+
 #endif
 
