@@ -37,9 +37,9 @@ extern "C"
 #include <stdint.h>
 
 #define X_JSON_INVALID 0
-#define X_JSON_FALSE   (1 << 0)
-#define X_JSON_TRUE    (1 << 1)
-#define x_json_NULL    (1 << 2)
+#define X_JSON_BOOL    (1 << 0)
+#define X_JSON_NULL    (1 << 1)
+#define X_JSON_INTEGER (1 << 2)
 #define X_JSON_NUMBER  (1 << 3)
 #define X_JSON_STRING  (1 << 4)
 #define X_JSON_ARRAY   (1 << 5)
@@ -54,10 +54,13 @@ struct x_json_st
     struct x_json_st *prev;
     struct x_json_st *child;
     int type;
-    char *valuestring;
-    int valueint;
-    double valuedouble;
     char *string;
+
+	union {
+		char *string;
+		int integer;
+		double number;
+	} value;
 };
 
 #ifndef X_JSON_NESTING_LIMIT
@@ -78,42 +81,41 @@ x_json *x_json_parse4(const char *value, size_t buffer_length, const char **retu
 char *x_json_print(const x_json *item, bool fmt);
 char *x_json_print_buffered(const x_json *item, int prebuffer, bool fmt);
 bool x_json_print_to_buffer(x_json *item, char *buffer, const int length, const bool format);
-void x_json_delete(x_json *item);
+void x_json_free(x_json *item);
 
-int x_json_get_array_size(const x_json *array);
-x_json *x_json_get_array_item(const x_json *array, int index);
-x_json *x_json_get_object_item(const x_json *const object, const char *const string);
-x_json *x_json_get_object_item_case_sensitive(const x_json *const object, const char *const string);
-bool x_json_has_object_item(const x_json *object, const char *string);
+int x_json_array_size(const x_json *array);
+x_json *x_json_array_at(const x_json *array, int index);
+x_json *x_json_object_at(const x_json *const object, const char *const string, bool case_sensitive);
+bool x_json_object_exist(const x_json *object, const char *string, bool case_sensitive);
 
 bool x_json_is_invalid(const x_json *const item);
 bool x_json_is_false(const x_json *const item);
 bool x_json_is_true(const x_json *const item);
 bool x_json_is_bool(const x_json *const item);
 bool x_json_is_null(const x_json *const item);
+bool x_json_is_int(const x_json *const item);
 bool x_json_is_number(const x_json *const item);
 bool x_json_is_string(const x_json *const item);
 bool x_json_is_array(const x_json *const item);
 bool x_json_is_object(const x_json *const item);
 bool x_json_is_raw(const x_json *const item);
-char *x_json_get_string_value(const x_json *const item);
-double x_json_get_number_value(const x_json *const item);
+char *x_json_string(const x_json *const item);
+double x_json_number(const x_json *const item);
 
 x_json *x_json_create_null(void);
-x_json *x_json_create_true(void);
-x_json *x_json_create_false(void);
 x_json *x_json_create_bool(bool boolean);
+x_json *x_json_create_int(double num);
 x_json *x_json_create_number(double num);
 x_json *x_json_create_string(const char *string);
 x_json *x_json_create_raw(const char *raw);
 x_json *x_json_create_array(void);
 x_json *x_json_create_object(void);
 
-/* Create a string where valuestring references a string so
- * it will not be freed by x_json_delete */
+/* Create a string where value.string references a string so
+ * it will not be freed by x_json_free */
 x_json *x_json_create_string_reference(const char *string);
 /* Create an object/array that only references it's elements so
- * they will not be freed by x_json_delete */
+ * they will not be freed by x_json_free */
 x_json *x_json_create_object_reference(const x_json *child);
 x_json *x_json_create_array_reference(const x_json *child);
 
@@ -122,31 +124,29 @@ x_json *x_json_create_float_array(const float *numbers, int count);
 x_json *x_json_create_double_array(const double *numbers, int count);
 x_json *x_json_create_string_array(const char *const *strings, int count);
 
-bool x_json_add_item_to_array(x_json *array, x_json *item);
-bool x_json_add_item_to_object(x_json *object, const char *string, x_json *item);
-/* Use this when string is definitely const (i.e. a literal, or as good as), and will definitely survive the x_json object.
- * WARNING: When this function was used, make sure to always check that (item->type & X_JSON_STRING_IS_CONST) is zero before
- * writing to `item->string` */
-bool x_json_add_item_to_object_cs(x_json *object, const char *string, x_json *item);
-/* Append reference to item to the specified array/object. Use this when you want to add an existing x_json to a new x_json, but don't want to corrupt your existing x_json. */
-bool x_json_add_item_reference_to_array(x_json *array, x_json *item);
-bool x_json_add_item_reference_to_object(x_json *object, const char *string, x_json *item);
+void x_json_replace_child(x_json *const parent, x_json *const item, x_json *replacement);
+x_json *x_json_detach_child(x_json *parent, x_json *const item);
 
-x_json *x_json_detach_item_via_pointer(x_json *parent, x_json *const item);
-x_json *x_json_detach_item_from_array(x_json *array, int which);
-void x_json_delete_item_from_array(x_json *array, int which);
-x_json *x_json_detach_item_from_object(x_json *object, const char *string);
-x_json *x_json_detach_item_from_object_case_sensitive(x_json *object, const char *string);
-void x_json_delete_item_from_object(x_json *object, const char *string);
-void x_json_delete_item_from_object_case_sensitive(x_json *object, const char *string);
+bool x_json_array_add(x_json *array, x_json *item);
+bool x_json_object_add(x_json *object, const char *string, bool case_sensitive, x_json *item);
+bool x_json_array_addref(x_json *array, x_json *item);
+bool x_json_object_addref(x_json *object, const char *string, x_json *item);
 
-bool x_json_insert_item_in_array(x_json *array, int which, x_json *newitem); /* Shifts pre-existing items to the right. */
-void x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement);
-void x_json_replace_item_in_array(x_json *array, int which, x_json *newitem);
-void x_json_replace_item_in_object(x_json *object,const char *string,x_json *newitem);
-void x_json_replace_item_in_object_case_sensitive(x_json *object,const char *string,x_json *newitem);
+x_json *x_json_array_detach(x_json *array, int which);
+x_json *x_json_object_detach(x_json *object, const char *string, bool case_sensitive);
+void x_json_array_del(x_json *array, int which);
+void x_json_object_del(x_json *object, const char *string, bool case_sensitive);
 
-x_json *x_json_duplicate(const x_json *item, bool recurse);
+bool x_json_array_insert(x_json *array, int which, x_json *newitem); /* Shifts pre-existing items to the right. */
+void x_json_array_replace(x_json *array, int which, x_json *newitem);
+void x_json_object_replace(x_json *object, const char *string, bool case_sensitive, x_json *newitem);
+
+void x_json_set_int(x_json *const object, int value);
+void x_json_set_float(x_json *const object, double value);
+void x_json_set_bool(x_json *const object, bool value);
+void x_json_set_string(x_json *object, const char *value);
+
+x_json *x_json_copy(const x_json *item, bool recurse);
 /* Duplicate will create a new, identical x_json item to the one you pass, in new memory that will
  * need to be released. With recurse!=0, it will duplicate any children connected to the item.
  * The item->next and ->prev pointers are always zero on return from Duplicate. */
@@ -158,42 +158,26 @@ bool x_json_compare(const x_json *const a, const x_json *const b, const bool cas
 void x_json_minify(char *json);
 
 /* Helper functions for creating and adding items to an object at the same time. */
-x_json* x_json_add_null_to_object(x_json *const object, const char *const name);
-x_json* x_json_add_true_to_object(x_json *const object, const char *const name);
-x_json* x_json_add_false_to_object(x_json *const object, const char *const name);
-x_json* x_json_add_bool_to_object(x_json *const object, const char *const name, const bool boolean);
-x_json* x_json_add_number_to_object(x_json *const object, const char *const name, const double number);
-x_json* x_json_add_string_to_object(x_json *const object, const char *const name, const char *const string);
-x_json* x_json_add_raw_to_object(x_json *const object, const char *const name, const char *const raw);
-x_json* x_json_add_object_to_object(x_json *const object, const char *const name);
-x_json* x_json_add_array_to_object(x_json *const object, const char *const name);
-
-/* When assigning an integer value, it needs to be propagated to valuedouble too. */
-#define x_json_set_int_value(object, number) ((object) ? (object)->valueint = (object)->valuedouble = (number) : (number))
-/* helper for the x_json_set_number_value macro */
-double x_json_set_number_helper(x_json *object, double number);
-#define x_json_set_number_value(object, number) ((object != NULL) ? x_json_set_number_helper(object, (double)number) : (number))
-/* Change the valuestring of a X_JSON_STRING object, only takes effect when type of object is X_JSON_STRING */
-char* x_json_set_valuestring(x_json *object, const char *valuestring);
-
-/* If the object is not a boolean type this does nothing and returns X_JSON_INVALID else it returns the new type*/
-#define x_json_set_bool_value(object, boolValue) ( \
-    (object != NULL && ((object)->type & (X_JSON_FALSE|X_JSON_TRUE))) ? \
-    (object)->type=((object)->type &(~(X_JSON_FALSE|X_JSON_TRUE)))|((boolValue)?X_JSON_TRUE:X_JSON_FALSE) : \
-    X_JSON_INVALID\
-)
+x_json* x_json_object_add_null(x_json *const object, const char *const name);
+x_json* x_json_object_add_true(x_json *const object, const char *const name);
+x_json* x_json_object_add_false(x_json *const object, const char *const name);
+x_json* x_json_object_add_bool(x_json *const object, const char *const name, const bool boolean);
+x_json* x_json_object_add_number(x_json *const object, const char *const name, const double number);
+x_json* x_json_object_add_string(x_json *const object, const char *const name, const char *const string);
+x_json* x_json_object_add_raw(x_json *const object, const char *const name, const char *const raw);
+x_json* x_json_object_add_object(x_json *const object, const char *const name);
+x_json* x_json_object_add_array(x_json *const object, const char *const name);
 
 /* Macro for iterating over an array or object */
 #define x_json_array_foreach(element, array) \
 	for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
 
-void *x_json_malloc(size_t size);
-void x_json_free(void *object);
+#define x_json_object_foreach(element, object) \
+	for(element = (object != NULL) ? (object)->child : NULL; element != NULL; element = element->next)
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
 

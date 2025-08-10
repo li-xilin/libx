@@ -38,6 +38,7 @@
 #include "x/json.h"
 #include "x/macros.h"
 #include "x/memory.h"
+#include "x/string.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -89,34 +90,23 @@ const char * x_json_get_error_ptr(void)
     return (const char*) (global_error.json + global_error.position);
 }
 
-char * x_json_get_string_value(const x_json *const item)
+char * x_json_string(const x_json *const item)
 {
     if (!x_json_is_string(item)) {
         return NULL;
     }
 
-    return item->valuestring;
+    return item->value.string;
 }
 
-double x_json_get_number_value(const x_json *const item)
+double x_json_number(const x_json *const item)
 {
-    if (!x_json_is_number(item))
-        return (double) NAN;
-    return item->valuedouble;
-}
-
-/* Case insensitive string comparison, doesn't consider two NULL pointers equal though */
-static int case_insensitive_strcmp(const uint8_t *string1, const uint8_t *string2)
-{
-    if ((string1 == NULL) || (string2 == NULL))
-        return 1;
-    if (string1 == string2)
-        return 0;
-    for(; tolower(*string1) == tolower(*string2); (void)string1++, string2++) {
-        if (*string1 == '\0')
-            return 0;
-    }
-    return tolower(*string1) - tolower(*string2);
+	if (!x_json_is_number(item))
+		return (double) NAN;
+	if ((item->type & 0xFF) == X_JSON_INTEGER)
+		return item->value.integer;
+	else
+		return item->value.number;
 }
 
 #define static_strlen(string_literal) (sizeof(string_literal) - sizeof(""))
@@ -144,17 +134,18 @@ static x_json *x_json_new_item(void)
 }
 
 /* Delete a x_json structure. */
-void x_json_delete(x_json *item)
+void x_json_free(x_json *item)
 {
     x_json *next = NULL;
     while (item != NULL) {
         next = item->next;
-        if (!(item->type & X_JSON_IS_REF) && (item->child != NULL)) {
-            x_json_delete(item->child);
-        }
-        if (!(item->type & X_JSON_IS_REF) && (item->valuestring != NULL)) {
-            x_free(item->valuestring);
-            item->valuestring = NULL;
+        if (!(item->type & X_JSON_IS_REF)) {
+			if ((item->type & 0xFF) == X_JSON_OBJECT) {
+				x_json_free(item->child);
+			}
+			else if ((item->type & 0xFF) == X_JSON_STRING) {
+				x_free(item->value.string);
+			}
         }
         if (!(item->type & X_JSON_STRING_IS_CONST) && (item->string != NULL)) {
             x_free(item->string);
@@ -195,7 +186,6 @@ typedef struct
 /* Parse the input text to generate a number, and populate the result into item. */
 static bool parse_number(x_json *const item, parse_buffer * const input_buffer)
 {
-    double number = 0;
     uint8_t *after_end = NULL;
     uint8_t *number_c_string;
     uint8_t decimal_point = get_decimal_point();
@@ -222,7 +212,7 @@ static bool parse_number(x_json *const item, parse_buffer * const input_buffer)
         }
     }
 loop_end:
-    number_c_string = (uint8_t *) x_malloc(NULL, number_string_length + 1);
+    number_c_string = (uint8_t *)x_malloc(NULL, number_string_length + 1);
     if (number_c_string == NULL)
         return false;
     memcpy(number_c_string, buffer_at_offset(input_buffer), number_string_length);
@@ -235,65 +225,74 @@ loop_end:
             }
         }
     }
-    number = strtod((const char*)number_c_string, (char**)&after_end);
-    if (number_c_string == after_end) {
-        /* free the temporary buffer */
-        x_free(number_c_string);
-        return false; /* parse_error */
-    }
-    item->valuedouble = number;
-    /* use saturation in case of overflow */
-    if (number >= INT_MAX)
-        item->valueint = INT_MAX;
-    else if (number <= (double)INT_MIN)
-        item->valueint = INT_MIN;
-    else
-        item->valueint = (int)number;
-    item->type = X_JSON_NUMBER;
-    input_buffer->offset += (size_t)(after_end - number_c_string);
-    x_free(number_c_string);
-    return true;
+
+	double number = strtod((const char*)number_c_string, (char**)&after_end);
+	if (has_decimal_point) {
+		if (number_c_string == after_end) {
+			/* free the temporary buffer */
+			x_free(number_c_string);
+			return false; /* parse_error */
+		}
+		item->value.number = number;
+		item->type = X_JSON_NUMBER;
+		input_buffer->offset += (size_t)(after_end - number_c_string);
+	}
+	else {
+		/* use saturation in case of overflow */
+		if (number >= INT_MAX)
+			item->value.integer = INT_MAX;
+		else if (number <= (double)INT_MIN)
+			item->value.integer = INT_MIN;
+		else
+			item->value.integer = (int)number;
+		item->type = X_JSON_INTEGER;
+		input_buffer->offset += number_string_length;
+	}
+	x_free(number_c_string);
+	return true;
 }
 
-/* don't ask me, but the original x_json_set_number_value returns an integer or double */
+/* don't ask me, but the original x_json_set_float returns an integer or double */
 double x_json_set_number_helper(x_json *object, double number)
 {
     if (number >= INT_MAX)
-        object->valueint = INT_MAX;
+        object->value.integer = INT_MAX;
     else if (number <= (double)INT_MIN)
-        object->valueint = INT_MIN;
+        object->value.integer = INT_MIN;
     else
-        object->valueint = (int)number;
-    return object->valuedouble = number;
+        object->value.integer = (int)number;
+    return object->value.number = number;
 }
 
-/* Note: when passing a NULL valuestring, x_json_set_valuestring treats this as an error and return NULL */
-char* x_json_set_valuestring(x_json *object, const char *valuestring)
+
+void x_json_set_int(x_json *const object, int value)
+{
+	assert(object->type & X_JSON_INTEGER);
+	object->value.integer = value;
+}
+
+void x_json_set_float(x_json *const object, double value)
+{
+	assert(object->type & X_JSON_NUMBER);
+	object->value.number = value;
+}
+
+void x_json_set_bool(x_json *const object, bool value)
+{
+	object->value.integer = value;
+}
+
+void x_json_set_string(x_json *object, const char *valuestring)
 {
     char *copy = NULL;
-    size_t v1_len;
-    size_t v2_len;
-    /* if object's type is not X_JSON_STRING or is X_JSON_IS_REF, it should not set valuestring */
-    if ((object == NULL) || !(object->type & X_JSON_STRING) || (object->type & X_JSON_IS_REF))
-        return NULL;
-    /* return NULL if the object is corrupted or valuestring is NULL */
-    if (object->valuestring == NULL || valuestring == NULL)
-        return NULL;
-    v1_len = strlen(valuestring);
-    v2_len = strlen(object->valuestring);
-    if (v1_len <= v2_len) {
-        /* strcpy does not handle overlapping string: [X1, X2] [Y1, Y2] => X2 < Y1 or Y2 < X1 */
-        if (!( valuestring + v1_len < object->valuestring || object->valuestring + v2_len < valuestring )) {
-            return NULL;
-        }
-        strcpy(object->valuestring, valuestring);
-        return object->valuestring;
-    }
+    /* if object's type is not X_JSON_STRING or is X_JSON_IS_REF, it should not set value.string */
+    assert ((object != NULL) && (object->type & X_JSON_STRING) && !(object->type & X_JSON_IS_REF));
+    /* return NULL if the object is corrupted or value.string is NULL */
+    assert (object->value.string != NULL && valuestring != NULL);
     copy = (char*) x_json_strdup((const uint8_t*)valuestring);
-    if (object->valuestring != NULL)
-        x_json_free(object->valuestring);
-    object->valuestring = copy;
-    return copy;
+    if (object->value.string != NULL)
+        x_free(object->value.string);
+    object->value.string = copy;
 }
 
 typedef struct
@@ -359,11 +358,10 @@ static bool compare_double(double a, double b)
     return (fabs(a - b) <= maxVal * DBL_EPSILON);
 }
 
-/* Render the number nicely from the given item into a string. */
 static bool print_number(const x_json *const item, printbuffer * const output_buffer)
 {
     uint8_t *output_pointer = NULL;
-    double d = item->valuedouble;
+    double d = item->value.number;
     int length = 0;
     size_t i = 0;
     uint8_t number_buffer[26] = {0}; /* temporary buffer to print the number into */
@@ -375,8 +373,8 @@ static bool print_number(const x_json *const item, printbuffer * const output_bu
     /* This checks for NaN and Infinity */
     if (isnan(d) || isinf(d))
         length = sprintf((char*)number_buffer, "null");
-    else if(d == (double)item->valueint)
-        length = sprintf((char*)number_buffer, "%d", item->valueint);
+    else if(d == (double)item->value.integer)
+        length = sprintf((char*)number_buffer, "%d", item->value.integer);
     else {
         /* Try 15 decimal places of precision to avoid nonsignificant nonzero digits */
         length = sprintf((char*)number_buffer, "%1.15g", d);
@@ -401,11 +399,30 @@ static bool print_number(const x_json *const item, printbuffer * const output_bu
             output_pointer[i] = '.';
             continue;
         }
-
         output_pointer[i] = number_buffer[i];
     }
     output_pointer[i] = '\0';
     output_buffer->offset += (size_t)length;
+    return true;
+}
+
+static bool print_integer(const x_json *const item, printbuffer * const output_buffer)
+{
+    uint8_t *output_pointer = NULL;
+    int length = 0;
+    uint8_t number_buffer[26] = {0}; /* temporary buffer to print the number into */
+    if (!output_buffer) {
+        return false;
+	}
+	length = sprintf((char*)number_buffer, "%d", item->value.integer);
+    if ((length < 0) || (length > (int)(sizeof(number_buffer) - 1)))
+        return false;
+    output_pointer = ensure(output_buffer, (size_t)length + sizeof(""));
+    if (!output_pointer)
+        return false;
+    memcpy(output_buffer, number_buffer, length);
+    output_pointer[length] = '\0';
+    output_buffer->offset += length;
     return true;
 }
 
@@ -598,7 +615,7 @@ static bool parse_string(x_json *const item, parse_buffer * const input_buffer)
     /* zero terminate the output */
     *output_pointer = '\0';
     item->type = X_JSON_STRING;
-    item->valuestring = (char*)output;
+    item->value.string = (char*)output;
     input_buffer->offset = (size_t) (input_end - input_buffer->content);
     input_buffer->offset++;
     return true;
@@ -713,7 +730,7 @@ static bool print_string_ptr(const uint8_t * const input, printbuffer * const ou
 /* Invoke print_string_ptr (which is useful) on an item. */
 static bool print_string(const x_json *const item, printbuffer * const p)
 {
-    return print_string_ptr((uint8_t*)item->valuestring, p);
+    return print_string_ptr((uint8_t*)item->value.string, p);
 }
 
 /* Predeclare these prototypes. */
@@ -813,7 +830,7 @@ x_json *x_json_parse4(const char *value, size_t buffer_length, const char **retu
     return item;
 fail:
     if (item != NULL)
-        x_json_delete(item);
+        x_json_free(item);
     if (value != NULL) {
         error local_error;
         local_error.json = (const uint8_t*)value;
@@ -924,20 +941,21 @@ static bool parse_value(x_json *const item, parse_buffer * const input_buffer)
     /* parse the different types of values */
     /* null */
     if (can_read(input_buffer, 4) && (strncmp((const char*)buffer_at_offset(input_buffer), "null", 4) == 0)) {
-        item->type = x_json_NULL;
+        item->type = X_JSON_NULL;
         input_buffer->offset += 4;
         return true;
     }
     /* false */
     if (can_read(input_buffer, 5) && (strncmp((const char*)buffer_at_offset(input_buffer), "false", 5) == 0)) {
-        item->type = X_JSON_FALSE;
+        item->type = X_JSON_BOOL;
+		item->value.integer = 0;
         input_buffer->offset += 5;
         return true;
     }
     /* true */
     if (can_read(input_buffer, 4) && (strncmp((const char*)buffer_at_offset(input_buffer), "true", 4) == 0)) {
-        item->type = X_JSON_TRUE;
-        item->valueint = 1;
+        item->type = X_JSON_BOOL;
+        item->value.integer = 1;
         input_buffer->offset += 4;
         return true;
     }
@@ -967,37 +985,31 @@ static bool print_value(const x_json *const item, printbuffer * const output_buf
     if ((item == NULL) || (output_buffer == NULL))
         return false;
     switch ((item->type) & 0xFF) {
-        case x_json_NULL:
+        case X_JSON_NULL:
             output = ensure(output_buffer, 5);
             if (!output)
                 return false;
             strcpy((char*)output, "null");
             return true;
-
-        case X_JSON_FALSE:
-            output = ensure(output_buffer, 6);
+        case X_JSON_BOOL:
+            output = ensure(output_buffer, item->value.integer ? 5 : 6);
             if (!output)
                 return false;
-            strcpy((char*)output, "false");
-            return true;
-
-        case X_JSON_TRUE:
-            output = ensure(output_buffer, 5);
-            if (!output)
-                return false;
-            strcpy((char*)output, "true");
+            strcpy((char*)output, item->value.integer ? "true" : "false");
             return true;
         case X_JSON_NUMBER:
+            return print_integer(item, output_buffer);
+        case X_JSON_INTEGER:
             return print_number(item, output_buffer);
         case X_JSON_RAW:
-            if (item->valuestring == NULL)
+            if (item->value.string == NULL)
                 return false;
             size_t raw_length = 0;
-            raw_length = strlen(item->valuestring) + sizeof("");
+            raw_length = strlen(item->value.string) + sizeof("");
             output = ensure(output_buffer, raw_length);
             if (!output)
                 return false;
-            memcpy(output, item->valuestring, raw_length);
+            memcpy(output, item->value.string, raw_length);
             return true;
         case X_JSON_STRING:
             return print_string(item, output_buffer);
@@ -1069,7 +1081,7 @@ success:
     return true;
 fail:
     if (head != NULL)
-        x_json_delete(head);
+        x_json_free(head);
     return false;
 }
 
@@ -1161,9 +1173,9 @@ static bool parse_object(x_json *const item, parse_buffer * const input_buffer)
         if (!parse_string(current_item, input_buffer))
             goto fail; /* failed to parse name */
         buffer_skip_whitespace(input_buffer);
-        /* swap valuestring and string, because we parsed the name */
-        current_item->string = current_item->valuestring;
-        current_item->valuestring = NULL;
+        /* swap value.string and string, because we parsed the name */
+        current_item->string = current_item->value.string;
+        current_item->value.string = NULL;
         if (cannot_access_at_index(input_buffer, 0) || (buffer_at_offset(input_buffer)[0] != ':'))
             goto fail; /* invalid object */
         /* parse the value */
@@ -1187,7 +1199,7 @@ success:
     return true;
 fail:
     if (head != NULL)
-        x_json_delete(head);
+        x_json_free(head);
     return false;
 }
 
@@ -1266,7 +1278,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
 }
 
 /* Get Array size/item / object item. */
-int x_json_get_array_size(const x_json *array)
+int x_json_array_size(const x_json *array)
 {
     x_json *child = NULL;
     size_t size = 0;
@@ -1294,7 +1306,7 @@ static x_json* get_array_item(const x_json *array, size_t index)
     return current_child;
 }
 
-x_json *x_json_get_array_item(const x_json *array, int index)
+x_json *x_json_array_at(const x_json *array, int index)
 {
     if (index < 0)
         return NULL;
@@ -1313,7 +1325,7 @@ static x_json *get_object_item(const x_json *const object, const char *const nam
         }
     }
     else {
-        while ((current_element != NULL) && (case_insensitive_strcmp((const uint8_t*)name, (const uint8_t*)(current_element->string)) != 0)) {
+        while ((current_element != NULL) && (x_stricmp(name, current_element->string) != 0)) {
             current_element = current_element->next;
         }
     }
@@ -1323,19 +1335,14 @@ static x_json *get_object_item(const x_json *const object, const char *const nam
     return current_element;
 }
 
-x_json *x_json_get_object_item(const x_json *const object, const char *const string)
+x_json *x_json_object_at(const x_json *const object, const char *const string, bool case_sensitive)
 {
-    return get_object_item(object, string, false);
+    return get_object_item(object, string, case_sensitive);
 }
 
-x_json *x_json_get_object_item_case_sensitive(const x_json *const object, const char *const string)
+bool x_json_object_exist(const x_json *object, const char *string, bool case_sensitive)
 {
-    return get_object_item(object, string, true);
-}
-
-bool x_json_has_object_item(const x_json *object, const char *string)
-{
-    return x_json_get_object_item(object, string) ? 1 : 0;
+    return x_json_object_at(object, string, case_sensitive) ? 1 : 0;
 }
 
 /* Utility for array list handling. */
@@ -1387,7 +1394,7 @@ static bool add_item_to_array(x_json *array, x_json *item)
 }
 
 /* Add item to array/object. */
-bool x_json_add_item_to_array(x_json *array, x_json *item)
+bool x_json_array_add(x_json *array, x_json *item)
 {
     return add_item_to_array(array, item);
 }
@@ -1428,113 +1435,89 @@ static bool add_item_to_object(x_json *const object, const char *const string, x
     return add_item_to_array(object, item);
 }
 
-bool x_json_add_item_to_object(x_json *object, const char *string, x_json *item)
+bool x_json_object_add(x_json *object, const char *string, bool case_sensitive, x_json *item)
 {
-    return add_item_to_object(object, string, item, false);
+    return add_item_to_object(object, string, item, case_sensitive);
 }
 
-/* Add an item to an object with constant string as key */
-bool x_json_add_item_to_object_cs(x_json *object, const char *string, x_json *item)
-{
-    return add_item_to_object(object, string, item, true);
-}
-
-bool x_json_add_item_reference_to_array(x_json *array, x_json *item)
+bool x_json_array_addref(x_json *array, x_json *item)
 {
     if (array == NULL)
         return false;
     return add_item_to_array(array, create_reference(item));
 }
 
-bool x_json_add_item_reference_to_object(x_json *object, const char *string, x_json *item)
+bool x_json_object_addref(x_json *object, const char *string, x_json *item)
 {
     if ((object == NULL) || (string == NULL))
         return false;
     return add_item_to_object(object, string, create_reference(item), false);
 }
 
-x_json* x_json_add_null_to_object(x_json *const object, const char *const name)
+x_json* x_json_object_add_null(x_json *const object, const char *const name)
 {
     x_json *null = x_json_create_null();
     if (add_item_to_object(object, name, null, false))
         return null;
-    x_json_delete(null);
+    x_json_free(null);
     return NULL;
 }
 
-x_json* x_json_add_true_to_object(x_json *const object, const char *const name)
-{
-    x_json *true_item = x_json_create_true();
-    if (add_item_to_object(object, name, true_item, false))
-        return true_item;
-    x_json_delete(true_item);
-    return NULL;
-}
-
-x_json* x_json_add_false_to_object(x_json *const object, const char *const name)
-{
-    x_json *false_item = x_json_create_false();
-    if (add_item_to_object(object, name, false_item, false))
-        return false_item;
-    x_json_delete(false_item);
-    return NULL;
-}
-
-x_json* x_json_add_bool_to_object(x_json *const object, const char *const name, const bool boolean)
+x_json* x_json_object_add_bool(x_json *const object, const char *const name, const bool boolean)
 {
     x_json *bool_item = x_json_create_bool(boolean);
     if (add_item_to_object(object, name, bool_item, false))
         return bool_item;
-    x_json_delete(bool_item);
+    x_json_free(bool_item);
     return NULL;
 }
 
-x_json* x_json_add_number_to_object(x_json *const object, const char *const name, const double number)
+x_json* x_json_object_add_number(x_json *const object, const char *const name, const double number)
 {
     x_json *number_item = x_json_create_number(number);
     if (add_item_to_object(object, name, number_item, false))
         return number_item;
-    x_json_delete(number_item);
+    x_json_free(number_item);
     return NULL;
 }
 
-x_json* x_json_add_string_to_object(x_json *const object, const char *const name, const char *const string)
+x_json* x_json_object_add_string(x_json *const object, const char *const name, const char *const string)
 {
     x_json *string_item = x_json_create_string(string);
     if (add_item_to_object(object, name, string_item, false))
         return string_item;
-    x_json_delete(string_item);
+    x_json_free(string_item);
     return NULL;
 }
 
-x_json* x_json_add_raw_to_object(x_json *const object, const char *const name, const char *const raw)
+x_json* x_json_object_add_raw(x_json *const object, const char *const name, const char *const raw)
 {
     x_json *raw_item = x_json_create_raw(raw);
     if (add_item_to_object(object, name, raw_item, false))
         return raw_item;
-    x_json_delete(raw_item);
+    x_json_free(raw_item);
     return NULL;
 }
 
-x_json* x_json_add_object_to_object(x_json *const object, const char *const name)
+x_json* x_json_object_add_object(x_json *const object, const char *const name)
 {
     x_json *object_item = x_json_create_object();
     if (add_item_to_object(object, name, object_item, false))
         return object_item;
-    x_json_delete(object_item);
+    x_json_free(object_item);
     return NULL;
 }
 
-x_json* x_json_add_array_to_object(x_json *const object, const char *const name)
+x_json* x_json_object_add_array(x_json *const object, const char *const name)
 {
     x_json *array = x_json_create_array();
     if (add_item_to_object(object, name, array, false))
         return array;
-    x_json_delete(array);
+    x_json_free(array);
     return NULL;
 }
 
-x_json *x_json_detach_item_via_pointer(x_json *parent, x_json *const item)
+x_json *x_json_detach_child(x_json *parent, x_json *const item)
 {
     if ((parent == NULL) || (item == NULL) || (item != parent->child && item->prev == NULL))
         return NULL;
@@ -1552,42 +1535,31 @@ x_json *x_json_detach_item_via_pointer(x_json *parent, x_json *const item)
     return item;
 }
 
-x_json *x_json_detach_item_from_array(x_json *array, int which)
+x_json *x_json_array_detach(x_json *array, int which)
 {
     if (which < 0)
         return NULL;
-    return x_json_detach_item_via_pointer(array, get_array_item(array, (size_t)which));
+    return x_json_detach_child(array, get_array_item(array, (size_t)which));
 }
 
-void x_json_delete_item_from_array(x_json *array, int which)
+void x_json_array_del(x_json *array, int which)
 {
-    x_json_delete(x_json_detach_item_from_array(array, which));
+    x_json_free(x_json_array_detach(array, which));
 }
 
-x_json *x_json_detach_item_from_object(x_json *object, const char *string)
+x_json *x_json_object_detach(x_json *object, const char *string, bool case_sensitive)
 {
-    x_json *to_detach = x_json_get_object_item(object, string);
-    return x_json_detach_item_via_pointer(object, to_detach);
+    x_json *to_detach = x_json_object_at(object, string, case_sensitive);
+    return x_json_detach_child(object, to_detach);
 }
 
-x_json *x_json_detach_item_from_object_case_sensitive(x_json *object, const char *string)
+void x_json_object_del(x_json *object, const char *string, bool case_sensitive)
 {
-    x_json *to_detach = x_json_get_object_item_case_sensitive(object, string);
-    return x_json_detach_item_via_pointer(object, to_detach);
-}
-
-void x_json_delete_item_from_object(x_json *object, const char *string)
-{
-    x_json_delete(x_json_detach_item_from_object(object, string));
-}
-
-void x_json_delete_item_from_object_case_sensitive(x_json *object, const char *string)
-{
-    x_json_delete(x_json_detach_item_from_object_case_sensitive(object, string));
+    x_json_free(x_json_object_detach(object, string, case_sensitive));
 }
 
 /* Replace array/object items with new ones. */
-bool x_json_insert_item_in_array(x_json *array, int which, x_json *newitem)
+bool x_json_array_insert(x_json *array, int which, x_json *newitem)
 {
     x_json *after_inserted = NULL;
     if (which < 0 || newitem == NULL)
@@ -1608,7 +1580,7 @@ bool x_json_insert_item_in_array(x_json *array, int which, x_json *newitem)
     return true;
 }
 
-void x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement)
+void x_json_replace_child(x_json *const parent, x_json *const item, x_json *replacement)
 {
     assert(parent&& parent->child && replacement && item);
     if (replacement == item)
@@ -1634,14 +1606,14 @@ void x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x
     }
     item->next = NULL;
     item->prev = NULL;
-    x_json_delete(item);
+    x_json_free(item);
 }
 
-void x_json_replace_item_in_array(x_json *array, int which, x_json *newitem)
+void x_json_array_replace(x_json *array, int which, x_json *newitem)
 {
     if (which < 0)
 		return;
-    x_json_replace_item_via_pointer(array, get_array_item(array, (size_t)which), newitem);
+    x_json_replace_child(array, get_array_item(array, (size_t)which), newitem);
 }
 
 static void replace_item_in_object(x_json *object, const char *string, x_json *replacement, bool case_sensitive)
@@ -1649,48 +1621,30 @@ static void replace_item_in_object(x_json *object, const char *string, x_json *r
     assert ((replacement != NULL) || (string != NULL));
     /* replace the name in the replacement */
     if (!(replacement->type & X_JSON_STRING_IS_CONST) && (replacement->string != NULL)) {
-        x_json_free(replacement->string);
+        x_free(replacement->string);
     }
     replacement->string = (char*)x_json_strdup((const uint8_t*)string);
     replacement->type &= ~X_JSON_STRING_IS_CONST;
-    x_json_replace_item_via_pointer(object, get_object_item(object, string, case_sensitive), replacement);
+    x_json_replace_child(object, get_object_item(object, string, case_sensitive), replacement);
 }
 
-void x_json_replace_item_in_object(x_json *object, const char *string, x_json *newitem)
+void x_json_object_replace(x_json *object, const char *string, bool case_sensitive, x_json *newitem)
 {
-    replace_item_in_object(object, string, newitem, false);
-}
-
-void x_json_replace_item_in_object_case_sensitive(x_json *object, const char *string, x_json *newitem)
-{
-    replace_item_in_object(object, string, newitem, true);
+    replace_item_in_object(object, string, newitem, case_sensitive);
 }
 
 x_json *x_json_create_null(void)
 {
     x_json *item = x_json_new_item();
-	item->type = x_json_NULL;
-    return item;
-}
-
-x_json *x_json_create_true(void)
-{
-    x_json *item = x_json_new_item();
-	item->type = X_JSON_TRUE;
-    return item;
-}
-
-x_json *x_json_create_false(void)
-{
-    x_json *item = x_json_new_item();
-	item->type = X_JSON_FALSE;
+	item->type = X_JSON_NULL;
     return item;
 }
 
 x_json *x_json_create_bool(bool boolean)
 {
     x_json *item = x_json_new_item();
-	item->type = boolean ? X_JSON_TRUE : X_JSON_FALSE;
+	item->type = X_JSON_BOOL;
+	item->value.integer = boolean;
     return item;
 }
 
@@ -1698,14 +1652,22 @@ x_json *x_json_create_number(double num)
 {
     x_json *item = x_json_new_item();
 	item->type = X_JSON_NUMBER;
-	item->valuedouble = num;
+	item->value.number = num;
 	/* use saturation in case of overflow */
 	if (num >= INT_MAX)
-		item->valueint = INT_MAX;
+		item->value.integer = INT_MAX;
 	else if (num <= (double)INT_MIN)
-		item->valueint = INT_MIN;
+		item->value.integer = INT_MIN;
 	else
-		item->valueint = (int)num;
+		item->value.integer = (int)num;
+    return item;
+}
+
+x_json *x_json_create_int(double num)
+{
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_INTEGER;
+	item->value.integer = num;
     return item;
 }
 
@@ -1713,9 +1675,9 @@ x_json *x_json_create_string(const char *string)
 {
 	x_json *item = x_json_new_item();
 	item->type = X_JSON_STRING;
-	item->valuestring = (char*)x_json_strdup((const uint8_t*)string);
-	if(!item->valuestring) {
-		x_json_delete(item);
+	item->value.string = (char*)x_json_strdup((const uint8_t*)string);
+	if(!item->value.string) {
+		x_json_free(item);
 		return NULL;
 	}
 	return item;
@@ -1725,7 +1687,7 @@ x_json *x_json_create_string_reference(const char *string)
 {
     x_json *item = x_json_new_item();
 	item->type = X_JSON_STRING | X_JSON_IS_REF;
-	item->valuestring = (char*)cast_away_const(string);
+	item->value.string = (char*)cast_away_const(string);
     return item;
 }
 
@@ -1749,9 +1711,9 @@ x_json *x_json_create_raw(const char *raw)
 {
 	x_json *item = x_json_new_item();
 	item->type = X_JSON_RAW;
-	item->valuestring = (char*)x_json_strdup((const uint8_t*)raw);
-	if(!item->valuestring) {
-		x_json_delete(item);
+	item->value.string = (char*)x_json_strdup((const uint8_t*)raw);
+	if(!item->value.string) {
+		x_json_free(item);
 		return NULL;
 	}
     return item;
@@ -1844,7 +1806,7 @@ x_json *x_json_create_string_array(const char *const *strings, int count)
     for (i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_string(strings[i]);
         if(!n) {
-            x_json_delete(a);
+            x_json_free(a);
             return NULL;
         }
         if(!i)
@@ -1859,14 +1821,14 @@ x_json *x_json_create_string_array(const char *const *strings, int count)
 }
 
 /* Duplication */
-x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse);
+x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse);
 
-x_json *x_json_duplicate(const x_json *item, bool recurse)
+x_json *x_json_copy(const x_json *item, bool recurse)
 {
-    return x_json_duplicate_rec(item, 0, recurse );
+    return x_json_copy_rec(item, 0, recurse );
 }
 
-x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
+x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse)
 {
     x_json *newitem = NULL;
     x_json *child = NULL;
@@ -1883,11 +1845,11 @@ x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
     }
     /* Copy over all vars */
     newitem->type = item->type & (~X_JSON_IS_REF);
-    newitem->valueint = item->valueint;
-    newitem->valuedouble = item->valuedouble;
-    if (item->valuestring) {
-        newitem->valuestring = (char*)x_json_strdup((uint8_t*)item->valuestring);
-        if (!newitem->valuestring) {
+    newitem->value.integer = item->value.integer;
+    newitem->value.number = item->value.number;
+    if (item->value.string) {
+        newitem->value.string = (char*)x_json_strdup((uint8_t*)item->value.string);
+        if (!newitem->value.string) {
             goto fail;
         }
     }
@@ -1905,7 +1867,7 @@ x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
     while (child != NULL) {
         if(depth >= X_JSON_CIRCULAR_LIMIT)
             goto fail;
-        newchild = x_json_duplicate_rec(child, depth + 1, true); /* Duplicate (with recurse) each item in the ->next chain */
+        newchild = x_json_copy_rec(child, depth + 1, true); /* Duplicate (with recurse) each item in the ->next chain */
         if (!newchild)
             goto fail;
         if (next != NULL) {
@@ -1926,7 +1888,7 @@ x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
     return newitem;
 fail:
     if (newitem != NULL)
-        x_json_delete(newitem);
+        x_json_free(newitem);
     return NULL;
 }
 
@@ -2012,38 +1974,31 @@ bool x_json_is_invalid(const x_json *const item)
 	return (item->type & 0xFF) == X_JSON_INVALID;
 }
 
-bool x_json_is_false(const x_json *const item)
-{
-	if (!item)
-		return false;
-	return (item->type & 0xFF) == X_JSON_FALSE;
-}
-
-bool x_json_is_true(const x_json *const item)
-{
-	if (!item)
-		return false;
-	return (item->type & 0xff) == X_JSON_TRUE;
-}
-
 bool x_json_is_bool(const x_json *const item)
 {
 	if (!item)
 		return false;
-	return (item->type & (X_JSON_TRUE | X_JSON_FALSE)) != 0;
+	return (item->type & 0xFF) == X_JSON_BOOL;
 }
 bool x_json_is_null(const x_json *const item)
 {
 	if (!item)
 		return false;
-	return (item->type & 0xFF) == x_json_NULL;
+	return (item->type & 0xFF) == X_JSON_NULL;
 }
 
 bool x_json_is_number(const x_json *const item)
 {
 	if (!item)
 		return false;
-	return (item->type & 0xFF) == X_JSON_NUMBER;
+	return (item->type & 0xFF) == X_JSON_NUMBER || (item->type & 0xFF) == X_JSON_INTEGER;
+}
+
+bool x_json_is_int(const x_json *const item)
+{
+	if (!item)
+		return false;
+	return (item->type & 0xFF) == X_JSON_INTEGER;
 }
 
 bool x_json_is_string(const x_json *const item)
@@ -2074,15 +2029,14 @@ bool x_json_is_raw(const x_json *const item)
 	return (item->type & 0xFF) == X_JSON_RAW;
 }
 
-bool x_json_compare(const x_json *const a, const x_json *const b, const bool case_sensitive)
+bool x_json_compare(const x_json *const a, const x_json *const b, bool case_sensitive)
 {
     if ((a == NULL) || (b == NULL) || ((a->type & 0xFF) != (b->type & 0xFF)))
         return false;
     /* check if type is valid */
     switch (a->type & 0xFF) {
-        case X_JSON_FALSE:
-        case X_JSON_TRUE:
-        case x_json_NULL:
+        case X_JSON_BOOL:
+        case X_JSON_NULL:
         case X_JSON_NUMBER:
         case X_JSON_STRING:
         case X_JSON_RAW:
@@ -2097,20 +2051,19 @@ bool x_json_compare(const x_json *const a, const x_json *const b, const bool cas
         return true;
     switch (a->type & 0xFF) {
         /* in these cases and equal type is enough */
-        case X_JSON_FALSE:
-        case X_JSON_TRUE:
-        case x_json_NULL:
+        case X_JSON_BOOL:
+        case X_JSON_NULL:
             return true;
 
         case X_JSON_NUMBER:
-            if (compare_double(a->valuedouble, b->valuedouble))
+            if (compare_double(a->value.number, b->value.number))
                 return true;
             return false;
         case X_JSON_STRING:
         case X_JSON_RAW:
-            if ((a->valuestring == NULL) || (b->valuestring == NULL))
+            if ((a->value.string == NULL) || (b->value.string == NULL))
                 return false;
-            if (strcmp(a->valuestring, b->valuestring) == 0)
+            if (strcmp(a->value.string, b->value.string) == 0)
                 return true;
             return false;
         case X_JSON_ARRAY:
@@ -2155,16 +2108,5 @@ bool x_json_compare(const x_json *const a, const x_json *const b, const bool cas
         default:
             return false;
     }
-}
-
-void * x_json_malloc(size_t size)
-{
-    return x_malloc(NULL, size);
-}
-
-void x_json_free(void *object)
-{
-    x_free(object);
-    object = NULL;
 }
 
