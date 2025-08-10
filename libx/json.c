@@ -141,7 +141,7 @@ void x_json_free(x_json *item)
         next = item->next;
         if (!(item->type & X_JSON_IS_REF)) {
 			if ((item->type & 0xFF) == X_JSON_OBJECT) {
-				x_json_free(item->child);
+				x_json_free(item->value.child);
 			}
 			else if ((item->type & 0xFF) == X_JSON_STRING) {
 				x_free(item->value.string);
@@ -1076,7 +1076,7 @@ success:
     if (head != NULL)
         head->prev = current_item;
     item->type = X_JSON_ARRAY;
-    item->child = head;
+    item->value.child = head;
     input_buffer->offset++;
     return true;
 fail:
@@ -1090,7 +1090,7 @@ static bool print_array(const x_json *const item, printbuffer * const output_buf
 {
     uint8_t *output_pointer = NULL;
     size_t length = 0;
-    x_json *current_element = item->child;
+    x_json *current_element = item->value.child;
     if (output_buffer == NULL)
         return false;
     /* Compose the output array. */
@@ -1175,7 +1175,6 @@ static bool parse_object(x_json *const item, parse_buffer * const input_buffer)
         buffer_skip_whitespace(input_buffer);
         /* swap value.string and string, because we parsed the name */
         current_item->string = current_item->value.string;
-        current_item->value.string = NULL;
         if (cannot_access_at_index(input_buffer, 0) || (buffer_at_offset(input_buffer)[0] != ':'))
             goto fail; /* invalid object */
         /* parse the value */
@@ -1194,7 +1193,7 @@ success:
     if (head != NULL)
         head->prev = current_item;
     item->type = X_JSON_OBJECT;
-    item->child = head;
+    item->value.child = head;
     input_buffer->offset++;
     return true;
 fail:
@@ -1208,7 +1207,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
 {
     uint8_t *output_pointer = NULL;
     size_t length = 0;
-    x_json *current_item = item->child;
+    x_json *current_item = item->value.child;
     if (output_buffer == NULL)
         return false;
     /* Compose the output: */
@@ -1284,7 +1283,7 @@ int x_json_array_size(const x_json *array)
     size_t size = 0;
     if (array == NULL)
         return 0;
-    child = array->child;
+    child = array->value.child;
     while(child != NULL) {
         size++;
         child = child->next;
@@ -1298,7 +1297,7 @@ static x_json* get_array_item(const x_json *array, size_t index)
     x_json *current_child = NULL;
     if (array == NULL)
         return NULL;
-    current_child = array->child;
+    current_child = array->value.child;
     while ((current_child != NULL) && (index > 0)) {
         index--;
         current_child = current_child->next;
@@ -1318,7 +1317,7 @@ static x_json *get_object_item(const x_json *const object, const char *const nam
     x_json *current_element = NULL;
     if ((object == NULL) || (name == NULL))
         return NULL;
-    current_element = object->child;
+    current_element = object->value.child;
     if (case_sensitive) {
         while ((current_element != NULL) && (current_element->string != NULL) && (strcmp(name, current_element->string) != 0)) {
             current_element = current_element->next;
@@ -1373,13 +1372,13 @@ static bool add_item_to_array(x_json *array, x_json *item)
     x_json *child = NULL;
     if ((item == NULL) || (array == NULL) || (array == item))
         return false;
-    child = array->child;
+    child = array->value.child;
     /*
      * To find the last item in array quickly, we use prev in array
      */
     if (child == NULL) {
         /* list is empty, start new one */
-        array->child = item;
+        array->value.child = item;
         item->prev = item;
         item->next = NULL;
     }
@@ -1387,7 +1386,7 @@ static bool add_item_to_array(x_json *array, x_json *item)
         /* append to the end */
         if (child->prev) {
             suffix_object(child->prev, item);
-            array->child->prev = item;
+            array->value.child->prev = item;
         }
     }
     return true;
@@ -1519,16 +1518,16 @@ x_json* x_json_object_add_array(x_json *const object, const char *const name)
 
 x_json *x_json_detach_child(x_json *parent, x_json *const item)
 {
-    if ((parent == NULL) || (item == NULL) || (item != parent->child && item->prev == NULL))
+    if ((parent == NULL) || (item == NULL) || (item != parent->value.child && item->prev == NULL))
         return NULL;
-    if (item != parent->child) /* not the first element */
+    if (item != parent->value.child) /* not the first element */
         item->prev->next = item->next;
     if (item->next != NULL) /* not the last element */
         item->next->prev = item->prev;
-    if (item == parent->child) /* first element */
-        parent->child = item->next;
+    if (item == parent->value.child) /* first element */
+        parent->value.child = item->next;
     else if (item->next == NULL) /* last element */
-        parent->child->prev = item->prev;
+        parent->value.child->prev = item->prev;
     /* make sure the detached item doesn't point anywhere anymore */
     item->prev = NULL;
     item->next = NULL;
@@ -1567,14 +1566,14 @@ bool x_json_array_insert(x_json *array, int which, x_json *newitem)
     after_inserted = get_array_item(array, (size_t)which);
     if (after_inserted == NULL)
         return add_item_to_array(array, newitem);
-    if (after_inserted != array->child && after_inserted->prev == NULL)
+    if (after_inserted != array->value.child && after_inserted->prev == NULL)
         /* return false if after_inserted is a corrupted array item */
         return false;
     newitem->next = after_inserted;
     newitem->prev = after_inserted->prev;
     after_inserted->prev = newitem;
-    if (after_inserted == array->child)
-        array->child = newitem;
+    if (after_inserted == array->value.child)
+        array->value.child = newitem;
     else
         newitem->prev->next = newitem;
     return true;
@@ -1582,17 +1581,17 @@ bool x_json_array_insert(x_json *array, int which, x_json *newitem)
 
 void x_json_replace_child(x_json *const parent, x_json *const item, x_json *replacement)
 {
-    assert(parent&& parent->child && replacement && item);
+    assert(parent&& parent->value.child && replacement && item);
     if (replacement == item)
 		return;
     replacement->next = item->next;
     replacement->prev = item->prev;
     if (replacement->next != NULL)
         replacement->next->prev = replacement;
-    if (parent->child == item) {
-        if (parent->child->prev == parent->child)
+    if (parent->value.child == item) {
+        if (parent->value.child->prev == parent->value.child)
             replacement->prev = replacement;
-        parent->child = replacement;
+        parent->value.child = replacement;
     }
     else {
 		/*
@@ -1602,7 +1601,7 @@ void x_json_replace_child(x_json *const parent, x_json *const item, x_json *repl
         if (replacement->prev != NULL)
             replacement->prev->next = replacement;
         if (replacement->next == NULL)
-            parent->child->prev = replacement;
+            parent->value.child->prev = replacement;
     }
     item->next = NULL;
     item->prev = NULL;
@@ -1695,7 +1694,7 @@ x_json *x_json_create_object_reference(const x_json *child)
 {
     x_json *item = x_json_new_item();
 	item->type = X_JSON_OBJECT | X_JSON_IS_REF;
-	item->child = (x_json*)cast_away_const(child);
+	item->value.child = (x_json*)cast_away_const(child);
     return item;
 }
 
@@ -1703,7 +1702,7 @@ x_json *x_json_create_array_reference(const x_json *child)
 {
     x_json *item = x_json_new_item();
 	item->type = X_JSON_ARRAY | X_JSON_IS_REF;
-	item->child = (x_json*)cast_away_const(child);
+	item->value.child = (x_json*)cast_away_const(child);
     return item;
 }
 
@@ -1746,13 +1745,13 @@ x_json *x_json_create_int_array(const int *numbers, int count)
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number(numbers[i]);
         if(!i)
-            a->child = n;
+            a->value.child = n;
         else
             suffix_object(p, n);
         p = n;
     }
-    if (a && a->child)
-        a->child->prev = n;
+    if (a && a->value.child)
+        a->value.child->prev = n;
     return a;
 }
 
@@ -1766,13 +1765,13 @@ x_json *x_json_create_float_array(const float *numbers, int count)
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number((double)numbers[i]);
         if(!i)
-            a->child = n;
+            a->value.child = n;
         else
             suffix_object(p, n);
         p = n;
     }
-    if (a && a->child)
-        a->child->prev = n;
+    if (a && a->value.child)
+        a->value.child->prev = n;
     return a;
 }
 
@@ -1786,13 +1785,13 @@ x_json *x_json_create_double_array(const double *numbers, int count)
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number(numbers[i]);
         if(!i)
-            a->child = n;
+            a->value.child = n;
         else
             suffix_object(p, n);
         p = n;
     }
-    if (a && a->child)
-        a->child->prev = n;
+    if (a && a->value.child)
+        a->value.child->prev = n;
     return a;
 }
 
@@ -1810,13 +1809,13 @@ x_json *x_json_create_string_array(const char *const *strings, int count)
             return NULL;
         }
         if(!i)
-            a->child = n;
+            a->value.child = n;
         else
             suffix_object(p,n);
         p = n;
     }
-    if (a && a->child)
-        a->child->prev = n;
+    if (a && a->value.child)
+        a->value.child->prev = n;
     return a;
 }
 
@@ -1863,7 +1862,7 @@ x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse)
     if (!recurse)
         return newitem;
     /* Walk the ->next chain for the child. */
-    child = item->child;
+    child = item->value.child;
     while (child != NULL) {
         if(depth >= X_JSON_CIRCULAR_LIMIT)
             goto fail;
@@ -1871,20 +1870,20 @@ x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse)
         if (!newchild)
             goto fail;
         if (next != NULL) {
-            /* If newitem->child already set, then crosswire ->prev and ->next and move on */
+            /* If newitem->value.child already set, then crosswire ->prev and ->next and move on */
             next->next = newchild;
             newchild->prev = next;
             next = newchild;
         }
         else {
-            /* Set newitem->child and move to it */
-            newitem->child = newchild;
+            /* Set newitem->value.child and move to it */
+            newitem->value.child = newchild;
             next = newchild;
         }
         child = child->next;
     }
-    if (newitem && newitem->child)
-        newitem->child->prev = newchild;
+    if (newitem && newitem->value.child)
+        newitem->value.child->prev = newchild;
     return newitem;
 fail:
     if (newitem != NULL)
@@ -2068,8 +2067,8 @@ bool x_json_compare(const x_json *const a, const x_json *const b, bool case_sens
             return false;
         case X_JSON_ARRAY:
         {
-            x_json *a_element = a->child;
-            x_json *b_element = b->child;
+            x_json *a_element = a->value.child;
+            x_json *b_element = b->value.child;
 
             for (; (a_element != NULL) && (b_element != NULL);) {
                 if (!x_json_compare(a_element, b_element, case_sensitive))

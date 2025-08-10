@@ -45,14 +45,14 @@ extern "C"
 #define X_JSON_ARRAY   (1 << 5)
 #define X_JSON_OBJECT  (1 << 6)
 #define X_JSON_RAW     (1 << 7)
-#define X_JSON_IS_REF  256
+
+#define X_JSON_IS_REF 256
 #define X_JSON_STRING_IS_CONST 512
 
 struct x_json_st
 {
     struct x_json_st *next;
     struct x_json_st *prev;
-    struct x_json_st *child;
     int type;
     char *string;
 
@@ -60,6 +60,7 @@ struct x_json_st
 		char *string;
 		int integer;
 		double number;
+		struct x_json_st *child;
 	} value;
 };
 
@@ -170,10 +171,10 @@ x_json* x_json_object_add_array(x_json *const object, const char *const name);
 
 /* Macro for iterating over an array or object */
 #define x_json_array_foreach(element, array) \
-	for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
+	for(element = (array != NULL) ? (array)->value.child : NULL; element != NULL; element = element->next)
 
 #define x_json_object_foreach(element, object) \
-	for(element = (object != NULL) ? (object)->child : NULL; element != NULL; element = element->next)
+	for(element = (object != NULL) ? (object)->value.child : NULL; element != NULL; element = element->next)
 
 #ifdef __cplusplus
 }

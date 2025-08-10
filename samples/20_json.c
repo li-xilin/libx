@@ -24,8 +24,8 @@ int main(void)
 	char *out = x_json_print(tree, true);
 	printf("%s\n", out);
 
-	printf("%s = %lf\n", tree->child->child->string, x_json_number(tree->child->child));
-	printf("%s = %lf\n", tree->child->child->next->string, x_json_number(tree->child->child->next));
+	printf("%s = %lf\n", tree->value.child->value.child->string, x_json_number(tree->value.child->value.child));
+	printf("%s = %lf\n", tree->value.child->value.child->next->string, x_json_number(tree->value.child->value.child->next));
 
 	x_json_free(tree);
 	x_free(out);
