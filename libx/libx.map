@@ -194,7 +194,6 @@ global:
 	x_json_get_object_item_case_sensitive;
 	x_json_get_string_value;
 	x_json_has_object_item;
-	x_json_init_hooks;
 	x_json_insert_item_in_array;
 	x_json_is_array;
 	x_json_is_bool;

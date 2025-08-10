@@ -60,12 +60,6 @@ struct x_json_st
     char *string;
 };
 
-typedef struct x_json_hooks
-{
-      void *(*malloc_fn)(size_t sz);
-      void (*free_fn)(void *ptr);
-} x_json_hooks;
-
 #ifndef X_JSON_NESTING_LIMIT
 #define X_JSON_NESTING_LIMIT 1000
 #endif
@@ -74,7 +68,6 @@ typedef struct x_json_hooks
 #define X_JSON_CIRCULAR_LIMIT 10000
 #endif
 
-void x_json_init_hooks(x_json_hooks* hooks);
 const char *x_json_get_error_ptr(void);
 
 x_json *x_json_parse(const char *value);
@@ -148,10 +141,10 @@ void x_json_delete_item_from_object(x_json *object, const char *string);
 void x_json_delete_item_from_object_case_sensitive(x_json *object, const char *string);
 
 bool x_json_insert_item_in_array(x_json *array, int which, x_json *newitem); /* Shifts pre-existing items to the right. */
-bool x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement);
-bool x_json_replace_item_in_array(x_json *array, int which, x_json *newitem);
-bool x_json_replace_item_in_object(x_json *object,const char *string,x_json *newitem);
-bool x_json_replace_item_in_object_case_sensitive(x_json *object,const char *string,x_json *newitem);
+void x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement);
+void x_json_replace_item_in_array(x_json *array, int which, x_json *newitem);
+void x_json_replace_item_in_object(x_json *object,const char *string,x_json *newitem);
+void x_json_replace_item_in_object_case_sensitive(x_json *object,const char *string,x_json *newitem);
 
 x_json *x_json_duplicate(const x_json *item, bool recurse);
 /* Duplicate will create a new, identical x_json item to the one you pass, in new memory that will

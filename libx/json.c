@@ -37,6 +37,7 @@
 
 #include "x/json.h"
 #include "x/macros.h"
+#include "x/memory.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -45,6 +46,7 @@
 #include <ctype.h>
 #include <float.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #ifdef ENABLE_LOCALES
 #include <locale.h>
@@ -117,91 +119,23 @@ static int case_insensitive_strcmp(const uint8_t *string1, const uint8_t *string
     return tolower(*string1) - tolower(*string2);
 }
 
-typedef struct internal_hooks
-{
-    void *(*allocate)(size_t size);
-    void (*deallocate)(void *pointer);
-    void *(*reallocate)(void *pointer, size_t size);
-} internal_hooks;
-
-#if defined(_MSC_VER)
-/* work around MSVC error C2322: '...' address of dllimport '...' is not static */
-static void * internal_malloc(size_t size)
-{
-    return malloc(size);
-}
-
-static void internal_free(void *pointer)
-{
-    free(pointer);
-}
-
-static void * internal_realloc(void *pointer, size_t size)
-{
-    return realloc(pointer, size);
-}
-
-#else
-#define internal_malloc malloc
-#define internal_free free
-#define internal_realloc realloc
-#endif
-
-/* strlen of character literals resolved at compile time */
 #define static_strlen(string_literal) (sizeof(string_literal) - sizeof(""))
 
-static internal_hooks global_hooks = { internal_malloc, internal_free, internal_realloc };
-
-static uint8_t* x_json_strdup(const uint8_t* string, const internal_hooks * const hooks)
+static uint8_t* x_json_strdup(const uint8_t* string)
 {
     size_t length = 0;
     uint8_t *copy = NULL;
-
-    if (string == NULL) {
-        return NULL;
-    }
-
+	assert(string);
     length = strlen((const char*)string) + sizeof("");
-    copy = (uint8_t*)hooks->allocate(length);
-    if (copy == NULL) {
-        return NULL;
-    }
+    copy = (uint8_t*)x_malloc(NULL, length);
     memcpy(copy, string, length);
-
     return copy;
 }
 
-void x_json_init_hooks(x_json_hooks* hooks)
-{
-    if (hooks == NULL) {
-        /* Reset hooks */
-        global_hooks.allocate = malloc;
-        global_hooks.deallocate = free;
-        global_hooks.reallocate = realloc;
-        return;
-    }
-
-    global_hooks.allocate = malloc;
-    if (hooks->malloc_fn != NULL) {
-        global_hooks.allocate = hooks->malloc_fn;
-    }
-
-    global_hooks.deallocate = free;
-    if (hooks->free_fn != NULL) {
-        global_hooks.deallocate = hooks->free_fn;
-    }
-
-    /* use realloc only if both free and malloc are used */
-    global_hooks.reallocate = NULL;
-    if ((global_hooks.allocate == malloc) && (global_hooks.deallocate == free)) {
-        global_hooks.reallocate = realloc;
-    }
-}
-
 /* Internal constructor. */
-static x_json *x_json_new_item(const internal_hooks * const hooks)
+static x_json *x_json_new_item(void)
 {
-    x_json* node = (x_json*)hooks->allocate(sizeof(x_json));
+    x_json* node = (x_json*)x_malloc(NULL, sizeof(x_json));
     if (node) {
         memset(node, '\0', sizeof(x_json));
     }
@@ -219,14 +153,14 @@ void x_json_delete(x_json *item)
             x_json_delete(item->child);
         }
         if (!(item->type & X_JSON_IS_REF) && (item->valuestring != NULL)) {
-            global_hooks.deallocate(item->valuestring);
+            x_free(item->valuestring);
             item->valuestring = NULL;
         }
         if (!(item->type & X_JSON_STRING_IS_CONST) && (item->string != NULL)) {
-            global_hooks.deallocate(item->string);
+            x_free(item->string);
             item->string = NULL;
         }
-        global_hooks.deallocate(item);
+        x_free(item);
         item = next;
     }
 }
@@ -248,7 +182,6 @@ typedef struct
     size_t length;
     size_t offset;
     size_t depth; /* How deeply nested (in arrays/objects) is the input at the current offset. */
-    internal_hooks hooks;
 } parse_buffer;
 
 /* check if the given size is left to read in a given parse buffer (starting with 1) */
@@ -269,44 +202,27 @@ static bool parse_number(x_json *const item, parse_buffer * const input_buffer)
     size_t i = 0;
     size_t number_string_length = 0;
     bool has_decimal_point = false;
-
-    if ((input_buffer == NULL) || (input_buffer->content == NULL)) {
+    if ((input_buffer == NULL) || (input_buffer->content == NULL))
         return false;
-    }
-
     /* copy the number into a temporary buffer and replace '.' with the decimal point
      * of the current locale (for strtod)
      * This also takes care of '\0' not necessarily being available for marking the end of the input */
     for (i = 0; can_access_at_index(input_buffer, i); i++) {
         switch (buffer_at_offset(input_buffer)[i]) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case '+':
-            case '-':
-            case 'e':
-            case 'E':
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+            case '8': case '9': case '+': case '-': case 'e': case 'E':
                 number_string_length++;
                 break;
-
             case '.':
                 number_string_length++;
                 has_decimal_point = true;
                 break;
-
             default:
                 goto loop_end;
         }
     }
 loop_end:
-    number_c_string = (uint8_t *) input_buffer->hooks.allocate(number_string_length + 1);
+    number_c_string = (uint8_t *) x_malloc(NULL, number_string_length + 1);
     if (number_c_string == NULL)
         return false;
     memcpy(number_c_string, buffer_at_offset(input_buffer), number_string_length);
@@ -319,11 +235,10 @@ loop_end:
             }
         }
     }
-
     number = strtod((const char*)number_c_string, (char**)&after_end);
     if (number_c_string == after_end) {
         /* free the temporary buffer */
-        input_buffer->hooks.deallocate(number_c_string);
+        x_free(number_c_string);
         return false; /* parse_error */
     }
     item->valuedouble = number;
@@ -336,7 +251,7 @@ loop_end:
         item->valueint = (int)number;
     item->type = X_JSON_NUMBER;
     input_buffer->offset += (size_t)(after_end - number_c_string);
-    input_buffer->hooks.deallocate(number_c_string);
+    x_free(number_c_string);
     return true;
 }
 
@@ -374,9 +289,7 @@ char* x_json_set_valuestring(x_json *object, const char *valuestring)
         strcpy(object->valuestring, valuestring);
         return object->valuestring;
     }
-    copy = (char*) x_json_strdup((const uint8_t*)valuestring, &global_hooks);
-    if (copy == NULL)
-        return NULL;
+    copy = (char*) x_json_strdup((const uint8_t*)valuestring);
     if (object->valuestring != NULL)
         x_json_free(object->valuestring);
     object->valuestring = copy;
@@ -391,7 +304,6 @@ typedef struct
     size_t depth; /* current nesting depth (for formatted printing) */
     bool noalloc;
     bool format; /* is this print a formatted print */
-    internal_hooks hooks;
 } printbuffer;
 
 /* realloc printbuffer if necessary to have at least "needed" bytes more */
@@ -420,31 +332,12 @@ static uint8_t* ensure(printbuffer * const p, size_t needed)
         else
             return NULL;
     }
-    else
-        newsize = needed * 2;
-    if (p->hooks.reallocate != NULL) {
-        /* reallocate with realloc if available */
-        newbuffer = (uint8_t*)p->hooks.reallocate(p->buffer, newsize);
-        if (newbuffer == NULL) {
-            p->hooks.deallocate(p->buffer);
-            p->length = 0;
-            p->buffer = NULL;
-            return NULL;
-        }
-    }
     else {
-        /* otherwise reallocate manually */
-        newbuffer = (uint8_t*)p->hooks.allocate(newsize);
-        if (!newbuffer) {
-            p->hooks.deallocate(p->buffer);
-            p->length = 0;
-            p->buffer = NULL;
-            return NULL;
-        }
-        memcpy(newbuffer, p->buffer, p->offset + 1);
-        p->hooks.deallocate(p->buffer);
-    }
-    p->length = newsize;
+        newsize = needed * 2;
+	}
+	/* reallocate with realloc if available */
+	newbuffer = (uint8_t*)x_realloc(p->buffer, newsize);
+	p->length = newsize;
     p->buffer = newbuffer;
     return newbuffer + p->offset;
 }
@@ -499,7 +392,7 @@ static bool print_number(const x_json *const item, printbuffer * const output_bu
         return false;
     /* reserve appropriate space in the output */
     output_pointer = ensure(output_buffer, (size_t)length + sizeof(""));
-    if (output_pointer == NULL)
+    if (!output_pointer)
         return false;
     /* copy the printed number to the output and replace locale
      * dependent decimal point with '.' */
@@ -617,7 +510,6 @@ static uint8_t utf16_literal_to_utf8(const uint8_t * const input_pointer, const 
         (*output_pointer)[0] = (uint8_t)(codepoint & 0x7F);
     *output_pointer += utf8_length;
     return sequence_length;
-
 fail:
     return 0;
 }
@@ -628,37 +520,33 @@ static bool parse_string(x_json *const item, parse_buffer * const input_buffer)
     const uint8_t *input_pointer = buffer_at_offset(input_buffer) + 1;
     const uint8_t *input_end = buffer_at_offset(input_buffer) + 1;
     uint8_t *output_pointer = NULL, *output = NULL;
+	size_t allocation_length = 0;
+	size_t skipped_bytes = 0;
     /* not a string */
-    if (buffer_at_offset(input_buffer)[0] != '\"')
+    if (buffer_at_offset(input_buffer)[0] != '\"') {
         goto fail;
+	}
 
-    {
-        /* calculate approximate size of the output (overestimate) */
-        size_t allocation_length = 0;
-        size_t skipped_bytes = 0;
-        while (((size_t)(input_end - input_buffer->content) < input_buffer->length) && (*input_end != '\"')) {
-            /* is escape sequence */
-            if (input_end[0] == '\\') {
-                if ((size_t)(input_end + 1 - input_buffer->content) >= input_buffer->length) {
-                    /* prevent buffer overflow when last input character is a backslash */
-                    goto fail;
-                }
-                skipped_bytes++;
-                input_end++;
-            }
-            input_end++;
-        }
-        if (((size_t)(input_end - input_buffer->content) >= input_buffer->length) || (*input_end != '\"')) {
-            goto fail; /* string ended unexpectedly */
-        }
+	/* calculate approximate size of the output (overestimate) */
+	while (((size_t)(input_end - input_buffer->content) < input_buffer->length) && (*input_end != '\"')) {
+		/* is escape sequence */
+		if (input_end[0] == '\\') {
+			if ((size_t)(input_end + 1 - input_buffer->content) >= input_buffer->length) {
+				/* prevent buffer overflow when last input character is a backslash */
+				goto fail;
+			}
+			skipped_bytes++;
+			input_end++;
+		}
+		input_end++;
+	}
+	if (((size_t)(input_end - input_buffer->content) >= input_buffer->length) || (*input_end != '\"')) {
+		goto fail; /* string ended unexpectedly */
+	}
 
-        /* This is at most how much we need for the output */
-        allocation_length = (size_t) (input_end - buffer_at_offset(input_buffer)) - skipped_bytes;
-        output = (uint8_t*)input_buffer->hooks.allocate(allocation_length + sizeof(""));
-        if (output == NULL) {
-            goto fail; /* allocation failure */
-        }
-    }
+	/* This is at most how much we need for the output */
+	allocation_length = (size_t) (input_end - buffer_at_offset(input_buffer)) - skipped_bytes;
+	output = (uint8_t*)x_malloc(NULL, allocation_length + sizeof(""));
 
     output_pointer = output;
     /* loop through the string literal */
@@ -717,7 +605,7 @@ static bool parse_string(x_json *const item, parse_buffer * const input_buffer)
 
 fail:
     if (output != NULL) {
-        input_buffer->hooks.deallocate(output);
+        x_free(output);
         output = NULL;
     }
     if (input_pointer != NULL)
@@ -739,7 +627,7 @@ static bool print_string_ptr(const uint8_t * const input, printbuffer * const ou
     /* empty string */
     if (input == NULL) {
         output = ensure(output_buffer, sizeof("\"\""));
-        if (output == NULL)
+        if (!output)
             return false;
         strcpy((char*)output, "\"\"");
         return true;
@@ -767,7 +655,7 @@ static bool print_string_ptr(const uint8_t * const input, printbuffer * const ou
     }
     output_length = (size_t)(input_pointer - input) + escape_characters;
     output = ensure(output_buffer, output_length + sizeof("\"\""));
-    if (output == NULL)
+    if (!output)
         return false;
     /* no characters have to be escaped */
     if (escape_characters == 0) {
@@ -889,7 +777,7 @@ x_json *x_json_parse3(const char *value, const char **return_parse_end, bool req
 /* Parse an object - create a new root, and populate. */
 x_json *x_json_parse4(const char *value, size_t buffer_length, const char **return_parse_end, bool require_null_terminated)
 {
-    parse_buffer buffer = { 0, 0, 0, 0, { 0, 0, 0 } };
+    parse_buffer buffer = { 0 };
     x_json *item = NULL;
 
     /* reset error position */
@@ -902,9 +790,8 @@ x_json *x_json_parse4(const char *value, size_t buffer_length, const char **retu
     buffer.content = (const uint8_t*)value;
     buffer.length = buffer_length;
     buffer.offset = 0;
-    buffer.hooks = global_hooks;
 
-    item = x_json_new_item(&global_hooks);
+    item = x_json_new_item();
     if (item == NULL)
         goto fail;
 
@@ -953,7 +840,7 @@ x_json *x_json_parse2(const char *value, size_t buffer_length)
     return x_json_parse4(value, buffer_length, 0, 0);
 }
 
-static uint8_t *print(const x_json *const item, bool format, const internal_hooks * const hooks)
+static uint8_t *print(const x_json *const item, bool format)
 {
     static const size_t default_buffer_size = 256;
     printbuffer buffer[1];
@@ -962,10 +849,9 @@ static uint8_t *print(const x_json *const item, bool format, const internal_hook
     memset(buffer, 0, sizeof(buffer));
 
     /* create buffer */
-    buffer->buffer = (uint8_t*) hooks->allocate(default_buffer_size);
+    buffer->buffer = (uint8_t*) x_malloc(NULL, default_buffer_size);
     buffer->length = default_buffer_size;
     buffer->format = format;
-    buffer->hooks = *hooks;
     if (buffer->buffer == NULL)
         goto fail;
 
@@ -974,34 +860,20 @@ static uint8_t *print(const x_json *const item, bool format, const internal_hook
         goto fail;
     update_offset(buffer);
 
-    /* check if reallocate is available */
-    if (hooks->reallocate != NULL) {
-        printed = (uint8_t*) hooks->reallocate(buffer->buffer, buffer->offset + 1);
-        if (printed == NULL) {
-            goto fail;
-        }
-        buffer->buffer = NULL;
-    }
-	/* otherwise copy the JSON over to a new buffer */
-    else {
-        printed = (uint8_t*) hooks->allocate(buffer->offset + 1);
-        if (printed == NULL)
-            goto fail;
-        memcpy(printed, buffer->buffer, x_min(buffer->length, buffer->offset + 1));
-        printed[buffer->offset] = '\0'; /* just to be sure */
-
-        /* free the buffer */
-        hooks->deallocate(buffer->buffer);
-        buffer->buffer = NULL;
-    }
+	printed = (uint8_t*) x_realloc(buffer->buffer, buffer->offset + 1);
+	if (printed == NULL) {
+		goto fail;
+	}
+	buffer->buffer = NULL;
+	
     return printed;
 fail:
     if (buffer->buffer != NULL) {
-        hooks->deallocate(buffer->buffer);
+        x_free(buffer->buffer);
         buffer->buffer = NULL;
     }
     if (printed != NULL) {
-        hooks->deallocate(printed);
+        x_free(printed);
         printed = NULL;
     }
     return NULL;
@@ -1010,24 +882,21 @@ fail:
 /* Render a x_json item/entity/structure to text. */
 char * x_json_print(const x_json *item, bool fmt)
 {
-    return (char*)print(item, fmt, &global_hooks);
+    return (char*)print(item, fmt);
 }
 
 char * x_json_print_buffered(const x_json *item, int prebuffer, bool fmt)
 {
-    printbuffer p = { 0, 0, 0, 0, 0, 0, { 0, 0, 0 } };
+    printbuffer p = { 0 };
     if (prebuffer < 0)
         return NULL;
-    p.buffer = (uint8_t*)global_hooks.allocate((size_t)prebuffer);
-    if (!p.buffer)
-        return NULL;
+    p.buffer = (uint8_t*)x_malloc(NULL, (size_t)prebuffer);
     p.length = (size_t)prebuffer;
     p.offset = 0;
     p.noalloc = false;
     p.format = fmt;
-    p.hooks = global_hooks;
     if (!print_value(item, &p)) {
-        global_hooks.deallocate(p.buffer);
+        x_free(p.buffer);
         p.buffer = NULL;
         return NULL;
     }
@@ -1036,7 +905,7 @@ char * x_json_print_buffered(const x_json *item, int prebuffer, bool fmt)
 
 bool x_json_print_to_buffer(x_json *item, char *buffer, const int length, const bool format)
 {
-    printbuffer p = { 0, 0, 0, 0, 0, 0, { 0, 0, 0 } };
+    printbuffer p = { 0 };
     if ((length < 0) || (buffer == NULL))
         return false;
     p.buffer = (uint8_t*)buffer;
@@ -1044,7 +913,6 @@ bool x_json_print_to_buffer(x_json *item, char *buffer, const int length, const 
     p.offset = 0;
     p.noalloc = true;
     p.format = format;
-    p.hooks = global_hooks;
     return print_value(item, &p);
 }
 
@@ -1101,21 +969,21 @@ static bool print_value(const x_json *const item, printbuffer * const output_buf
     switch ((item->type) & 0xFF) {
         case x_json_NULL:
             output = ensure(output_buffer, 5);
-            if (output == NULL)
+            if (!output)
                 return false;
             strcpy((char*)output, "null");
             return true;
 
         case X_JSON_FALSE:
             output = ensure(output_buffer, 6);
-            if (output == NULL)
+            if (!output)
                 return false;
             strcpy((char*)output, "false");
             return true;
 
         case X_JSON_TRUE:
             output = ensure(output_buffer, 5);
-            if (output == NULL)
+            if (!output)
                 return false;
             strcpy((char*)output, "true");
             return true;
@@ -1127,7 +995,7 @@ static bool print_value(const x_json *const item, printbuffer * const output_buf
             size_t raw_length = 0;
             raw_length = strlen(item->valuestring) + sizeof("");
             output = ensure(output_buffer, raw_length);
-            if (output == NULL)
+            if (!output)
                 return false;
             memcpy(output, item->valuestring, raw_length);
             return true;
@@ -1168,7 +1036,7 @@ static bool parse_array(x_json *const item, parse_buffer * const input_buffer)
     /* loop through the comma separated array elements */
     do {
         /* allocate next item */
-        x_json *new_item = x_json_new_item(&(input_buffer->hooks));
+        x_json *new_item = x_json_new_item();
         if (new_item == NULL)
             goto fail; /* allocation failure */
         /* attach next item to list */
@@ -1216,7 +1084,7 @@ static bool print_array(const x_json *const item, printbuffer * const output_buf
     /* Compose the output array. */
     /* opening square bracket */
     output_pointer = ensure(output_buffer, 1);
-    if (output_pointer == NULL)
+    if (!output_pointer)
         return false;
     *output_pointer = '[';
     output_buffer->offset++;
@@ -1229,7 +1097,7 @@ static bool print_array(const x_json *const item, printbuffer * const output_buf
         if (current_element->next) {
             length = (size_t) (output_buffer->format ? 2 : 1);
             output_pointer = ensure(output_buffer, length + 1);
-            if (output_pointer == NULL)
+            if (!output_pointer)
                 return false;
             *output_pointer++ = ',';
             if(output_buffer->format)
@@ -1240,7 +1108,7 @@ static bool print_array(const x_json *const item, printbuffer * const output_buf
         current_element = current_element->next;
     }
     output_pointer = ensure(output_buffer, 2);
-    if (output_pointer == NULL)
+    if (!output_pointer)
         return false;
     *output_pointer++ = ']';
     *output_pointer = '\0';
@@ -1272,7 +1140,7 @@ static bool parse_object(x_json *const item, parse_buffer * const input_buffer)
     /* loop through the comma separated array elements */
     do {
         /* allocate next item */
-        x_json *new_item = x_json_new_item(&(input_buffer->hooks));
+        x_json *new_item = x_json_new_item();
         if (new_item == NULL)
             goto fail; /* allocation failure */
         /* attach next item to list */
@@ -1334,7 +1202,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
     /* Compose the output: */
     length = (size_t) (output_buffer->format ? 2 : 1); /* fmt: {\n */
     output_pointer = ensure(output_buffer, length + 1);
-    if (output_pointer == NULL)
+    if (!output_pointer)
         return false;
     *output_pointer++ = '{';
     output_buffer->depth++;
@@ -1345,7 +1213,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
         if (output_buffer->format) {
             size_t i;
             output_pointer = ensure(output_buffer, output_buffer->depth);
-            if (output_pointer == NULL) {
+            if (!output_pointer) {
                 return false;
             }
             for (i = 0; i < output_buffer->depth; i++) {
@@ -1360,7 +1228,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
 
         length = (size_t) (output_buffer->format ? 2 : 1);
         output_pointer = ensure(output_buffer, length);
-        if (output_pointer == NULL)
+        if (!output_pointer)
             return false;
         *output_pointer++ = ':';
         if (output_buffer->format)
@@ -1373,7 +1241,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
         /* print comma if not last */
         length = ((size_t)(output_buffer->format ? 1 : 0) + (size_t)(current_item->next ? 1 : 0));
         output_pointer = ensure(output_buffer, length + 1);
-        if (output_pointer == NULL)
+        if (!output_pointer)
             return false;
         if (current_item->next)
             *output_pointer++ = ',';
@@ -1384,7 +1252,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
         current_item = current_item->next;
     }
     output_pointer = ensure(output_buffer, output_buffer->format ? (output_buffer->depth + 1) : 2);
-    if (output_pointer == NULL)
+    if (!output_pointer)
         return false;
     if (output_buffer->format) {
         size_t i;
@@ -1478,12 +1346,12 @@ static void suffix_object(x_json *prev, x_json *item)
 }
 
 /* Utility for handling references. */
-static x_json *create_reference(const x_json *item, const internal_hooks * const hooks)
+static x_json *create_reference(const x_json *item)
 {
     x_json *reference = NULL;
     if (item == NULL)
         return NULL;
-    reference = x_json_new_item(hooks);
+    reference = x_json_new_item();
     if (reference == NULL)
         return NULL;
     memcpy(reference, item, sizeof(x_json));
@@ -1539,7 +1407,7 @@ static void* cast_away_const(const void* string)
     #pragma GCC diagnostic pop
 #endif
 
-static bool add_item_to_object(x_json *const object, const char *const string, x_json *const item, const internal_hooks * const hooks, const bool constant_key)
+static bool add_item_to_object(x_json *const object, const char *const string, x_json *const item, const bool constant_key)
 {
     char *new_key = NULL;
     int new_type = X_JSON_INVALID;
@@ -1550,13 +1418,11 @@ static bool add_item_to_object(x_json *const object, const char *const string, x
         new_type = item->type | X_JSON_STRING_IS_CONST;
     }
     else {
-        new_key = (char*)x_json_strdup((const uint8_t*)string, hooks);
-        if (new_key == NULL)
-            return false;
+        new_key = (char*)x_json_strdup((const uint8_t*)string);
         new_type = item->type & ~X_JSON_STRING_IS_CONST;
     }
     if (!(item->type & X_JSON_STRING_IS_CONST) && (item->string != NULL))
-        hooks->deallocate(item->string);
+        x_free(item->string);
     item->string = new_key;
     item->type = new_type;
     return add_item_to_array(object, item);
@@ -1564,33 +1430,33 @@ static bool add_item_to_object(x_json *const object, const char *const string, x
 
 bool x_json_add_item_to_object(x_json *object, const char *string, x_json *item)
 {
-    return add_item_to_object(object, string, item, &global_hooks, false);
+    return add_item_to_object(object, string, item, false);
 }
 
 /* Add an item to an object with constant string as key */
 bool x_json_add_item_to_object_cs(x_json *object, const char *string, x_json *item)
 {
-    return add_item_to_object(object, string, item, &global_hooks, true);
+    return add_item_to_object(object, string, item, true);
 }
 
 bool x_json_add_item_reference_to_array(x_json *array, x_json *item)
 {
     if (array == NULL)
         return false;
-    return add_item_to_array(array, create_reference(item, &global_hooks));
+    return add_item_to_array(array, create_reference(item));
 }
 
 bool x_json_add_item_reference_to_object(x_json *object, const char *string, x_json *item)
 {
     if ((object == NULL) || (string == NULL))
         return false;
-    return add_item_to_object(object, string, create_reference(item, &global_hooks), &global_hooks, false);
+    return add_item_to_object(object, string, create_reference(item), false);
 }
 
 x_json* x_json_add_null_to_object(x_json *const object, const char *const name)
 {
     x_json *null = x_json_create_null();
-    if (add_item_to_object(object, name, null, &global_hooks, false))
+    if (add_item_to_object(object, name, null, false))
         return null;
     x_json_delete(null);
     return NULL;
@@ -1599,7 +1465,7 @@ x_json* x_json_add_null_to_object(x_json *const object, const char *const name)
 x_json* x_json_add_true_to_object(x_json *const object, const char *const name)
 {
     x_json *true_item = x_json_create_true();
-    if (add_item_to_object(object, name, true_item, &global_hooks, false))
+    if (add_item_to_object(object, name, true_item, false))
         return true_item;
     x_json_delete(true_item);
     return NULL;
@@ -1608,7 +1474,7 @@ x_json* x_json_add_true_to_object(x_json *const object, const char *const name)
 x_json* x_json_add_false_to_object(x_json *const object, const char *const name)
 {
     x_json *false_item = x_json_create_false();
-    if (add_item_to_object(object, name, false_item, &global_hooks, false))
+    if (add_item_to_object(object, name, false_item, false))
         return false_item;
     x_json_delete(false_item);
     return NULL;
@@ -1617,7 +1483,7 @@ x_json* x_json_add_false_to_object(x_json *const object, const char *const name)
 x_json* x_json_add_bool_to_object(x_json *const object, const char *const name, const bool boolean)
 {
     x_json *bool_item = x_json_create_bool(boolean);
-    if (add_item_to_object(object, name, bool_item, &global_hooks, false))
+    if (add_item_to_object(object, name, bool_item, false))
         return bool_item;
     x_json_delete(bool_item);
     return NULL;
@@ -1626,7 +1492,7 @@ x_json* x_json_add_bool_to_object(x_json *const object, const char *const name, 
 x_json* x_json_add_number_to_object(x_json *const object, const char *const name, const double number)
 {
     x_json *number_item = x_json_create_number(number);
-    if (add_item_to_object(object, name, number_item, &global_hooks, false))
+    if (add_item_to_object(object, name, number_item, false))
         return number_item;
     x_json_delete(number_item);
     return NULL;
@@ -1635,7 +1501,7 @@ x_json* x_json_add_number_to_object(x_json *const object, const char *const name
 x_json* x_json_add_string_to_object(x_json *const object, const char *const name, const char *const string)
 {
     x_json *string_item = x_json_create_string(string);
-    if (add_item_to_object(object, name, string_item, &global_hooks, false))
+    if (add_item_to_object(object, name, string_item, false))
         return string_item;
     x_json_delete(string_item);
     return NULL;
@@ -1644,7 +1510,7 @@ x_json* x_json_add_string_to_object(x_json *const object, const char *const name
 x_json* x_json_add_raw_to_object(x_json *const object, const char *const name, const char *const raw)
 {
     x_json *raw_item = x_json_create_raw(raw);
-    if (add_item_to_object(object, name, raw_item, &global_hooks, false))
+    if (add_item_to_object(object, name, raw_item, false))
         return raw_item;
     x_json_delete(raw_item);
     return NULL;
@@ -1653,7 +1519,7 @@ x_json* x_json_add_raw_to_object(x_json *const object, const char *const name, c
 x_json* x_json_add_object_to_object(x_json *const object, const char *const name)
 {
     x_json *object_item = x_json_create_object();
-    if (add_item_to_object(object, name, object_item, &global_hooks, false))
+    if (add_item_to_object(object, name, object_item, false))
         return object_item;
     x_json_delete(object_item);
     return NULL;
@@ -1662,7 +1528,7 @@ x_json* x_json_add_object_to_object(x_json *const object, const char *const name
 x_json* x_json_add_array_to_object(x_json *const object, const char *const name)
 {
     x_json *array = x_json_create_array();
-    if (add_item_to_object(object, name, array, &global_hooks, false))
+    if (add_item_to_object(object, name, array, false))
         return array;
     x_json_delete(array);
     return NULL;
@@ -1742,12 +1608,11 @@ bool x_json_insert_item_in_array(x_json *array, int which, x_json *newitem)
     return true;
 }
 
-bool x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement)
+void x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x_json *replacement)
 {
-    if ((parent == NULL) || (parent->child == NULL) || (replacement == NULL) || (item == NULL))
-        return false;
+    assert(parent&& parent->child && replacement && item);
     if (replacement == item)
-        return true;
+		return;
     replacement->next = item->next;
     replacement->prev = item->prev;
     if (replacement->next != NULL)
@@ -1770,163 +1635,139 @@ bool x_json_replace_item_via_pointer(x_json *const parent, x_json *const item, x
     item->next = NULL;
     item->prev = NULL;
     x_json_delete(item);
-    return true;
 }
 
-bool x_json_replace_item_in_array(x_json *array, int which, x_json *newitem)
+void x_json_replace_item_in_array(x_json *array, int which, x_json *newitem)
 {
     if (which < 0)
-        return false;
-    return x_json_replace_item_via_pointer(array, get_array_item(array, (size_t)which), newitem);
+		return;
+    x_json_replace_item_via_pointer(array, get_array_item(array, (size_t)which), newitem);
 }
 
-static bool replace_item_in_object(x_json *object, const char *string, x_json *replacement, bool case_sensitive)
+static void replace_item_in_object(x_json *object, const char *string, x_json *replacement, bool case_sensitive)
 {
-    if ((replacement == NULL) || (string == NULL))
-        return false;
+    assert ((replacement != NULL) || (string != NULL));
     /* replace the name in the replacement */
     if (!(replacement->type & X_JSON_STRING_IS_CONST) && (replacement->string != NULL)) {
         x_json_free(replacement->string);
     }
-    replacement->string = (char*)x_json_strdup((const uint8_t*)string, &global_hooks);
-    if (replacement->string == NULL) {
-        return false;
-    }
+    replacement->string = (char*)x_json_strdup((const uint8_t*)string);
     replacement->type &= ~X_JSON_STRING_IS_CONST;
-    return x_json_replace_item_via_pointer(object, get_object_item(object, string, case_sensitive), replacement);
+    x_json_replace_item_via_pointer(object, get_object_item(object, string, case_sensitive), replacement);
 }
 
-bool x_json_replace_item_in_object(x_json *object, const char *string, x_json *newitem)
+void x_json_replace_item_in_object(x_json *object, const char *string, x_json *newitem)
 {
-    return replace_item_in_object(object, string, newitem, false);
+    replace_item_in_object(object, string, newitem, false);
 }
 
-bool x_json_replace_item_in_object_case_sensitive(x_json *object, const char *string, x_json *newitem)
+void x_json_replace_item_in_object_case_sensitive(x_json *object, const char *string, x_json *newitem)
 {
-    return replace_item_in_object(object, string, newitem, true);
+    replace_item_in_object(object, string, newitem, true);
 }
 
-/* Create basic types: */
 x_json *x_json_create_null(void)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item)
-        item->type = x_json_NULL;
+    x_json *item = x_json_new_item();
+	item->type = x_json_NULL;
     return item;
 }
 
 x_json *x_json_create_true(void)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item)
-        item->type = X_JSON_TRUE;
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_TRUE;
     return item;
 }
 
 x_json *x_json_create_false(void)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item)
-        item->type = X_JSON_FALSE;
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_FALSE;
     return item;
 }
 
 x_json *x_json_create_bool(bool boolean)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item)
-        item->type = boolean ? X_JSON_TRUE : X_JSON_FALSE;
+    x_json *item = x_json_new_item();
+	item->type = boolean ? X_JSON_TRUE : X_JSON_FALSE;
     return item;
 }
 
 x_json *x_json_create_number(double num)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item) {
-        item->type = X_JSON_NUMBER;
-        item->valuedouble = num;
-        /* use saturation in case of overflow */
-        if (num >= INT_MAX)
-            item->valueint = INT_MAX;
-        else if (num <= (double)INT_MIN)
-            item->valueint = INT_MIN;
-        else
-            item->valueint = (int)num;
-    }
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_NUMBER;
+	item->valuedouble = num;
+	/* use saturation in case of overflow */
+	if (num >= INT_MAX)
+		item->valueint = INT_MAX;
+	else if (num <= (double)INT_MIN)
+		item->valueint = INT_MIN;
+	else
+		item->valueint = (int)num;
     return item;
 }
 
 x_json *x_json_create_string(const char *string)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item) {
-        item->type = X_JSON_STRING;
-        item->valuestring = (char*)x_json_strdup((const uint8_t*)string, &global_hooks);
-        if(!item->valuestring) {
-            x_json_delete(item);
-            return NULL;
-        }
-    }
-    return item;
+	x_json *item = x_json_new_item();
+	item->type = X_JSON_STRING;
+	item->valuestring = (char*)x_json_strdup((const uint8_t*)string);
+	if(!item->valuestring) {
+		x_json_delete(item);
+		return NULL;
+	}
+	return item;
 }
 
 x_json *x_json_create_string_reference(const char *string)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if (item != NULL) {
-        item->type = X_JSON_STRING | X_JSON_IS_REF;
-        item->valuestring = (char*)cast_away_const(string);
-    }
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_STRING | X_JSON_IS_REF;
+	item->valuestring = (char*)cast_away_const(string);
     return item;
 }
 
 x_json *x_json_create_object_reference(const x_json *child)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if (item != NULL) {
-        item->type = X_JSON_OBJECT | X_JSON_IS_REF;
-        item->child = (x_json*)cast_away_const(child);
-    }
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_OBJECT | X_JSON_IS_REF;
+	item->child = (x_json*)cast_away_const(child);
     return item;
 }
 
 x_json *x_json_create_array_reference(const x_json *child)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if (item != NULL) {
-        item->type = X_JSON_ARRAY | X_JSON_IS_REF;
-        item->child = (x_json*)cast_away_const(child);
-    }
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_ARRAY | X_JSON_IS_REF;
+	item->child = (x_json*)cast_away_const(child);
     return item;
 }
 
 x_json *x_json_create_raw(const char *raw)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item) {
-        item->type = X_JSON_RAW;
-        item->valuestring = (char*)x_json_strdup((const uint8_t*)raw, &global_hooks);
-        if(!item->valuestring) {
-            x_json_delete(item);
-            return NULL;
-        }
-    }
+	x_json *item = x_json_new_item();
+	item->type = X_JSON_RAW;
+	item->valuestring = (char*)x_json_strdup((const uint8_t*)raw);
+	if(!item->valuestring) {
+		x_json_delete(item);
+		return NULL;
+	}
     return item;
 }
 
 x_json *x_json_create_array(void)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if(item)
-        item->type=X_JSON_ARRAY;
+    x_json *item = x_json_new_item();
+	item->type=X_JSON_ARRAY;
     return item;
 }
 
 x_json *x_json_create_object(void)
 {
-    x_json *item = x_json_new_item(&global_hooks);
-    if (item)
-        item->type = X_JSON_OBJECT;
+    x_json *item = x_json_new_item();
+	item->type = X_JSON_OBJECT;
     return item;
 }
 
@@ -1942,10 +1783,6 @@ x_json *x_json_create_int_array(const int *numbers, int count)
     a = x_json_create_array();
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number(numbers[i]);
-        if (!n) {
-            x_json_delete(a);
-            return NULL;
-        }
         if(!i)
             a->child = n;
         else
@@ -1966,10 +1803,6 @@ x_json *x_json_create_float_array(const float *numbers, int count)
     a = x_json_create_array();
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number((double)numbers[i]);
-        if(!n) {
-            x_json_delete(a);
-            return NULL;
-        }
         if(!i)
             a->child = n;
         else
@@ -1990,10 +1823,6 @@ x_json *x_json_create_double_array(const double *numbers, int count)
     a = x_json_create_array();
     for(i = 0; a && (i < (size_t)count); i++) {
         n = x_json_create_number(numbers[i]);
-        if(!n) {
-            x_json_delete(a);
-            return NULL;
-        }
         if(!i)
             a->child = n;
         else
@@ -2048,7 +1877,7 @@ x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
         goto fail;
     }
     /* Create new item */
-    newitem = x_json_new_item(&global_hooks);
+    newitem = x_json_new_item();
     if (!newitem) {
         goto fail;
     }
@@ -2057,13 +1886,13 @@ x_json *x_json_duplicate_rec(const x_json *item, size_t depth, bool recurse)
     newitem->valueint = item->valueint;
     newitem->valuedouble = item->valuedouble;
     if (item->valuestring) {
-        newitem->valuestring = (char*)x_json_strdup((uint8_t*)item->valuestring, &global_hooks);
+        newitem->valuestring = (char*)x_json_strdup((uint8_t*)item->valuestring);
         if (!newitem->valuestring) {
             goto fail;
         }
     }
     if (item->string) {
-        newitem->string = (item->type&X_JSON_STRING_IS_CONST) ? item->string : (char*)x_json_strdup((uint8_t*)item->string, &global_hooks);
+        newitem->string = (item->type&X_JSON_STRING_IS_CONST) ? item->string : (char*)x_json_strdup((uint8_t*)item->string);
         if (!newitem->string) {
             goto fail;
         }
@@ -2330,12 +2159,12 @@ bool x_json_compare(const x_json *const a, const x_json *const b, const bool cas
 
 void * x_json_malloc(size_t size)
 {
-    return global_hooks.allocate(size);
+    return x_malloc(NULL, size);
 }
 
 void x_json_free(void *object)
 {
-    global_hooks.deallocate(object);
+    x_free(object);
     object = NULL;
 }
 
