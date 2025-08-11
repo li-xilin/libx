@@ -83,6 +83,8 @@ typedef struct {
     size_t position;
 } error;
 
+static x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse);
+
 static error global_error = { NULL, 0 };
 
 const char * x_json_get_error_ptr(void)
@@ -1434,9 +1436,9 @@ static bool add_item_to_object(x_json *const object, const char *const string, x
     return add_item_to_array(object, item);
 }
 
-bool x_json_object_add(x_json *object, const char *string, bool case_sensitive, x_json *item)
+bool x_json_object_add(x_json *object, const char *string, x_json *item)
 {
-    return add_item_to_object(object, string, item, case_sensitive);
+    return add_item_to_object(object, string, item, false);
 }
 
 bool x_json_array_addref(x_json *array, x_json *item)
@@ -1819,15 +1821,12 @@ x_json *x_json_create_string_array(const char *const *strings, int count)
     return a;
 }
 
-/* Duplication */
-x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse);
-
 x_json *x_json_copy(const x_json *item, bool recurse)
 {
-    return x_json_copy_rec(item, 0, recurse );
+    return x_json_copy_rec(item, 0, recurse);
 }
 
-x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse)
+static x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse)
 {
     x_json *newitem = NULL;
     x_json *child = NULL;
@@ -2108,4 +2107,76 @@ bool x_json_compare(const x_json *const a, const x_json *const b, bool case_sens
             return false;
     }
 }
+
+void x_json_swap_value(x_json* item1, x_json* item2)
+{
+	assert(item1 && item2);
+    x_json tmp = {
+		.type = item1->type,
+		.value = item1->value,
+	};
+	item1->type = item2->type;
+	item1->value = item2->value;
+	item2->type = tmp.type;
+	item2->value = tmp.value;
+}
+
+static void quicksort(x_json *start, x_json *end)
+{
+    if (start == NULL || start == end)
+        return;
+    x_json *q = end;
+    x_json *p = start;
+    while (q != p) {
+        if (strlen(start->string) > strlen(q->string) || (strlen(start->string) == strlen(q->string) && strcmp(start->string, q->string) > 0)) {
+            p = p->next;
+            x_json_swap_value(p, q);
+        } else {
+            q = q->prev;
+        }
+    }
+    x_json_swap_value(p, start);
+    quicksort(start, p);
+    quicksort(p->next, end);
+}
+
+ void x_json_sort_object(x_json* object, bool recursive)
+{
+    x_json *start = NULL, *end = NULL, *child = NULL;
+    if (object == NULL || (!x_json_is_object(object) && !x_json_is_array(object))) {
+        return;
+    }
+	start = object->value.child;
+	end = object->value.child->prev;
+	quicksort(start, end);
+	if (recursive) {
+		x_json_array_foreach(child, object)
+			x_json_sort_object(child, recursive);
+	}
+}
+
+void x_json_dedup(x_json* root)
+{
+    x_json *p = NULL, *p2 = NULL, *q = NULL;
+    /* if root is a object, do deduplicate and recruit in it's child
+       else if it is a array, just recruit in it's child
+     */
+    if (x_json_is_object(root)) {
+        x_json_object_foreach(p, root) {
+            for (q = p;q != NULL && q->next != NULL; q = q->next) {
+                p2 = q->next;
+                if (strcmp(p2->string, p->string) == 0) {
+                    // when p2's key equal p's key, they are dupicated
+                    x_json_free(x_json_detach_child(root, p2));
+                }
+            }
+            x_json_dedup(p);
+        }
+    } else if (x_json_is_array(root)) {
+        x_json_array_foreach(p, root) {
+            x_json_dedup(p);
+        }
+    }
+}
+
 

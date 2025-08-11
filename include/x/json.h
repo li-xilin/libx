@@ -73,6 +73,9 @@ struct x_json_st
 #endif
 
 const char *x_json_get_error_ptr(void);
+void x_json_swap_value(x_json* item1, x_json* item2);
+void x_json_sort_object(x_json* object, bool recursive);
+void x_json_dedup(x_json* root);
 
 x_json *x_json_parse(const char *value);
 x_json *x_json_parse2(const char *value, size_t buffer_length);
@@ -129,7 +132,7 @@ void x_json_replace_child(x_json *const parent, x_json *const item, x_json *repl
 x_json *x_json_detach_child(x_json *parent, x_json *const item);
 
 bool x_json_array_add(x_json *array, x_json *item);
-bool x_json_object_add(x_json *object, const char *string, bool case_sensitive, x_json *item);
+bool x_json_object_add(x_json *object, const char *string, x_json *item);
 bool x_json_array_addref(x_json *array, x_json *item);
 bool x_json_object_addref(x_json *object, const char *string, x_json *item);
 

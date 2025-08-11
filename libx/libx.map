@@ -167,6 +167,7 @@ global:
 	x_json_create_string;
 	x_json_create_string_array;
 	x_json_create_string_reference;
+	x_json_dedup;
 	x_json_detach_child;
 	x_json_free;
 	x_json_get_error_ptr;
@@ -208,7 +209,9 @@ global:
 	x_json_set_int;
 	x_json_set_number_helper;
 	x_json_set_string;
+	x_json_sort_object;
 	x_json_string;
+	x_json_swap_value;
 	x_last_error;
 	x_log_handler_native;
 	x_log_handler_utf8;
