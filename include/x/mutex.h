@@ -43,7 +43,7 @@ struct x_mutex_st
 #endif
 };
 
-int x_mutex_init(x_mutex *lock);
+void x_mutex_init(x_mutex *lock);
 
 void x_mutex_lock(x_mutex *lock);
 

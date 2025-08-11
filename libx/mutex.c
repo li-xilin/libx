@@ -35,16 +35,14 @@
 #include <errno.h>
 #include <string.h>
 
-int x_mutex_init(x_mutex *lock)
+void x_mutex_init(x_mutex *lock)
 {
 #ifdef X_OS_WIN
 	lock->section = x_malloc(NULL, sizeof *lock->section);
 	InitializeCriticalSection(lock->section);
 #else
-	if (pthread_mutex_init(&lock->mutex, NULL))
-		return -1;
+	(void)pthread_mutex_init(&lock->mutex, NULL);
 #endif
-	return 0;
 }
 
 #ifdef X_OS_WIN

@@ -22,7 +22,6 @@
 
 #include "x/list.h"
 #include "x/memory.h"
-#include "x/once.h"
 #include "x/thread.h"
 #include "x/mutex.h"
 #include <stdlib.h>
@@ -30,44 +29,38 @@
 
 #define RETRY_INTERVAL 20
 
-struct block_st
-{
-	x_mset *mset;
-	x_link link;
-	char data[];
+static x_mset s_mset = {
+	.list = X_LIST_INIT(s_mset.list),
+	.lock = X_MUTEX_INIT
 };
 
-struct x_mset_st
+void x_mset_init(x_mset *mset)
 {
-	x_list list;
-	x_mutex lock;
-};
-
-x_mset *x_mset_create(void)
-{
-	x_mset *mset = malloc(sizeof *mset);
-	while (!mset) {
-		x_thread_sleep(RETRY_INTERVAL);
-		mset = malloc(sizeof *mset);
-	}
 	x_mutex_init(&mset->lock);
 	x_list_init(&mset->list);
-	return mset;
+}
+
+void x_mset_clear(x_mset *mset)
+{
+	if (!mset)
+		mset = &s_mset;
+	while (!x_list_is_empty(&mset->list)) {
+		x_link *pos = x_list_first(&mset->list);
+		x_list_del(pos);
+		free(x_container_of(pos, struct block_st, link));
+	}
 }
 
 void x_mset_free(x_mset *mset)
 {
 	if (!mset)
 		return;
-
 	while (!x_list_is_empty(&mset->list)) {
 		x_link *pos = x_list_first(&mset->list);
 		x_list_del(pos);
 		free(x_container_of(pos, struct block_st, link));
 	}
-
 	x_mutex_destroy(&mset->lock);
-	free(mset);
 }
 
 void *x_malloc(x_mset *mset, size_t size)
@@ -78,13 +71,12 @@ void *x_malloc(x_mset *mset, size_t size)
 		x_thread_sleep(RETRY_INTERVAL);
 		b = malloc(size ? size : 1);
 	}
-
+	if (!mset)
+		mset = &s_mset;
 	b->mset = mset;
-	if (mset) {
-		x_mutex_lock(&b->mset->lock);
-		x_list_add_back(&mset->list, &b->link);
-		x_mutex_unlock(&b->mset->lock);
-	}
+	x_mutex_lock(&b->mset->lock);
+	x_list_add_back(&mset->list, &b->link);
+	x_mutex_unlock(&b->mset->lock);
 	return b->data;
 }
 
@@ -106,15 +98,11 @@ void *x_realloc(void *ptr, size_t size)
 {
 	if (!ptr)
 		return x_malloc(NULL, size);
-
 	struct block_st *b = x_container_of(ptr, struct block_st, data);
-
-	if (b->mset) {
-		x_mutex_lock(&b->mset->lock);
-		x_list_del(&b->link);
-		x_mutex_unlock(&b->mset->lock);
-	}
-
+	assert(b->mset);
+	x_mutex_lock(&b->mset->lock);
+	x_list_del(&b->link);
+	x_mutex_unlock(&b->mset->lock);
 	struct block_st *new_blk = realloc(b, sizeof *b + size);
 	if (new_blk)
 		b = NULL;
@@ -123,13 +111,11 @@ void *x_realloc(void *ptr, size_t size)
 		struct block_st **bp = &b;
 		new_blk = realloc(*bp, sizeof *b + size);
 	}
-
 	if (new_blk->mset) {
 		x_mutex_lock(&new_blk->mset->lock);
 		x_list_add_back(&new_blk->mset->list, &new_blk->link);
 		x_mutex_unlock(&new_blk->mset->lock);
 	}
-	
 	return new_blk->data;
 }
 
@@ -138,11 +124,10 @@ void x_free(void *ptr)
 	if (!ptr)
 		return;
 	struct block_st *b = x_container_of(ptr, struct block_st, data);
-	if (b->mset) {
-		x_mutex_lock(&b->mset->lock);
-		x_list_del(&b->link);
-		x_mutex_unlock(&b->mset->lock);
-	}
+	assert(b->mset);
+	x_mutex_lock(&b->mset->lock);
+	x_list_del(&b->link);
+	x_mutex_unlock(&b->mset->lock);
 	free(b);
 }
 
@@ -163,10 +148,10 @@ void x_mattach(x_mset *mset, void *ptr)
 	struct block_st *b = x_container_of(ptr, struct block_st, data);
 	x_mdetach(ptr);
 	b->mset = mset;
-	if (mset) {
-		x_mutex_lock(&b->mset->lock);
-		x_list_add_back(&mset->list, &b->link);
-		x_mutex_unlock(&b->mset->lock);
-	}
+	if (!mset)
+		mset = &s_mset;
+	x_mutex_lock(&b->mset->lock);
+	x_list_add_back(&mset->list, &b->link);
+	x_mutex_unlock(&b->mset->lock);
 }
 

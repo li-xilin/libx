@@ -225,8 +225,9 @@ global:
 	x_memswp;
 	x_memtohex;
 	x_memxor;
-	x_mset_create;
+	x_mset_clear;
 	x_mset_free;
+	x_mset_init;
 	x_mutex_destroy;
 	x_mutex_init;
 	x_mutex_lock;

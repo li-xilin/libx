@@ -24,25 +24,33 @@
 #define X_MEMORY_H
 
 #include "types.h"
+#include "list.h"
+#include "mutex.h"
 #include <stddef.h>
 #include <stdint.h>
 
-x_mset *x_mset_create(void);
+struct block_st
+{
+	x_mset *mset;
+	x_link link;
+	char data[];
+};
 
+struct x_mset_st
+{
+	x_list list;
+	x_mutex lock;
+};
+
+void x_mset_init(x_mset *mset);
+void x_mset_clear(x_mset *mset);
 void x_mset_free(x_mset *mset);
-
 void *x_calloc(x_mset *mset, size_t nmemb, size_t size);
-
 void *x_malloc(x_mset *mset, size_t size);
-
 void *x_zalloc(x_mset *mset, size_t size);
-
 void *x_realloc(void *ptr, size_t size);
-
 void x_free(void *ptr);
-
 void x_mdetach(void *ptr);
-
 void x_mattach(x_mset *mset, void *ptr);
 
 #endif

@@ -77,10 +77,7 @@ static void free_thread_tss(void *data)
 static void init(void)
 {
 	s_init_errno = 0;
-	if (x_mutex_init(&s_lock)) {
-		s_init_errno = errno;
-		return;
-	}
+	x_mutex_init(&s_lock);
 	if (x_tss_init(&s_thread_ptr, free_thread_tss)) {
 		s_init_errno = errno;
 		x_mutex_destroy(&s_lock);
@@ -196,14 +193,10 @@ x_thread *x_thread_create(x_thread_fn *thread_func, x_thread_clean_fn *cleanup, 
 		goto fail;
 	if (x_cond_init(&info->finished_cond))
 		goto fail;
-	if (x_mutex_init(&info->mutex)) {
-		x_cond_destroy(&info->finished_cond);
-		goto fail;
-	}
+	x_mutex_init(&info->mutex);
 	info->arg = arg;
 	info->func = thread_func;
 	info->thread = t;
-
 #ifdef X_OS_WIN
 	DWORD dwThreadId;
 	t->hThread = CreateThread(NULL, 0, __x_thread_proc, info, 0, &dwThreadId);
