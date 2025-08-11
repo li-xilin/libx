@@ -412,17 +412,15 @@ static bool print_integer(const x_json *const item, printbuffer * const output_b
 {
     uint8_t *output_pointer = NULL;
     int length = 0;
-    uint8_t number_buffer[26] = {0}; /* temporary buffer to print the number into */
-    if (!output_buffer) {
-        return false;
-	}
+    uint8_t number_buffer[16];
+    assert(output_buffer);
 	length = sprintf((char*)number_buffer, "%d", item->value.integer);
     if ((length < 0) || (length > (int)(sizeof(number_buffer) - 1)))
         return false;
     output_pointer = ensure(output_buffer, (size_t)length + sizeof(""));
     if (!output_pointer)
         return false;
-    memcpy(output_buffer, number_buffer, length);
+    memcpy(output_pointer, number_buffer, length);
     output_pointer[length] = '\0';
     output_buffer->offset += length;
     return true;
@@ -1000,9 +998,9 @@ static bool print_value(const x_json *const item, printbuffer * const output_buf
             strcpy((char*)output, item->value.integer ? "true" : "false");
             return true;
         case X_JSON_NUMBER:
-            return print_integer(item, output_buffer);
-        case X_JSON_INTEGER:
             return print_number(item, output_buffer);
+        case X_JSON_INTEGER:
+            return print_integer(item, output_buffer);
         case X_JSON_RAW:
             if (item->value.string == NULL)
                 return false;
@@ -1226,12 +1224,10 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
         if (output_buffer->format) {
             size_t i;
             output_pointer = ensure(output_buffer, output_buffer->depth);
-            if (!output_pointer) {
+            if (!output_pointer)
                 return false;
-            }
-            for (i = 0; i < output_buffer->depth; i++) {
+            for (i = 0; i < output_buffer->depth; i++)
                 *output_pointer++ = '\t';
-            }
             output_buffer->offset += output_buffer->depth;
         }
         /* print key */
@@ -1245,7 +1241,7 @@ static bool print_object(const x_json *const item, printbuffer * const output_bu
             return false;
         *output_pointer++ = ':';
         if (output_buffer->format)
-            *output_pointer++ = '\t';
+            *output_pointer++ = ' ';
         output_buffer->offset += length;
         /* print value */
         if (!print_value(current_item, output_buffer))
@@ -1321,18 +1317,15 @@ static x_json *get_object_item(const x_json *const object, const char *const nam
         return NULL;
     current_element = object->value.child;
     if (case_sensitive) {
-        while ((current_element != NULL) && (current_element->string != NULL) && (strcmp(name, current_element->string) != 0)) {
+        while ((current_element != NULL) && (current_element->string != NULL) && (strcmp(name, current_element->string) != 0))
             current_element = current_element->next;
-        }
     }
     else {
-        while ((current_element != NULL) && (x_stricmp(name, current_element->string) != 0)) {
+        while ((current_element != NULL) && (x_stricmp(name, current_element->string) != 0))
             current_element = current_element->next;
-        }
     }
-    if ((current_element == NULL) || (current_element->string == NULL)) {
+    if ((current_element == NULL) || (current_element->string == NULL))
         return NULL;
-    }
     return current_element;
 }
 
