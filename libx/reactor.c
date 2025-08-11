@@ -154,8 +154,7 @@ int x_reactor_init(x_reactor *r)
 		goto fail;
 	if (x_sock_pair(AF_UNIX, SOCK_STREAM, 0, r->io_pipe) == -1)
 		goto fail;
-	if (x_mutex_init(&r->lock))
-		goto fail;
+	x_mutex_init(&r->lock);
 	x_hmap_init(&r->sock_ht, 0.5, evsocket_hash, evsocket_equal);
 	x_list_init(&r->pending_list);
 	x_list_init(&r->obj_list);
