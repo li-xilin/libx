@@ -50,11 +50,6 @@ void x_heap_free(x_heap* h)
 	x_free(h->table);
 }
 
-inline static size_t x_heap_size(const x_heap* h)
-{
-	return h->entry_cnt;
-}
-
 x_ranode *x_heap_top(const x_heap* h)
 {
 	if (h->entry_cnt == 0)

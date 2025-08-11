@@ -49,5 +49,10 @@ x_ranode *x_heap_top(const x_heap *h);
 x_ranode *x_heap_pop(x_heap *h);
 void x_heap_remove(x_heap *h, x_ranode *n);
 
+static inline size_t x_heap_size(const x_heap* h)
+{
+	return h->entry_cnt;
+}
+
 #endif
 
