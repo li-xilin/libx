@@ -51,7 +51,6 @@ typedef int64_t x_ssize ;
 #error "Unknown the size of size_t"
 #endif
 
-
 #ifndef X_ROPE_NODE_DEFINED
 #define X_ROPE_NODE_DEFINED
 typedef struct x_rope_node_st x_rope_node;
@@ -240,6 +239,21 @@ typedef struct x_sockmux_st x_sockmux;
 #ifndef X_JSON_DEFINED
 #define X_JSON_DEFINED
 typedef struct x_json_st x_json;
+#endif
+
+#ifndef X_JPATH_DEFINED
+#define X_JPATH_DEFINED
+typedef struct x_jpath_st x_jpath;
+#endif
+
+#ifndef X_JPATH_RESULT_DEFINED
+#define X_JPATH_RESULT_DEFINED
+typedef struct x_jpath_result_st x_jpath_result;
+#endif
+
+#ifndef X_JPATH_RESULT_NODE_DEFINED
+#define X_JPATH_RESULT_NODE_DEFINED
+typedef struct x_jpath_result_node_st x_jpath_result_node;
 #endif
 
 #endif

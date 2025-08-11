@@ -141,6 +141,17 @@ global:
 	x_ini_strerror;
 	x_ini_unset;
 	x_isatty;
+	x_jpath_append;
+	x_jpath_create;
+	x_jpath_free;
+	x_jpath_insert;
+	x_jpath_match;
+	x_jpath_parse;
+	x_jpath_result_add;
+	x_jpath_result_create;
+	x_jpath_result_free;
+	x_jpath_result_to_array;
+	x_jpath_wildcarded;
 	x_json_array_add;
 	x_json_array_addref;
 	x_json_array_at;

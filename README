@@ -8,18 +8,17 @@
     x/detect.h       编译环境探测宏
     x/dump.h         数据结构可视化转储
     x/flowctl.h      流程控制语句
-    x/memory.h       内存分配
+    x/memory.h       管理内存分配
     x/narg.h         参数数量计算
-    x/trick.h        魔法宏
+    x/trick.h        宏模板函数
     x/time.h         高精度时间计算
     x/test.h         单元测试
 
 文件操作：
     x/path.h         路径操作
     x/file.h         文件操作
-    x/file.h         文件操作
-    x/log.h          日志打印
-    x/sys.h          系统接口
+    x/log.h          日志
+    x/sys.h          操作系统
     x/ini.h          读写INI配置文件
     x/stat.h         获取文件元数据
     x/dir.h          读取文件夹
@@ -27,15 +26,16 @@
 字符串操作：
     x/unicode.h      UNICODE操作
     x/uchar.h        跨平台字符串
-    x/rope.h         绳索（编辑超长字符串）
-    x/strbuf.h       动态连续字符串缓冲区
+    x/rope.h         绳索
+    x/strbuf.h       动态连续字符串
     x/string.h       串操作函数
     x/printf.h       字符串格式化打印
     x/cliarg.h       CLI参数解析
     x/base64.h       Base64编解码
-	x/json.h         JSON字符串解析
+	x/json.h         Json字符串解析
+	x/jpath.h        JsonPath路径检索
 
-数据容器：
+数据结构：
     x/btnode.h       二叉树
     x/bitmap.h       位图
     x/heap.h         堆（优先队列）
@@ -44,7 +44,7 @@
     x/splay.h        伸展树
     x/pipe.h         FIFO队列
 
-多线程：
+线程和进程：
     x/cond.h         条件变量
     x/mutex.h        互斥量
     x/once.h         原子初始化

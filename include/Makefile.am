@@ -48,6 +48,7 @@ xinclude_HEADERS = \
 	x/socket.h \
 	x/reactor.h \
 	x/json.h \
+	x/jpath.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
