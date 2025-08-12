@@ -31,7 +31,6 @@
 #endif
 #if defined(_MSC_VER)
 #pragma warning (push)
-/* disable warning about single line comments in system headers */
 #pragma warning (disable : 4001)
 #endif
 
@@ -48,34 +47,15 @@
 #include <float.h>
 #include <stdbool.h>
 #include <assert.h>
-
 #ifdef ENABLE_LOCALES
 #include <locale.h>
 #endif
 
-#if 0
 #if defined(_MSC_VER)
 #pragma warning (pop)
 #endif
 #ifdef __GNUC__
 #pragma GCC visibility pop
-#endif
-#endif
-
-/* define isnan and isinf for ANSI C, if in C99 or above, isnan and isinf has been defined in math.h */
-#ifndef isinf
-#define isinf(d) (isnan((d - d)) && !isnan(d))
-#endif
-#ifndef isnan
-#define isnan(d) (d != d)
-#endif
-
-#ifndef NAN
-#ifdef _WIN32
-#define NAN sqrt(-1.0)
-#else
-#define NAN 0.0/0.0
-#endif
 #endif
 
 typedef struct {
@@ -83,7 +63,40 @@ typedef struct {
     size_t position;
 } error;
 
+typedef struct
+{
+    const uint8_t *content;
+    size_t length;
+    size_t offset;
+    size_t depth; /* How deeply nested (in arrays/objects) is the input at the current offset. */
+} parse_buffer;
+
+typedef struct
+{
+    uint8_t *buffer;
+    size_t length;
+    size_t offset;
+    size_t depth; /* current nesting depth (for formatted printing) */
+    bool noalloc;
+    bool format; /* is this print a formatted print */
+} printbuffer;
+
+/* check if the given size is left to read in a given parse buffer (starting with 1) */
+#define can_read(buffer, size) ((buffer != NULL) && (((buffer)->offset + size) <= (buffer)->length))
+/* check if the buffer can be accessed at the given index (starting with 0) */
+#define can_access_at_index(buffer, index) ((buffer != NULL) && (((buffer)->offset + index) < (buffer)->length))
+#define cannot_access_at_index(buffer, index) (!can_access_at_index(buffer, index))
+/* get a pointer to the buffer at the position */
+#define buffer_at_offset(buffer) ((buffer)->content + (buffer)->offset)
+#define static_strlen(string_literal) (sizeof(string_literal) - sizeof(""))
+
 static x_json *x_json_copy_rec(const x_json *item, size_t depth, bool recurse);
+static bool parse_value(x_json *const item, parse_buffer * const input_buffer);
+static bool print_value(const x_json *const item, printbuffer * const output_buffer);
+static bool parse_array(x_json *const item, parse_buffer * const input_buffer);
+static bool print_array(const x_json *const item, printbuffer * const output_buffer);
+static bool parse_object(x_json *const item, parse_buffer * const input_buffer);
+static bool print_object(const x_json *const item, printbuffer * const output_buffer);
 
 static error global_error = { NULL, 0 };
 
@@ -94,10 +107,8 @@ const char * x_json_get_error_ptr(void)
 
 char * x_json_string(const x_json *const item)
 {
-    if (!x_json_is_string(item)) {
+    if (!x_json_is_string(item))
         return NULL;
-    }
-
     return item->value.string;
 }
 
@@ -110,9 +121,6 @@ double x_json_number(const x_json *const item)
 	else
 		return item->value.number;
 }
-
-#define static_strlen(string_literal) (sizeof(string_literal) - sizeof(""))
-
 static uint8_t* x_json_strdup(const uint8_t* string)
 {
     size_t length = 0;
@@ -128,10 +136,8 @@ static uint8_t* x_json_strdup(const uint8_t* string)
 static x_json *x_json_new_item(void)
 {
     x_json* node = (x_json*)x_malloc(NULL, sizeof(x_json));
-    if (node) {
+    if (node)
         memset(node, '\0', sizeof(x_json));
-    }
-
     return node;
 }
 
@@ -142,12 +148,10 @@ void x_json_free(x_json *item)
     while (item != NULL) {
         next = item->next;
         if (!(item->type & X_JSON_IS_REF)) {
-			if ((item->type & 0xFF) == X_JSON_OBJECT) {
+			if ((item->type & 0xFF) == X_JSON_OBJECT)
 				x_json_free(item->value.child);
-			}
-			else if ((item->type & 0xFF) == X_JSON_STRING) {
+			else if ((item->type & 0xFF) == X_JSON_STRING)
 				x_free(item->value.string);
-			}
         }
         if (!(item->type & X_JSON_STRING_IS_CONST) && (item->string != NULL)) {
             x_free(item->string);
@@ -168,23 +172,6 @@ static uint8_t get_decimal_point(void)
     return '.';
 #endif
 }
-
-typedef struct
-{
-    const uint8_t *content;
-    size_t length;
-    size_t offset;
-    size_t depth; /* How deeply nested (in arrays/objects) is the input at the current offset. */
-} parse_buffer;
-
-/* check if the given size is left to read in a given parse buffer (starting with 1) */
-#define can_read(buffer, size) ((buffer != NULL) && (((buffer)->offset + size) <= (buffer)->length))
-/* check if the buffer can be accessed at the given index (starting with 0) */
-#define can_access_at_index(buffer, index) ((buffer != NULL) && (((buffer)->offset + index) < (buffer)->length))
-#define cannot_access_at_index(buffer, index) (!can_access_at_index(buffer, index))
-/* get a pointer to the buffer at the position */
-#define buffer_at_offset(buffer) ((buffer)->content + (buffer)->offset)
-
 /* Parse the input text to generate a number, and populate the result into item. */
 static bool parse_number(x_json *const item, parse_buffer * const input_buffer)
 {
@@ -266,7 +253,6 @@ double x_json_set_number_helper(x_json *object, double number)
     return object->value.number = number;
 }
 
-
 void x_json_set_int(x_json *const object, int value)
 {
 	assert(object->type & X_JSON_INTEGER);
@@ -296,16 +282,6 @@ void x_json_set_string(x_json *object, const char *valuestring)
         x_free(object->value.string);
     object->value.string = copy;
 }
-
-typedef struct
-{
-    uint8_t *buffer;
-    size_t length;
-    size_t offset;
-    size_t depth; /* current nesting depth (for formatted printing) */
-    bool noalloc;
-    bool format; /* is this print a formatted print */
-} printbuffer;
 
 /* realloc printbuffer if necessary to have at least "needed" bytes more */
 static uint8_t* ensure(printbuffer * const p, size_t needed)
@@ -445,7 +421,6 @@ static uint32_t parse_hex4(const uint8_t * const input)
             /* shift left to make place for the next nibble */
             h = h << 4;
     }
-
     return h;
 }
 
@@ -733,14 +708,6 @@ static bool print_string(const x_json *const item, printbuffer * const p)
     return print_string_ptr((uint8_t*)item->value.string, p);
 }
 
-/* Predeclare these prototypes. */
-static bool parse_value(x_json *const item, parse_buffer * const input_buffer);
-static bool print_value(const x_json *const item, printbuffer * const output_buffer);
-static bool parse_array(x_json *const item, parse_buffer * const input_buffer);
-static bool print_array(const x_json *const item, printbuffer * const output_buffer);
-static bool parse_object(x_json *const item, parse_buffer * const input_buffer);
-static bool print_object(const x_json *const item, printbuffer * const output_buffer);
-
 /* Utility to jump whitespace and cr/lf */
 static parse_buffer *buffer_skip_whitespace(parse_buffer * const buffer)
 {
@@ -960,21 +927,17 @@ static bool parse_value(x_json *const item, parse_buffer * const input_buffer)
         return true;
     }
     /* string */
-    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '\"')) {
+    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '\"'))
         return parse_string(item, input_buffer);
-    }
     /* number */
-    if (can_access_at_index(input_buffer, 0) && ((buffer_at_offset(input_buffer)[0] == '-') || ((buffer_at_offset(input_buffer)[0] >= '0') && (buffer_at_offset(input_buffer)[0] <= '9')))) {
+    if (can_access_at_index(input_buffer, 0) && ((buffer_at_offset(input_buffer)[0] == '-') || ((buffer_at_offset(input_buffer)[0] >= '0') && (buffer_at_offset(input_buffer)[0] <= '9')))) 
         return parse_number(item, input_buffer);
-    }
     /* array */
-    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '[')) {
+    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '['))
         return parse_array(item, input_buffer);
-    }
     /* object */
-    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '{')) {
+    if (can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '{'))
         return parse_object(item, input_buffer);
-    }
     return false;
 }
 
