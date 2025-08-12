@@ -35,6 +35,7 @@ xinclude_HEADERS = \
 	x/dir.h \
 	x/stat.h \
 	x/proc.h \
+	x/lib.h \
 	x/cliarg.h \
 	x/sys.h \
 	x/path.h \

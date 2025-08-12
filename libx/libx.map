@@ -224,6 +224,10 @@ global:
 	x_json_string;
 	x_json_swap_value;
 	x_last_error;
+	x_lib_close;
+	x_lib_open;
+	x_lib_strerror;
+	x_lib_symbol;
 	x_log_handler_native;
 	x_log_handler_utf8;
 	x_log_mode;

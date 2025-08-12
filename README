@@ -52,6 +52,7 @@
     x/tss.h          线程本地存储
     x/tpool.h        线程池
     x/proc.h         进程执行
+    x/lib.h          加载动态库
 
 终端操作：
     x/tsignal.h      进程/终端信号

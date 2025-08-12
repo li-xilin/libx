@@ -256,5 +256,10 @@ typedef struct x_jpath_result_st x_jpath_result;
 typedef struct x_jpath_result_node_st x_jpath_result_node;
 #endif
 
+#ifndef X_LIB_DEFINED
+#define X_LIB_DEFINED
+typedef void *x_lib;
+#endif
+
 #endif
 
