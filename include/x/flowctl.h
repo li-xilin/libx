@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,14 @@
 #include <stdint.h>
 #include <setjmp.h>
 
-#define x_block for (register int __ax_block_flag = 0; __ax_block_flag != 1; __ax_block_flag = 1)
+#define x_block \
+	for (register int __x_block_flag = 0; __x_block_flag != 1; __x_block_flag = 1)
 
-#define x_block_var(...) for (__VA_ARGS__, *__ax_block_flag = (void *)(uintptr_t)1; __ax_block_flag != NULL; __ax_block_flag = NULL)
+#define x_block_var(...) \
+	for (__VA_ARGS__, *__x_block_flag = (void *)(uintptr_t)1; __x_block_flag != NULL; __x_block_flag = NULL)
 
-#define x_repeat(_n) for (size_t _ = 0; _ != (_n); _++)
+#define x_repeat(_n) \
+	for (size_t _ = 0; _ != (_n); _++)
 
 #define x_forever for(;;)
 
@@ -56,10 +59,16 @@
 		_ != __x_forrange_end; \
 		_ += __X_FORRANGE_STEP(__VA_ARGS__))
 
-#define x_routine(name) jmp_buf __x_jmpbuf_##name; while (0) __x_label_##name: \
-                for (int __x_tmp = 0;  ; __x_tmp = 1) if (__x_tmp) longjmp(__x_jmpbuf_##name, 1); else \
-                for (; !__x_tmp ; __x_tmp = 1)
+#define x_routine(name) jmp_buf __x_jmpbuf_##name; while (0) __x_routine_##name: \
+	for (int __x_tmp = 0;  ; __x_tmp = 1) \
+		if (__x_tmp) \
+			longjmp(__x_jmpbuf_##name, 1); \
+		else \
+			for (; !__x_tmp ; __x_tmp = 1)
 
-#define x_routine_call(name) if (!setjmp(__x_jmpbuf_##name)) goto __x_label_##name;
+#define x_call_routine(name) \
+	if (!setjmp(__x_jmpbuf_##name)) \
+		goto __x_routine_##name
 
 #endif
+
