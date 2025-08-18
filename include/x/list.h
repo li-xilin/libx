@@ -76,9 +76,9 @@ inline static void x_list_swap(x_link *link1, x_link *link2)
 
 inline static void x_list_replace(x_link *link, x_link *new_link)
 {
-		link->prev->next = new_link;
-		link->next->prev = new_link;
-		*new_link = *link;
+	link->prev->next = new_link;
+	link->next->prev = new_link;
+	*new_link = *link;
 }
 
 inline static void x_list_clear(x_list *list)
@@ -94,18 +94,31 @@ inline static void __x_list_add(x_link *new_link, x_link *prev, x_link *next)
 	prev->next = new_link;
 }
 
-inline static void x_list_add_front(x_link *head, x_link *new_link)
+inline static void x_list_add_front(x_list *list, x_link *new_link)
 {
-	__x_list_add(new_link, head, head->next);
+	assert(list);
+	assert(new_link);
+	__x_list_add(new_link, &list->head, list->head.next);
 }
 
 inline static void x_list_add_back(x_list *list, x_link *new_link)
 {
+	assert(list);
+	assert(new_link);
 	__x_list_add(new_link, list->head.prev, &list->head);
+}
+
+inline static void x_list_insert(x_link *link, x_link *new_link)
+{
+	assert(link);
+	assert(new_link);
+	__x_list_add(new_link, link->prev, link);
 }
 
 inline static void __x_list_del(x_link * prev, x_link * next)
 {
+	assert(prev);
+	assert(next);
 	next->prev = prev;
 	prev->next = next;
 }
@@ -115,7 +128,6 @@ inline static void x_list_del(x_link *link)
 	assert(link);
 	assert(link->prev);
 	assert(link->next);
-
 	__x_list_del(link->prev, link->next);
 	link->prev = link->next = 0;
 }
@@ -125,14 +137,24 @@ inline static int x_list_is_empty(const x_list *list)
 	return list->head.next == &list->head;
 }
 
-inline static x_link *x_list_first(x_list *list)
+inline static x_link *x_list_first(const x_list *list)
 {
 	return x_list_is_empty(list) ? NULL : list->head.next;
 }
 
-inline static x_link *x_list_last(x_list *list)
+inline static x_link *x_list_last(const x_list *list)
 {
 	return x_list_is_empty(list) ? NULL : list->head.prev;
+}
+
+inline static bool x_list_has_multiple(const x_list *list)
+{
+	return !x_list_is_empty(list) && x_list_first((x_list *)list) != x_list_last((x_list *)list);
+}
+
+inline static x_link *x_list_second(const x_list *list)
+{
+	return x_list_has_multiple(list) ? list->head.next->next : NULL;
 }
 
 #define x_list_foreach(pos, list) \
