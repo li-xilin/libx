@@ -2,6 +2,7 @@
 #include "x/regex.h"
 #include "x/string.h"
 #include <ctype.h>
+#include <wchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -408,28 +409,28 @@ static int match_range(struct pattern *rexp, int chr) {
 		chr = tolower(chr);
 		return chr >= tolower(rexp->ptr[0]) && chr <= tolower(rexp->ptr[2]);
 	} else
-		return chr >= rexp->ptr[1] && chr <= rexp->ptr[2];
+		return chr >= rexp->ptr[0] && chr <= rexp->ptr[2];
 }
 
 static int match_meta(struct pattern *rexp, const char *txt) {
 
 	switch (rexp->ptr[1]) {
 		case 'a':
-			return isalpha(*txt);
+			return !!x_isalpha_7bit(*txt);
 		case 'A':
-			return !isalpha(*txt) ? x_utf8_meter(txt): false;
+			return !x_isalpha_7bit(*txt) ? x_utf8_meter(txt): false;
 		case 'd':
-			return isdigit(*txt);
+			return !!x_isdigit_7bit(*txt);
 		case 'D':
-			return !isdigit(*txt) ? x_utf8_meter(txt): false;
+			return !x_isdigit_7bit(*txt) ? x_utf8_meter(txt): false;
 		case 'w':
-			return isalnum(*txt);
+			return !!x_isalnum_7bit(*txt);
 		case 'W':
-			return !isalnum(*txt) ? x_utf8_meter(txt): false;
+			return !x_isalnum_7bit(*txt) ? x_utf8_meter(txt): false;
 		case 's':
-			return isspace(*txt);
+			return !!x_isspace_7bit(*txt);
 		case 'S':
-			return !isspace(*txt) ? x_utf8_meter(txt): false;
+			return !x_isspace_7bit(*txt) ? x_utf8_meter(txt): false;
 		case '&':
 			return *txt & UTF8_BIT ? x_utf8_meter(txt): false;
 		default:
@@ -507,11 +508,14 @@ static int last_id_catch(x_recatch *catch, int id)
 
 static void open_catch(x_recatch *catch, int *index)
 {
-	if (catch->count >= X_REGEX_CATCH_MAX)
+	if (catch->count >= X_REGEX_CATCH_MAX) {
 		*index = X_REGEX_CATCH_MAX;
-	*index = catch->count++;
+		return;
+	}
+	*index = catch->count;
 	catch->items[*index].ptr = catch->text.str + catch->text.pos;
 	catch->items[*index].id = catch->idx++;
+	catch->count++;
 }
 
 static void close_catch(x_recatch *catch, int index)
@@ -537,10 +541,13 @@ int x_recatch_len_at(x_recatch *catch, int index)
 
 char *x_recatch_fetch(x_recatch *catch, char *str, int index)
 {
-	if (index > 0 && index < catch->count)
-		strncpy(str, catch->items[index].ptr, catch->items[index].len);
-	else
-		*str = '\0';
+	if (index > 0 && index < catch->count) {
+		int len = catch->items[index].len;
+		strncpy(str, catch->items[index].ptr, len);
+		str[len] = '\0';
+		return str;
+	}
+	*str = '\0';
 	return str;
 }
 
@@ -558,7 +565,9 @@ char *x_recatch_replace(x_recatch *catch, char *new_str, const char *rpl_str, in
 			new_str += rpLen;
 			last = catch->items[index].ptr + catch->items[index].len;
 		}
-	strncpy(new_str, last, catch->items[0].ptr + catch->items[0].len - last);
+	int len = catch->items[0].ptr + catch->items[0].len - last;
+	strncpy(new_str, last, len);
+	new_str[len] = '\0';
 	return ret_str;
 }
 
