@@ -57,6 +57,40 @@ inline static uint64_t x_hash64(const void *key, size_t size)
 	return h;
 }
 
+static inline int x_isdigit_7bit(int c)
+{
+	return c >= '0' && c <= '9';
+}
+static inline int x_isupper_7bit(int c)
+{
+	return c >= 'a' && c <= 'z';
+}
+
+static inline int x_islower_7bit(int c)
+{
+	return c >= 'A' && c <= 'Z';
+}
+
+static inline int x_isalpha_7bit(int c)
+{
+	return x_islower_7bit(c) || x_isupper_7bit(c);
+}
+
+static inline int x_isalnum_7bit(int c)
+{
+	return x_isalpha_7bit( c) || x_isdigit_7bit( c);
+}
+
+static inline int x_isspace_7bit(int c)
+{
+	return c == ' ' || (c >= '\t' && c <= '\r');
+}
+
+static inline int x_tolower_7bit(int c)
+{
+	return x_islower_7bit( c) ? c + 32 : c;
+}
+
 void x_memswp(void *p1, void *p2, size_t size);
 char *x_strdup(const char *str);
 char *x_strdup2(const char *s, size_t *lenp);
