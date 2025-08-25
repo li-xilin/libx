@@ -125,7 +125,6 @@
 #define FLAGS_CHAR        (1U <<  6U)
 #define FLAGS_SHORT       (1U <<  7U)
 #define FLAGS_INT         (1U <<  8U)
-// Only used with PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS
 #define FLAGS_LONG        (1U <<  9U)
 #define FLAGS_LONG_LONG   (1U << 10U)
 #define FLAGS_PRECISION   (1U << 11U)
@@ -134,9 +133,8 @@
 // Note: Similar, but not identical, effect as FLAGS_HASH
 #define FLAGS_SIGNED      (1U << 14U)
 #define FLAGS_LONG_DOUBLE (1U << 15U)
-// Only used with PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS
 
-#ifdef PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS
+#ifdef X_SUPPORT_PRINTF_IXX
 
 #define FLAGS_INT8 FLAGS_CHAR
 
@@ -177,7 +175,7 @@
 #error "No basic integer type has a size of 64 bits exactly"
 #endif
 
-#endif // PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS
+#endif // X_SUPPORT_PRINTF_IXX
 
 
 typedef unsigned int printf_flags_t;
@@ -1117,7 +1115,7 @@ static inline int format_string_loop(output_gadget_t* output, const x_uchar* for
 
 		// evaluate length field
 		switch (*format) {
-#ifdef PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS
+#ifdef X_SUPPORT_PRINTF_IXX
 			case 'I' :
 				ADVANCE_IN_FORMAT_STRING(format);
 				// Greedily parse for size in bits: 8, 16, 32 or 64
