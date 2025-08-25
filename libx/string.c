@@ -472,3 +472,20 @@ int x_strnrcmp(const char *s1, const char *s2, size_t len)
 	}
 }
 
+const char *x_strnchr(const char *str, int chr, int n)
+{
+	for(int i = 0; i < n && str[i]; i++)
+		if (str[i] == chr)
+			return str + i;
+	return 0;
+}
+
+const char *x_strnichr(const char *str, int chr, int n)
+{
+	for(int i = 0; i < n && str[i]; i++)
+		if (tolower(str[i]) == tolower(chr))
+			return str + i;
+	return 0;
+}
+
+

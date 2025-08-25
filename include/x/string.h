@@ -83,6 +83,8 @@ int x_stricmp(const char *s1, const char *s2);
 int x_strnicmp(const char *s1, const char *s2, size_t len);
 char *x_strnstr(const char *s, const char *find, size_t slen);
 int x_strnrcmp(const char *s1, const char *s2, size_t len);
+const char *x_strnchr(const char *str, int chr, int n);
+const char *x_strnichr(const char *str, int chr, int n);
 
 #endif
 

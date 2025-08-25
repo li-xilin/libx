@@ -352,6 +352,8 @@ global:
 	x_strhash;
 	x_stricmp;
 	x_strihash;
+	x_strnchr;
+	x_strnichr;
 	x_strnicmp;
 	x_strnihash;
 	x_strnrcmp;
