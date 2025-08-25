@@ -562,16 +562,19 @@ size_t x_utf8_meter(const char *s)
 	uint8_t sz = x & 7;
 	if (n < sz)
 		return 1;
+	uint8_t ch1 = s[1];
 	const struct accept_range accept = accept_ranges[x>>4];
-	if (s[1] < accept.lo || accept.hi < s[1])
+	if (ch1 < accept.lo || accept.hi < ch1)
 		return 1;
 	if (sz == 2)
 		return 2;
-	if (s[2] < locb || hicb < s[2])
+	uint8_t ch2 = s[2];
+	if (ch2 < locb || hicb < ch2)
 		return 1;
 	if (sz == 3)
 		return 3;
-	if (s[3] < locb || hicb < s[3])
+	uint8_t ch3 = s[3];
+	if (ch3 < locb || hicb < ch3)
 		return 1;
 	return 4;
 }
