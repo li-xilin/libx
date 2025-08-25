@@ -1,4 +1,4 @@
-基于POSIX和WIN32的轻量级跨平台C扩展库
+使用C99实现的基于POSIX和WIN32的轻量级跨平台C扩展库
 
 基础头文件：
     x/macros.h       宏函数
@@ -15,25 +15,25 @@
     x/test.h         单元测试
 
 文件操作：
-    x/path.h         路径操作
-    x/file.h         文件操作
+    x/path.h         文件路径操作
+    x/file.h         文件读写
     x/log.h          日志
-    x/sys.h          操作系统
-    x/ini.h          读写INI配置文件
+    x/sys.h          文件系统
     x/stat.h         获取文件元数据
     x/dir.h          读取文件夹
 
 字符串操作：
     x/unicode.h      UNICODE操作
     x/uchar.h        跨平台字符串
-    x/rope.h         绳索
-    x/strbuf.h       动态连续字符串
-    x/string.h       串操作函数
     x/printf.h       字符串格式化打印
+    x/string.h       串操作函数
     x/cliarg.h       CLI参数解析
-    x/base64.h       Base64编解码
+
+数据表示：
 	x/json.h         Json字符串解析
 	x/jpath.h        JsonPath路径检索
+    x/base64.h       Base64编解码
+    x/ini.h          INI配置文件
 
 数据结构：
     x/btnode.h       二叉树
@@ -43,6 +43,8 @@
     x/list.h         链表
     x/splay.h        伸展树
     x/pipe.h         FIFO队列
+    x/rope.h         绳索
+    x/strbuf.h       动态连续字符串
 
 线程和进程：
     x/cond.h         条件变量
