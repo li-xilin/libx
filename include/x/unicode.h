@@ -46,6 +46,8 @@
  */
 size_t x_utf8_charlen(uint8_t c);
 
+size_t x_utf8_meter(const char *s);
+
 size_t x_utf16_charlen(uint16_t c);
 
 /**

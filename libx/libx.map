@@ -425,6 +425,7 @@ global:
 	x_utf8_charcnt;
 	x_utf8_charlen;
 	x_utf8_index;
+	x_utf8_meter;
 	x_utf8_min_strlen;
 	x_utf8_strwidth;
 	x_utf8_to_ucode;

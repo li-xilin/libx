@@ -507,3 +507,72 @@ size_t x_utf16_to_utf8(uint16_t const* utf16, size_t utf16_len, char* utf8, size
 	return i;
 }
 
+
+size_t x_utf8_meter(const char *s)
+{
+#define	xx 0xF1 // invalid: size 1
+#define	as 0xF0 // ASCII: size 1
+#define	s1 0x02 // accept 0, size 2
+#define	s2 0x13 // accept 1, size 3
+#define	s3 0x03 // accept 0, size 3
+#define	s4 0x23 // accept 2, size 3
+#define	s5 0x34 // accept 3, size 4
+#define	s6 0x04 // accept 0, size 4
+#define	s7 0x44 // accept 4, size 4
+	static const uint8_t first[256] = {
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x00-0x0F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x10-0x1F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x20-0x2F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x30-0x3F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x40-0x4F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x50-0x5F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x60-0x6F
+		as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x70-0x7F
+		xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0x80-0x8F
+		xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0x90-0x9F
+		xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xA0-0xAF
+		xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xB0-0xBF
+		xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, // 0xC0-0xCF
+		s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, // 0xD0-0xDF
+		s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, // 0xE0-0xEF
+		s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xF0-0xFF
+	};
+
+	static const uint8_t locb = 0x80, // 1000 0000
+		hicb = 0xBF; // 1011 1111
+	static const struct accept_range
+	{
+		uint8_t lo; // lowest value for second byte.
+		uint8_t hi; // highest value for second byte.
+	} accept_ranges[5] = {
+		{ locb, hicb },
+		{ 0xA0, hicb },
+		{ locb, 0x9F },
+		{ 0x90, hicb },
+		{ locb, 0x8F },
+	};
+
+	int n = 0;
+	for(const char *a = s; *a && n < 5; n++, a++);
+	if (n < 1)
+		return 0;
+	uint8_t x = first[(uint8_t)s[0]];
+	if (x >= as)
+		return 1;
+	uint8_t sz = x & 7;
+	if (n < sz)
+		return 1;
+	const struct accept_range accept = accept_ranges[x>>4];
+	if (s[1] < accept.lo || accept.hi < s[1])
+		return 1;
+	if (sz == 2)
+		return 2;
+	if (s[2] < locb || hicb < s[2])
+		return 1;
+	if (sz == 3)
+		return 3;
+	if (s[3] < locb || hicb < s[3])
+		return 1;
+	return 4;
+}
+
