@@ -293,6 +293,13 @@ global:
 	x_reactor_remove;
 	x_reactor_wait;
 	x_realloc;
+	x_rematch;
+	x_recatch_at;
+	x_recatch_fetch;
+	x_recatch_len_at;
+	x_recatch_put;
+	x_recatch_replace;
+	x_recatch_size;
 	x_rope_append;
 	x_rope_at;
 	x_rope_balance;

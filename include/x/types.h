@@ -261,5 +261,11 @@ typedef struct x_jpath_result_node_st x_jpath_result_node;
 typedef void *x_lib;
 #endif
 
+#ifndef X_RECATCH_DEFINED
+#define X_RECATCH_DEFINED
+typedef struct x_recatch_st x_recatch;
+#endif
+
+
 #endif
 

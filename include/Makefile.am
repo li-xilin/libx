@@ -50,6 +50,7 @@ xinclude_HEADERS = \
 	x/reactor.h \
 	x/json.h \
 	x/jpath.h \
+	x/regex.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
