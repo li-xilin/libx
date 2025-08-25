@@ -29,5 +29,5 @@ AC_SUBST([LT_VERSION_INFO], ["1:0:0"])
 AC_SUBST([VERSION_MAJOR], [`echo "$PACKAGE_VERSION" | cut -d. -f1`])
 AC_SUBST([VERSION_MINOR], [`echo "$PACKAGE_VERSION" | cut -d. -f2`])
 AC_SUBST([VERSION_PATCH], [`echo "$PACKAGE_VERSION" | cut -d. -f3`])
-AC_CONFIG_FILES([Makefile build-aux/Makefile include/Makefile libx/Makefile libx.pc samples/Makefile])
+AC_CONFIG_FILES([Makefile build-aux/Makefile include/Makefile libx/Makefile libx.pc test/Makefile samples/Makefile])
 AC_OUTPUT

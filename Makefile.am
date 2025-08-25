@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = libx include samples build-aux
+SUBDIRS = build-aux libx include samples test
 DIST_SUBDIRS = $(SUBDIRS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libx.pc
