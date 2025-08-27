@@ -51,6 +51,7 @@ xinclude_HEADERS = \
 	x/json.h \
 	x/jpath.h \
 	x/regex.h \
+	x/future.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

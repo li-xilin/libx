@@ -107,6 +107,16 @@ global:
 	x_free;
 	x_freopen;
 	x_fscanf;
+	x_fupool_alloc_seq;
+	x_fupool_free;
+	x_fupool_free_seq;
+	x_fupool_init;
+	x_future_free;
+	x_future_init;
+	x_future_is_ready;
+	x_future_wait;
+	x_future_wait_all;
+	x_future_wait_any;
 	x_getchar;
 	x_heap_free;
 	x_heap_init;
@@ -281,6 +291,8 @@ global:
 	x_proc_open;
 	x_proc_pid;
 	x_proc_stdio;
+	x_promise_commit;
+	x_promise_start;
 	x_putchar;
 	x_reactor_add;
 	x_reactor_break;
