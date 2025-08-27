@@ -70,9 +70,12 @@ inline static bool x_splay_empty(x_splay *t)
 }
 
 x_btnode *x_splay_find(x_splay *t, const x_btnode *node);
-x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new);
-void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new);
-x_btnode *x_splay_replace_or_insert(x_splay *t, x_btnode *new);
+x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new_node);
+void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new_node);
+x_btnode *x_splay_replace_or_insert(x_splay *t, x_btnode *new_node);
 void x_splay_remove(x_splay *t, x_btnode *node);
+
+#define x_splay_foreach(pos, t) \
+	for (x_btnode *pos = x_splay_first(t); pos; pos = x_splay_next(pos))
 
 #endif
