@@ -53,6 +53,7 @@
     x/thread.h       线程操作
     x/tss.h          线程本地存储
     x/tpool.h        线程池
+    x/future.h       Future/Promise模型
     x/proc.h         进程执行
     x/lib.h          加载动态库
 
