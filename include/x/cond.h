@@ -23,8 +23,8 @@
 #ifndef X_COND_H
 #define X_COND_H
 
-#include "x/types.h"
-#include "x/detect.h"
+#include "types.h"
+#include "detect.h"
 
 #ifdef X_OS_WIN
 #include <synchapi.h>
