@@ -86,7 +86,7 @@ inline static void x_bitmap_toggle(x_bitmap *bm, size_t idx)
 	bm->data[byte_idx] ^=  (1 << bit_idx);
 }
 
-int x_bitmap_find(x_bitmap *bm, size_t start, int bit);
+int x_bitmap_find(x_bitmap *bm, int bit, size_t start, size_t len);
 size_t x_bitmap_count(x_bitmap *bm);
 
 #endif
