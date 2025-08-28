@@ -1,4 +1,4 @@
-AC_INIT([libx],[1.1.1],[lixilin@gmx.com])
+AC_INIT([libx],[1.1.2],[lixilin@gmx.com])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CANONICAL_HOST
 AC_CONFIG_MACRO_DIR([m4])
