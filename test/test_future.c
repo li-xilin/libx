@@ -3,6 +3,7 @@
 #include "x/thread.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
 
 #define N 16
 
