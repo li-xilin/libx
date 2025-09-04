@@ -579,3 +579,23 @@ size_t x_utf8_meter(const char *s)
 	return 4;
 }
 
+#if 0
+struct x_utfconv_state_st
+{
+	uint16_t u16_buffer[2];
+	char u8_buffer[4];
+};
+
+typedef struct x_utfconv_state_st x_utfconv_state;
+
+size_t x_utf8to16(x_utfconv_state *state, char *data, size_t size)
+{
+	for (int i = 0; i < size; ) {
+		uint32_t codepoint;
+		i += x_utf8_to_ucode((char *)data + i, size - i, &codepoint);
+		size_t u16len = x_ucode_to_utf16(codepoint, state->u16_buffer);
+		for (int j = 0; j < u16len; j++)
+			putchar_via_gadget(output, utf16[j]);
+	}
+}
+#endif

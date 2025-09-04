@@ -18,6 +18,26 @@ lt_cv_to_host_file_cmd=func_convert_file_noop
 lt_cv_to_tool_file_cmd=func_convert_file_noop
 LT_INIT([win32-dll pic-only])
 
+AC_ARG_ENABLE([network], [AS_HELP_STRING([--disable-network], [Disable network functions])],
+			  [disable_network=yes],
+			  [disable_network=no])
+AM_CONDITIONAL([ENABLE_NETWORK], [test "x$disable_network" = "xno"])
+
+AC_ARG_ENABLE([edit], [AS_HELP_STRING([--disable-edit], [Disable readline/edit functions])],
+			  [disable_edit=yes],
+			  [disable_edit=no])
+AM_CONDITIONAL([ENABLE_EDIT], [test "x$disable_edit" = "xno"])
+
+AC_ARG_ENABLE([json], [AS_HELP_STRING([--disable-json], [Disable json and json-path functions])],
+			  [disable_json=yes],
+			  [disable_json=no])
+AM_CONDITIONAL([ENABLE_JSON], [test "x$disable_json" = "xno"])
+
+AC_ARG_ENABLE([regex], [AS_HELP_STRING([--disable-regex], [Disable regex functions])],
+			  [disable_regex=yes],
+			  [disable_regex=no])
+AM_CONDITIONAL([ENABLE_REGEX], [test "x$disable_regex" = "xno"])
+
 regular_CFLAGS="-Wall -Werror --pedantic -std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],

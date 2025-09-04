@@ -39,23 +39,31 @@ xinclude_HEADERS = \
 	x/cliarg.h \
 	x/sys.h \
 	x/path.h \
-	x/edit.h \
 	x/strbuf.h \
 	x/printf.h \
 	x/hmap.h \
 	x/time.h \
-	x/event.h \
-	x/sockmux.h \
-	x/socket.h \
-	x/reactor.h \
-	x/json.h \
-	x/jpath.h \
-	x/regex.h \
 	x/future.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
 	x/version.h
+
+if ENABLE_NETWORK
+xinclude_HEADERS +=  x/event.h x/reactor.h x/socket.h x/sockmux.h
+endif
+
+if ENABLE_JSON
+xinclude_HEADERS +=  x/json.h x/jpath.h
+endif
+
+if ENABLE_EDIT
+xinclude_HEADERS +=  x/edit.h
+endif
+
+if ENABLE_REGEX
+xinclude_HEADERS +=  x/regex.h
+endif
 
 x/version.h: x/version.h.in $(top_builddir)/config.status
 	$(AM_V_GEN)$(SED) -e 's|@VERSION_MAJOR[@]|$(VERSION_MAJOR)|g' \

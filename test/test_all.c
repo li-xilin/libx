@@ -24,7 +24,9 @@ int main(int argc, char *argv[])
 	ut_runner r;
 	ut_runner_init(&r, output, stderr);
 
+#ifdef TEST_REGEX
 	ADD_SUITE(regex_test);
+#endif
 	ADD_SUITE(future_test);
 
 	ut_runner_run(&r, process);

@@ -4,7 +4,7 @@ DIST_SUBDIRS = $(SUBDIRS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libx.pc
 ${pkgconfig_DATA}: ${top_builddir}/config.status
-EXTRA_DIST = LICENSE autogen.sh
+EXTRA_DIST = LICENSE autogen.sh README.txt README_zh.txt
 DISTCLEANFILES = configure m4 config.h.in aclocal.m4 Makefile.in configure~
 distclean-local:
 	$(RM) -r $(builddir)/autom4te.cache 
