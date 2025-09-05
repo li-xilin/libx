@@ -118,9 +118,10 @@ void x_mutex_destroy(x_mutex *lock)
 {
 	assert(lock != NULL);
 #ifdef X_OS_WIN
-	assert(!lock->section);
-	DeleteCriticalSection(lock->section);
-	x_free(lock->section);
+	if (lock->section) {
+		DeleteCriticalSection(lock->section);
+		x_free(lock->section);
+	}
 #else
 	(void)pthread_mutex_destroy(&lock->mutex);
 #endif
