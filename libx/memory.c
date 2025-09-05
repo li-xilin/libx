@@ -24,15 +24,22 @@
 #include "x/memory.h"
 #include "x/thread.h"
 #include "x/mutex.h"
+#include "x/once.h"
 #include <stdlib.h>
 #include <string.h>
 
 #define RETRY_INTERVAL 20
 
+static x_once s_mset_once = X_ONCE_INIT;
 static x_mset s_mset = {
 	.list = X_LIST_INIT(s_mset.list),
 	.lock = X_MUTEX_INIT
 };
+
+static void init_mset(void)
+{
+	x_mutex_init(&s_mset.lock);
+}
 
 void x_mset_init(x_mset *mset)
 {
@@ -71,8 +78,10 @@ void *x_malloc(x_mset *mset, size_t size)
 		x_thread_sleep(RETRY_INTERVAL);
 		b = malloc(size ? size : 1);
 	}
-	if (!mset)
+	if (!mset) {
+		x_once_init(&s_mset_once, init_mset);
 		mset = &s_mset;
+	}
 	b->mset = mset;
 	x_mutex_lock(&b->mset->lock);
 	x_list_add_back(&mset->list, &b->link);
