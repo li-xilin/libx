@@ -36,24 +36,25 @@ static x_mset s_mset = {
 	.lock = X_MUTEX_INIT
 };
 
-static void init_mset(void)
+static void init_default_mset(void)
 {
-	x_mutex_init(&s_mset.lock);
+#ifdef X_OS_WIN
+	// Prevent infinite loop
+	size_t size = sizeof(struct block_st) + sizeof *s_mset.lock.section;
+	struct block_st *b = malloc(size);
+	while (!b) {
+		x_thread_sleep(RETRY_INTERVAL);
+		b = malloc(size);
+	}
+	s_mset.lock.section = (void *)b->data;
+	InitializeCriticalSection(s_mset.lock.section);
+	x_list_add_back(&s_mset.list, &b->link);
+#endif
 }
 
 void x_mset_init(x_mset *mset)
 {
-#ifdef X_OS_WIN
-	// Prevent infinite loop
-	size_t size = sizeof(block_st) + sizeof *lock->section;
-	lock->section = malloc(size);
-	while (!lock->section) {
-		x_thread_sleep(RETRY_INTERVAL);
-		lock->section = malloc(size);
-	}
-	InitializeCriticalSection(lock->section);
-	x_list_add_back(&mset->list, &b->link);
-#endif
+	x_mutex_init(&mset->lock);
 	x_list_init(&mset->list);
 }
 
@@ -73,7 +74,7 @@ void x_mset_free(x_mset *mset)
 	if (!mset) {
 		if (x_list_is_empty(&s_mset.list))
 			return;
-		x_once_init(&s_mset_once, init_mset);
+		x_once_init(&s_mset_once, init_default_mset);
 		mset = &s_mset;
 	}
 
@@ -93,7 +94,7 @@ void *x_malloc(x_mset *mset, size_t size)
 		b = malloc(sizeof *b + size);
 	}
 	if (!mset) {
-		x_once_init(&s_mset_once, init_mset);
+		x_once_init(&s_mset_once, init_default_mset);
 		mset = &s_mset;
 	}
 	b->mset = mset;
