@@ -61,7 +61,7 @@ static inline const char *__basename(const char *path)
 	int c = 0, i;
 	for (i = 0; path[i]; i++)
 #ifdef X_OS_WIN
-		if (path[i] == '\\')
+		if (path[i] == '\\' || path[i] == '/')
 #else
 			if (path[i] == '/')
 #endif
