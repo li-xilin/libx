@@ -27,6 +27,13 @@ global:
 	ut_suite_add_case;
 	ut_suite_free;
 	ut_suite_init;
+	x_aes_cbc_decrypt;
+	x_aes_cbc_encrypt;
+	x_aes_ctr_xcrypt;
+	x_aes_decrypt;
+	x_aes_encrypt;
+	x_aes_init;
+	x_aes_set_iv;
 	x_ansi_to_ustr;
 	x_base64_decode;
 	x_base64_encode;

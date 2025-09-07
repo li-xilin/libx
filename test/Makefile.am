@@ -10,6 +10,11 @@ test_SOURCES += test_regex.c
 AM_CFLAGS += -DTEST_REGEX
 endif
 
+if ENABLE_CRYPTO
+test_SOURCES += test_aes.c 
+AM_CFLAGS += -DTEST_CRYPTO
+endif
+
 DISTCLEANFILES = Makefile.in
 dist-hook:
 	$(RM) $(distdir)/Makefile.in

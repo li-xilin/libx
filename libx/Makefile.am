@@ -26,6 +26,9 @@ if ENABLE_REGEX
 libx_la_SOURCES +=  regex.c
 endif
 
+if ENABLE_CRYPTO
+libx_la_SOURCES +=  aes.c
+endif
 
 DISTCLEANFILES = Makefile.in
 EXTRA_DIST = libx.map strargv.inc wepoll.h

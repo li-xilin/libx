@@ -38,6 +38,11 @@ AC_ARG_ENABLE([regex], [AS_HELP_STRING([--disable-regex], [Disable regex functio
 			  [disable_regex=no])
 AM_CONDITIONAL([ENABLE_REGEX], [test "x$disable_regex" = "xno"])
 
+AC_ARG_ENABLE([crypto], [AS_HELP_STRING([--disable-crypto], [Disable crypto functions])],
+			  [disable_crypto=yes],
+			  [disable_crypto=no])
+AM_CONDITIONAL([ENABLE_CRYPTO], [test "x$disable_crypto" = "xno"])
+
 regular_CFLAGS="-Wall -Werror --pedantic -std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],

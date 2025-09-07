@@ -24,6 +24,10 @@ int main(int argc, char *argv[])
 	ut_runner r;
 	ut_runner_init(&r, output, stderr);
 
+#ifdef TEST_CRYPTO
+	ADD_SUITE(aes_test);
+#endif
+
 #ifdef TEST_REGEX
 	ADD_SUITE(regex_test);
 #endif

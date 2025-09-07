@@ -65,6 +65,10 @@ if ENABLE_REGEX
 xinclude_HEADERS +=  x/regex.h
 endif
 
+if ENABLE_CRYPTO
+xinclude_HEADERS +=  x/aes.h
+endif
+
 x/version.h: x/version.h.in $(top_builddir)/config.status
 	$(AM_V_GEN)$(SED) -e 's|@VERSION_MAJOR[@]|$(VERSION_MAJOR)|g' \
 	                  -e 's|@VERSION_MINOR[@]|$(VERSION_MINOR)|g' \

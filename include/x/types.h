@@ -281,5 +281,10 @@ typedef struct x_promise_st x_promise;
 typedef struct x_fupool_st x_fupool;
 #endif
 
+#ifndef X_AES_CTX_DEFINED
+#define X_AES_CTX_DEFINED
+typedef struct x_aes_ctx_st x_aes_ctx;
+#endif
+
 #endif
 
