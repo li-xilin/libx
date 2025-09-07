@@ -27,7 +27,7 @@ libx_la_SOURCES +=  regex.c
 endif
 
 if ENABLE_CRYPTO
-libx_la_SOURCES +=  aes.c
+libx_la_SOURCES +=  aes.c sha256.c
 endif
 
 DISTCLEANFILES = Makefile.in

@@ -11,7 +11,7 @@
 
 void process(const char *suite_name, const char *case_name, int pos, int total)
 {
-	fprintf(stderr, "[%d/%d]", pos, total);
+	// fprintf(stderr, "[%d/%d]", pos, total);
 }
 
 void output(const char* suite_name, ut_case *tc, void *arg)
@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 
 #ifdef TEST_CRYPTO
 	ADD_SUITE(aes_test);
+	ADD_SUITE(sha256_test);
 #endif
 
 #ifdef TEST_REGEX

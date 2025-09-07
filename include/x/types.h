@@ -286,5 +286,10 @@ typedef struct x_fupool_st x_fupool;
 typedef struct x_aes_ctx_st x_aes_ctx;
 #endif
 
+#ifndef X_SHA256_CTX_DEFINED
+#define X_SHA256_CTX_DEFINED
+typedef struct x_sha256_ctx_st x_sha256_ctx;
+#endif
+
 #endif
 

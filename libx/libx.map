@@ -342,6 +342,10 @@ global:
 	x_setmode_binary;
 	x_setmode_utf16;
 	x_setmode_utf8;
+	x_sha256_buffer;
+	x_sha256_finish;
+	x_sha256_init;
+	x_sha256_update;
 	x_snprintf;
 	x_sock_close;
 	x_sock_exit;
