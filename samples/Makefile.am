@@ -12,6 +12,10 @@ if ENABLE_JSON
 noinst_PROGRAMS += 20_json
 endif
 
+if ENABLE_CRYPTO
+noinst_PROGRAMS += 21_mt19937
+endif
+
 AM_CFLAGS = $(regular_CFLAGS) -I$(top_srcdir)/include -D_POSIX_C_SOURCE=200112L -pthread
 LDADD = $(top_builddir)/libx/libx.la
 #if WINDOWS

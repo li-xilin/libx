@@ -66,7 +66,7 @@ xinclude_HEADERS +=  x/regex.h
 endif
 
 if ENABLE_CRYPTO
-xinclude_HEADERS +=  x/aes.h x/sha256.h
+xinclude_HEADERS +=  x/aes.h x/sha256.h x/random.h
 endif
 
 x/version.h: x/version.h.in $(top_builddir)/config.status

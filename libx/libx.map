@@ -263,6 +263,8 @@ global:
 	x_mset_clear;
 	x_mset_free;
 	x_mset_init;
+	x_mt19937_ctx_init;
+	x_mt19937_next;
 	x_mutex_destroy;
 	x_mutex_init;
 	x_mutex_lock;
@@ -301,6 +303,7 @@ global:
 	x_promise_commit;
 	x_promise_start;
 	x_putchar;
+	x_random;
 	x_reactor_add;
 	x_reactor_break;
 	x_reactor_clear;
