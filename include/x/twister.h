@@ -19,13 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef X_RANDOM_H
-#define X_RANDOM_H
+#include "types.h"
 
-#include "x/types.h"
+#define X_MT19937_STATE_MAXLEN 624
 
-int x_random(void *buf, size_t size);
+struct x_mt19937_st {
+	uint32_t mt[X_MT19937_STATE_MAXLEN];
+	int32_t index;
+};
 
-#endif
-
+void x_mt19937_init(x_mt19937* rand, uint32_t seed);
+uint32_t x_mt19937_next(x_mt19937* rand);
 

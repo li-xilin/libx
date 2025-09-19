@@ -291,9 +291,9 @@ typedef struct x_aes_ctx_st x_aes_ctx;
 typedef struct x_sha256_ctx_st x_sha256_ctx;
 #endif
 
-#ifndef X_MT19937_CTX_DEFINED
-#define X_MT19937_CTX_DEFINED
-typedef struct x_mt19937_ctx_st x_mt19937_ctx;
+#ifndef X_MT19937_DEFINED
+#define X_MT19937_DEFINED
+typedef struct x_mt19937_st x_mt19937;
 #endif
 
 #endif

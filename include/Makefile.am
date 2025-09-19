@@ -44,6 +44,7 @@ xinclude_HEADERS = \
 	x/hmap.h \
 	x/time.h \
 	x/future.h \
+	x/twister.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
