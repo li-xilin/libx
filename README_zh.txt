@@ -13,6 +13,7 @@
     x/trick.h        宏模板函数
     x/time.h         高精度时间计算
     x/test.h         单元测试
+    x/twister.h      MT19937随机数发生器
 
 文件操作：
     x/path.h         文件路径操作
@@ -28,6 +29,7 @@
     x/printf.h       字符串格式化打印
     x/string.h       串操作函数
     x/cliarg.h       CLI参数解析
+	x/regex.h        正则表达式
 
 数据表示：
     x/json.h         Json字符串解析
@@ -68,3 +70,7 @@
     x/socket.h       套接字操作
     x/sockmux.h      套接字多路复用
 
+密码学：
+	x/aes.h			AES对称加密算法
+	x/sha256.h		SHA256摘要算法
+	x/random.h		生成安全的随机数

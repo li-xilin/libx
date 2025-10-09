@@ -13,6 +13,7 @@ Basic Headers:
     x/trick.h        Macro template functions
     x/time.h         High-precision time calculation
     x/test.h         Unit testing
+    x/twister.h      MT19937 randomizer
 
 File Operations:
     x/path.h         File path operations
@@ -28,6 +29,7 @@ String Operations:
     x/printf.h       String formatting and printing
     x/string.h       String manipulation functions
     x/cliarg.h       CLI argument parsing
+	x/regex.h        Regular expression
 
 Data Representation:
     x/json.h         JSON string parsing
@@ -67,3 +69,8 @@ Network Operations:
     x/reactor.h      Reactor pattern
     x/socket.h       Socket operations
     x/sockmux.h      Socket multiplexing
+
+Cryptography：
+    x/aes.h          AES algorithm
+    x/sha256.h       SHA256 digest algorithm
+    x/random.h       Generate security random sequence
