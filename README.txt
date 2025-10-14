@@ -44,6 +44,7 @@ Data Structures:
     x/hmap.h         Hash map
     x/list.h         Linked list
     x/splay.h        Splay tree
+    x/index.h        Indexer
     x/pipe.h         FIFO queue
     x/rope.h         Rope
     x/strbuf.h       Dynamic contiguous string

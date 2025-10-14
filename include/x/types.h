@@ -296,5 +296,20 @@ typedef struct x_sha256_ctx_st x_sha256_ctx;
 typedef struct x_mt19937_st x_mt19937;
 #endif
 
+#ifndef X_INDEX_DEFINED
+#define X_INDEX_DEFINED
+typedef struct x_index_st x_index;
+#endif
+
+#ifndef X_INDEXSET_DEFINED
+#define X_INDEXSET_DEFINED
+typedef struct x_indexset_st x_indexset;
+#endif
+
+#ifndef X_INDEXER_DEFINED
+#define X_INDEXER_DEFINED
+typedef struct x_indexer_st x_indexer;
+#endif
+
 #endif
 

@@ -137,6 +137,13 @@ global:
 	x_hmap_init;
 	x_hmap_remove;
 	x_hmap_replace_or_insert;
+	x_indexer_find;
+	x_indexer_init;
+	x_indexset_first;
+	x_indexset_next;
+	x_index_init;
+	x_index_insert;
+	x_index_remove;
 	x_ini_check_key_name;
 	x_ini_check_section_name;
 	x_ini_create;

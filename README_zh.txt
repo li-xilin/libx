@@ -44,6 +44,7 @@
     x/hmap.h         散列表
     x/list.h         链表
     x/splay.h        伸展树
+    x/index.h        索引
     x/pipe.h         FIFO队列
     x/rope.h         绳索
     x/strbuf.h       动态连续字符串
@@ -71,6 +72,6 @@
     x/sockmux.h      套接字多路复用
 
 密码学：
-	x/aes.h			AES对称加密算法
-	x/sha256.h		SHA256摘要算法
-	x/random.h		生成安全的随机数
+    x/aes.h         AES对称加密算法
+    x/sha256.h      SHA256摘要算法
+    x/random.h      生成安全的随机数

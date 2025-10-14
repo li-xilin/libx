@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	ADD_SUITE(regex_test);
 #endif
 	ADD_SUITE(future_test);
+	ADD_SUITE(index_test);
 
 	ut_runner_run(&r, process);
 }
