@@ -64,6 +64,8 @@ static void basic(ut_runner *r)
 	check_indexer(r, &indexer, 1, 1);
 	check_indexer(r, &indexer, 2, 2);
 	check_indexer(r, &indexer, 3, 3);
+
+	x_indexer_free(&indexer);
 }
 
 void index_test_init(ut_suite *s)

@@ -128,3 +128,17 @@ x_index *x_indexset_next(const x_index *idx)
 	return x_container_of(next, x_index, link);
 }
 
+void x_indexer_free(x_indexer *indexer)
+{
+	x_splay_foreach(cur, &indexer->indexes) {
+		x_indexset *iset = x_container_of(cur, x_indexset, node);
+		x_index *idx = x_indexset_first(iset);
+		while (idx) {
+			x_index *next = x_indexset_next(idx);
+			idx->ilist = NULL;
+			idx = next;
+		}
+	}
+	x_mset_free(&indexer->mset);
+}
+

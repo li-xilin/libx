@@ -51,8 +51,11 @@ struct x_indexer_st
 void x_index_init(x_index *idx);
 void x_index_insert(x_index *idx, x_indexer *indexer);
 void x_index_remove(x_index *idx);
+
 void x_indexer_init(x_indexer *indexer, x_index_cmp_f *cmp);
+void x_indexer_free(x_indexer *indexer);
 const x_indexset *x_indexer_find(x_indexer *indexer, const x_index *pattern);
+
 x_index *x_indexset_first(const x_indexset *iset);
 x_index *x_indexset_next(const x_index *idx);
 
