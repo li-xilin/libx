@@ -15,6 +15,7 @@ xinclude_HEADERS = \
 	x/log.h \
 	x/memory.h \
 	x/mutex.h \
+	x/rwlock.h \
 	x/narg.h \
 	x/once.h \
 	x/pipe.h \

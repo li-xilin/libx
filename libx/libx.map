@@ -349,6 +349,13 @@ global:
 	x_rope_split;
 	x_rope_swap;
 	x_rope_vprintf;
+	x_rwlock_destroy;
+	x_rwlock_init;
+	x_rwlock_rlock;
+	x_rwlock_try_rlock;
+	x_rwlock_try_wlock;
+	x_rwlock_unlock;
+	x_rwlock_wlock;
 	x_scanf;
 	x_setmode_binary;
 	x_setmode_utf16;
