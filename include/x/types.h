@@ -316,5 +316,15 @@ typedef struct x_indexset_st x_indexset;
 typedef struct x_indexer_st x_indexer;
 #endif
 
+#ifndef X_PATHSET_DEFINED
+#define X_PATHSET_DEFINED
+typedef struct x_pathset_st x_pathset;
+#endif
+
+#ifndef X_PATHSET_ENTRY_DEFINED
+#define X_PATHSET_ENTRY_DEFINED
+typedef struct x_pathset_entry_st x_pathset_entry;
+#endif
+
 #endif
 

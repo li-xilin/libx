@@ -166,5 +166,7 @@ int x_strbuf_chars(x_strbuf *sb)
 
 x_uchar *x_strbuf_str(const x_strbuf *sb)
 {
+	if (!sb->data)
+		return x_u("");
 	return sb->data;
 }

@@ -47,6 +47,7 @@ xinclude_HEADERS = \
 	x/future.h \
 	x/twister.h \
 	x/index.h \
+	x/pathset.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

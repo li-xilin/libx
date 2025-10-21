@@ -56,6 +56,8 @@ x_uchar *x_path_getcwd(x_uchar *path, size_t size);
 int x_path_setcwd(const x_uchar *path);
 x_uchar *x_path_homedir(x_uchar *path, size_t size);
 x_uchar *x_path_tmpdir(x_uchar *path, size_t size);
+int x_path_root_len(const x_uchar *path);
+
 
 #endif
 

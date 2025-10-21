@@ -39,7 +39,6 @@
 #include <unistd.h>
 #endif
 
-static int path_root(const x_uchar *path);
 static int path_rtrim(x_uchar *path);
 
 static int path_rtrim(x_uchar *path)
@@ -100,8 +99,9 @@ x_uchar *x_path_trim(x_uchar *path)
 			pre_is_sep = false;
 		*rear++ = *front++;
 	}
-	if (rear != path && rear[-1] == X_PATH_SEP_CHAR)
+	if (rear != path && rear != path + 1 && rear[-1] == X_PATH_SEP_CHAR) {
 		rear[-1] = x_u('\0');
+	}
 	else
 		*rear = x_u('\0');
 	return path;
@@ -109,7 +109,7 @@ x_uchar *x_path_trim(x_uchar *path)
 
 bool x_path_is_absolute(const x_uchar *path)
 {
-	return !!path_root(path);
+	return !!x_path_root_len(path);
 }
 
 const x_uchar *x_path_pop(x_uchar *path)
@@ -160,20 +160,20 @@ x_uchar *x_path_fixsep(x_uchar *path)
 	return path;
 }
 
-/* path must be trimed before */
-static int path_root(const x_uchar *path)
+int x_path_root_len(const x_uchar *path)
 {
-	if (path[0] == X_PATH_SEP_CHAR)
-		return 1;
+	int len = 0;
 #ifdef X_OS_WIN
 	if (isalpha(path[0]) && path[1] == L':' ) {
 		if (path[2] == x_u('\\'))
-			return 3;
+			len = 3;
 		else if (path[2] == x_u('\0'))
-			return 2;
+			len = 2;
 	}
 #endif
-	return 0;
+	int sep_cnt;
+	for (sep_cnt = 0; path[len + sep_cnt] && path[len + sep_cnt] == X_PATH_SEP_CHAR; sep_cnt++);
+	return len + sep_cnt;
 }
 
 x_uchar *x_path_normalize(x_uchar *path)
@@ -181,7 +181,7 @@ x_uchar *x_path_normalize(x_uchar *path)
 	if (!x_path_trim(x_path_fixsep(path)))
 		return NULL;
 
-	int root_len = path_root(path);
+	int root_len = x_path_root_len(path);
 	x_uchar *p = path + root_len;
 	
 	x_uchar *nam_tab[X_PATH_MAX / 2];
@@ -220,14 +220,13 @@ x_uchar *x_path_normalize(x_uchar *path)
 
 	/* Construct new path sequence by name segments */
 	if (nam_tab[0]) {
-		x_ustrcpy(path + root_len, nam_tab[0]);
+		memmove(path + root_len, nam_tab[0], x_ustrlen(nam_tab[0]) + 1);
 		for (int i = 1; nam_tab[i]; i++) {
 			int len = x_ustrlen(path + root_len);
-			path[len] = X_PATH_SEP_CHAR;
-			x_ustrcpy(path + len + 1, nam_tab[i]);
+			path[root_len + len] = X_PATH_SEP_CHAR;
+			memmove(path + root_len + len + 1, nam_tab[i], strlen(nam_tab[i]) + 1);
 		}
 	}
-
 	return path;
 }
 
