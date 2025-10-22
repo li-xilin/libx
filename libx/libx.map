@@ -124,6 +124,11 @@ global:
 	x_future_wait;
 	x_future_wait_all;
 	x_future_wait_any;
+	x_fwalker_close;
+	x_fwalker_leave;
+	x_fwalker_open;
+	x_fwalker_read;
+	x_fwalker_rewind;
 	x_getchar;
 	x_heap_free;
 	x_heap_init;

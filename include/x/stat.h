@@ -51,8 +51,6 @@ struct x_stat_st
 	time_t st_ctim; /* Time of last status change */
 };
 
-typedef struct x_stat_st x_stat;
-
 int x_lstat(const x_uchar* path, x_stat *stat_buf);
 
 #endif

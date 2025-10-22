@@ -326,5 +326,15 @@ typedef struct x_pathset_st x_pathset;
 typedef struct x_pathset_entry_st x_pathset_entry;
 #endif
 
+#ifndef X_FWALKER_DEFINED
+#define X_FWALKER_DEFINED
+typedef struct x_fwalker_st x_fwalker;
+#endif
+
+#ifndef X_STAT_DEFINED
+#define X_STAT_DEFINED
+typedef struct x_stat_st x_stat;
+#endif
+
 #endif
 
