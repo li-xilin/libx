@@ -14,14 +14,16 @@
     x/time.h         高精度时间计算
     x/test.h         单元测试
     x/twister.h      MT19937随机数发生器
-
-文件操作：
-    x/path.h         文件路径操作
-    x/file.h         文件读写
     x/log.h          日志
+
+文件和目录：
+    x/path.h         文件路径操作
+    x/pathset.h      文件路径过滤
+    x/file.h         文件读写
     x/sys.h          文件系统
     x/stat.h         获取文件元数据
     x/dir.h          读取文件夹
+    x/fwalker.h      递归遍历文件夹
 
 字符串操作：
     x/unicode.h      UNICODE操作

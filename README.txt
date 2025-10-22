@@ -14,14 +14,16 @@ Basic Headers:
     x/time.h         High-precision time calculation
     x/test.h         Unit testing
     x/twister.h      MT19937 randomizer
-
-File Operations:
-    x/path.h         File path operations
-    x/file.h         File reading and writing
     x/log.h          Logging
+
+File and Path:
+    x/path.h         File path operations
+    x/pathset.h      File path filter
+    x/file.h         File reading and writing
     x/sys.h          File system operations
     x/stat.h         File metadata retrieval
     x/dir.h          Directory reading
+    x/fwalker.h      Recursive folder traversal
 
 String Operations:
     x/unicode.h      UNICODE operations
