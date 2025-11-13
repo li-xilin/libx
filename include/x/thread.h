@@ -58,5 +58,7 @@ uint32_t x_thread_native_id(void);
 
 void x_thread_cleanup(void);
 
+bool x_thread_canceled(void);
+
 #endif
 

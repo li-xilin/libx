@@ -4,6 +4,7 @@ global:
 	__ut_assert_int_equal;
 	__ut_assert_mem_equal;
 	__ut_assert_str_equal;
+	__ut_assert_ustr_equal;
 	__ut_assert_uint_equal;
 	__ut_fail;
 	__ut_printf;
@@ -442,6 +443,7 @@ global:
 	x_tcolor_reset;
 	x_tcolor_set;
 	x_thread_cancel;
+	x_thread_canceled;
 	x_thread_cleanup;
 	x_thread_create;
 	x_thread_data;

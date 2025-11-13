@@ -224,7 +224,7 @@ x_uchar *x_path_normalize(x_uchar *path)
 		for (int i = 1; nam_tab[i]; i++) {
 			int len = x_ustrlen(path + root_len);
 			path[root_len + len] = X_PATH_SEP_CHAR;
-			memmove(path + root_len + len + 1, nam_tab[i], strlen(nam_tab[i]) + 1);
+			memmove(path + root_len + len + 1, nam_tab[i], (x_ustrlen(nam_tab[i]) + 1) * sizeof(x_uchar));
 		}
 	}
 	return path;

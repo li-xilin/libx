@@ -24,6 +24,7 @@
 #include "x/string.h"
 #include "x/splay.h"
 #include "x/memory.h"
+#include "x/uchar.h"
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -285,6 +286,16 @@ void __ut_assert_str_equal(ut_runner *r, const char *ex, const char *ac, const c
 	if (strcmp(ex, ac) == 0)
 		return;
 	__ut_fail(r, file, line, "test failed: expect '%s', but actual '%s'", ex, ac);
+}
+
+void __ut_assert_ustr_equal(ut_runner *r, const x_uchar *ex, const x_uchar *ac, const char *file, int line)
+{
+	if (x_ustrcmp(ex, ac) == 0)
+		return;
+	char ex_ansi[1024], ac_ansi[1024];
+	x_ustr_to_ansi(ex, ex_ansi, sizeof ex_ansi);
+	x_ustr_to_ansi(ac, ac_ansi, sizeof ac_ansi);
+	__ut_fail(r, file, line, "test failed: expect '%s', but actual '%s'", ex_ansi, ac_ansi);
 }
 
 void __ut_assert_mem_equal(ut_runner *r, const void *ex, size_t exsize, const void *ac, size_t acsize, const char *file, int line)

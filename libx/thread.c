@@ -328,6 +328,13 @@ void x_thread_testcancel(int retcode)
 		longjmp(thread->jmp_exit, retcode);
 }
 
+bool x_thread_canceled(void)
+{
+	x_thread *thread = x_thread_self();
+	x_assert(thread, "Try to cancel the thread which not created by x_thread_create");
+	return thread->canceled;
+}
+
 void x_thread_cancel(x_thread *t)
 {
 	assert(t);

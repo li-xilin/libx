@@ -138,8 +138,8 @@ int x_utf16_to_ustr(const uint16_t *from, x_uchar *us, size_t size)
 		errno = X_ERANGE;
 	}
 	else {
-		us[utf16_len] = x_u('\0');
-		retval = utf16_len;
+		us[utf8_len] = '\0';
+		retval = utf8_len;
 	}
 #endif
 	return retval;

@@ -96,15 +96,15 @@ static int pattern_init(pattern *pat, const x_uchar *path)
 		restore_root = true;
 	}
 #endif
-	char *state = pat->path, *name;
+	x_uchar *state = pat->path, *name;
 	uint32_t hash = 0;
 	pat->hash_cnt = 0;
-	while ((name = x_strsplit(&state, X_PATH_SEP_CHAR))) {
+	while ((name = x_ustrsplit(&state, X_PATH_SEP_CHAR))) {
 		if (pat->hash_cnt == PATH_DEPTH_MAX) {
 			errno = X_ENAMETOOLONG;
 			return -1;
 		}
-		hash ^= x_strhash(name);
+		hash ^= x_ustrhash(name);
 		pat->hashs[pat->hash_cnt++] = hash;
 		if (name != pat->path)
 			name[-1] = X_PATH_SEP_CHAR;
@@ -369,5 +369,6 @@ void x_pathset_free_entry_list(x_list *list)
 {
 	x_list_popeach(pos, list)
 		x_free(x_container_of(pos, x_pathset_entry, link));
+	x_list_init(list);
 }
 

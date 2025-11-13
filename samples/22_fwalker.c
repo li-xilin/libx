@@ -8,7 +8,7 @@
 int x_main(int argc, x_uchar *argv[])
 {
 	if (argc <= 1) {
-		x_fprintf(stderr, x_u("error: Root path not specified"));
+		x_fprintf(stderr, x_u("error: Root path not specified\n"));
 		exit(1);
 	}
 	x_fwalker fw;
