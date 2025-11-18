@@ -70,7 +70,7 @@ x_uchar *x_fwalker_read(x_fwalker *fwalker, x_stat *statbuf)
 				if (dirent->d_name[1] == '.' && dirent->d_name[2] == '\0')
 					continue;
 			}
-			x_sprintf(fwalker->path + d->path_len, x_u("/%S"), dirent->d_name);
+			x_sprintf(fwalker->path + d->path_len, X_PATH_SEP x_u("%S"), dirent->d_name);
 			if (x_lstat(fwalker->path, statbuf))
 				continue;
 			if ((statbuf->st_mode & X_S_IFMT) == X_S_IFDIR) {

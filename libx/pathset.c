@@ -85,7 +85,7 @@ static int pattern_init(pattern *pat, const x_uchar *path)
 	}
 	x_ustrcpy(pat->path, path);
 	x_path_normalize(pat->path);
-	if (pat->path[0] != X_PATH_SEP_CHAR) {
+	if (!x_path_is_absolute(pat->path)) {
 		errno = X_EINVAL;
 		return -1;
 	}
@@ -166,7 +166,7 @@ static bool path_mark_contain(path_mark *mark, const pattern *pat, bool with_equ
 		return true;
 #endif
 	int last_char = pat->path[mark->path_len];
-	if (last_char != '\0' && last_char != '/')
+	if (last_char != '\0' && last_char != X_PATH_SEP_CHAR)
 		return false;
 	return true;
 }
@@ -188,7 +188,7 @@ static bool path_mark_above(const path_mark *mark, const path_mark *mark1)
 		return false;
 	if (x_ustrncmp(mark1->path, mark->path, mark1->path_len) != 0)
 		return false;
-	if (mark->path[mark1->path_len] != '\0' && mark->path[mark1->path_len] != '/')
+	if (mark->path[mark1->path_len] != '\0' && mark->path[mark1->path_len] != X_PATH_SEP_CHAR)
 		return false;
 	return true;
 }
@@ -324,7 +324,7 @@ void x_pathset_dump(x_pathset *pset, x_strbuf *strbuf)
 	x_uchar buf[X_PATH_MAX + 64];
 	x_list_foreach(pos, &pset->dir_list) {
 		path_mark *mark = x_container_of(pos, path_mark, link);
-		x_sprintf(buf, x_u("0x%02I32d %s%S, "), mark->mask, (mark->path_len == 0 ? "/" : ""), mark->path);
+		x_sprintf(buf, x_u("0x%02I32d %s%S, "), mark->mask, (mark->path_len == 0 ? X_PATH_SEP : x_u("")), mark->path);
 		x_strbuf_append(strbuf, buf);
 	}
 	x_rwlock_unlock(&pset->lock);
