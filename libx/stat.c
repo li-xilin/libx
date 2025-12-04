@@ -161,9 +161,9 @@ int x_lstat(const x_uchar *path, x_stat *stat_buf)
 	stat_buf->st_nlink = st.st_nlink;
 	stat_buf->st_size = st.st_size;
 	stat_buf->st_mode = st.st_mode;
-	stat_buf->st_atim = st.st_atimensec;
-	stat_buf->st_mtim = st.st_mtimensec;
-	stat_buf->st_ctim = st.st_ctimensec;
+	stat_buf->st_atim = st.st_atime;
+	stat_buf->st_mtim = st.st_mtime;
+	stat_buf->st_ctim = st.st_ctime;
 	return 0;
 }
 #endif
