@@ -49,6 +49,7 @@ struct x_stat_st
 	time_t st_atim; /* Time of last access */
 	time_t st_mtim; /* Time of last modification */
 	time_t st_ctim; /* Time of last status change */
+	time_t st_btim;
 };
 
 int x_lstat(const x_uchar* path, x_stat *stat_buf);

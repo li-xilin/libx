@@ -20,6 +20,15 @@
  * SOFTWARE.
  */
 
+#ifdef __linux__
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 #include "x/stat.h"
 #include "x/detect.h"
 #include "x/uchar.h"
@@ -122,7 +131,8 @@ int x_lstat(const wchar_t* path, x_stat *stat)
 		memcpy(stat->st_ino.fileid + 12, &info.nFileIndexLow, 4);
 	}
 	stat->st_atim = FileTimeToTimet(&info.ftLastAccessTime);
-	stat->st_ctim = FileTimeToTimet(&info.ftCreationTime);
+	stat->st_ctim = FileTimeToTimet(&info.ftLastAccessTime);
+	stat->st_btim = FileTimeToTimet(&info.ftCreationTime);
 	stat->st_mtim = FileTimeToTimet(&info.ftLastWriteTime);
 	stat->st_uid = stat->st_gid = 0;
 	stat->st_nlink = info.nNumberOfLinks;
@@ -149,6 +159,30 @@ out:
 #else
 #  include <sys/stat.h>
 
+static int get_file_creation_time(const char *filename, const struct stat *st, time_t *creat_time)
+{
+
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+    *creat_time = st.st_birthtime;
+	return 0;
+#elif defined(st_birthtime)
+    *creat_time = st.st_birthtime;
+	return 0;
+#elif defined(__linux__) && defined(SYS_statx)
+	struct statx stx;
+	if (syscall(SYS_statx, AT_FDCWD, filename, AT_STATX_SYNC_AS_STAT,
+				STATX_BTIME, &stx) == 0) {
+		if (stx.stx_btime.tv_sec != 0) {
+			*creat_time = stx.stx_btime.tv_sec;
+			return 0;
+		}
+	}
+	return -1;
+#else
+   return -1;
+#endif
+}
+
 int x_lstat(const x_uchar *path, x_stat *stat_buf)
 {
 	struct stat st;
@@ -164,6 +198,8 @@ int x_lstat(const x_uchar *path, x_stat *stat_buf)
 	stat_buf->st_atim = st.st_atime;
 	stat_buf->st_mtim = st.st_mtime;
 	stat_buf->st_ctim = st.st_ctime;
+	if (get_file_creation_time(path, &st, &stat_buf->st_btim))
+		stat_buf->st_btim = st.st_mtime;
 	return 0;
 }
 #endif
