@@ -84,8 +84,8 @@ int x_utf8_to_ustr(const char *from, x_uchar *us, size_t size)
 	int retval = -1;
 	int utf8_len = strlen(from);
 #ifdef X_OS_WIN
-	int utf16_len = x_utf8_to_utf16(from, utf8_len, us, size);
-	if (utf16_len == size * 2) {
+	int utf16_len = x_utf8_to_utf16(from, utf8_len, us, size / 2);
+	if (utf16_len == size / 2 ) {
 		us[size / 2 - 1] = L'\0';
 		errno = X_ERANGE;
 	}
