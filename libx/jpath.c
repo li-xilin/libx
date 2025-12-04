@@ -347,6 +347,8 @@ x_json *x_jpath_result_to_array(x_jpath_result *res)
 
 void x_jpath_result_free(x_jpath_result *res)
 {
+	if (!res)
+		return;
 	x_jpath_result_node *head = res->head;
 	x_jpath_result_node *next = NULL;
 	while (head) {
