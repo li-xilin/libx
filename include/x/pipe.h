@@ -39,7 +39,7 @@ inline static void x_pipe_init(x_pipe *b, void *buf, size_t size)
 {
 	assert(size > 1);
 	b->size = size;
-	b->buf = buf;
+	b->buf = (uint8_t *)buf;
 	b->rear = b->front = 0;
 }
 
