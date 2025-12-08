@@ -537,9 +537,8 @@ size_t x_utf8_meter(const char *s)
 		s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, // 0xE0-0xEF
 		s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xF0-0xFF
 	};
-
-	static const uint8_t locb = 0x80, // 1000 0000
-		hicb = 0xBF; // 1011 1111
+#define locb ((uint8_t)0x80) // 1000 0000
+#define hicb ((uint8_t)0xBF) // 1011 1111
 	static const struct accept_range
 	{
 		uint8_t lo; // lowest value for second byte.
@@ -551,7 +550,6 @@ size_t x_utf8_meter(const char *s)
 		{ 0x90, hicb },
 		{ locb, 0x8F },
 	};
-
 	int n = 0;
 	for(const char *a = s; *a && n < 5; n++, a++);
 	if (n < 1)

@@ -634,19 +634,7 @@ static floating_point_t apply_scaling(floating_point_t num, struct scaling_facto
 
 static floating_point_t unapply_scaling(floating_point_t normalized, struct scaling_factor normalization)
 {
-#ifdef __GNUC__
-	// accounting for a static analysis bug in GCC 6.x and earlier
-#pragma GCC diagnostic push
-#if !defined(__has_warning)
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#elif __has_warning("-Wmaybe-uninitialized")
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-#endif
 	return normalization.multiply ? normalized / normalization.raw_factor : normalized * normalization.raw_factor;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 }
 
 static struct scaling_factor update_normalization(struct scaling_factor sf, floating_point_t extra_multiplicative_factor)
@@ -875,7 +863,7 @@ int print_exponential_number(output_gadget_t* output, floating_point_t number, s
 
 	int floored_exp10;
 	bool abs_exp10_covered_by_powers_table;
-	struct scaling_factor normalization;
+	struct scaling_factor normalization = { 0 };
 
 
 	// Determine the decimal exponent
@@ -918,19 +906,7 @@ int print_exponential_number(output_gadget_t* output, floating_point_t number, s
 		flags |= FLAGS_PRECISION;   // make sure print_broken_up_decimal respects our choice above
 	}
 
-#ifdef __GNUC__
-	// accounting for a static analysis bug in GCC 6.x and earlier
-#pragma GCC diagnostic push
-#if !defined(__has_warning)
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#elif __has_warning("-Wmaybe-uninitialized")
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-#endif
 	normalization.multiply = (floored_exp10 < 0 && abs_exp10_covered_by_powers_table);
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 	bool should_skip_normalization = (fall_back_to_decimal_only_mode || floored_exp10 == 0);
 	struct floating_point_components decimal_part_components =
 		should_skip_normalization ?

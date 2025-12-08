@@ -52,7 +52,7 @@ struct x_thread_st
 	void *data;
 	x_thread_clean_fn *cleanup;
 	jmp_buf jmp_exit;
-	uint8_t detached:1, exited:1, canceled:1;
+	unsigned int detached:1, exited:1, canceled:1;
 };
 
 struct thread_info
