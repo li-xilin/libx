@@ -63,7 +63,7 @@ int x_tsignal_set(x_tsignal_fn *proc)
 	return 0;
 }
 
-void x_tsignal_unset(void)
+void x_tsignal_reset(void)
 {
 	if (!sg_user_handler)
 		return;
