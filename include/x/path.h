@@ -35,6 +35,19 @@
 #  define X_PATH_MAX MAX_PATH + 1
 #  define X_PATHNAME_MAX 260
 #else
+#  if defined(X_OS_LINUX)
+#    include <linux/limits.h>
+#  elif defined(X_OS_FREEBSD)
+#    include <sys/syslimits.h>
+#  else
+#    ifndef PATH_MAX
+#      ifdef MAXPATHLEN
+#        define PATH_MAX MAXPATHLEN
+#      else
+#        define PATH_MAX 4096
+#      endif
+#    endif
+#  endif
 #  define X_PATH_SEP_CHAR L'/'
 #  define X_PATH_SEP x_u("/")
 #  define X_PATH_MAX PATH_MAX
@@ -57,7 +70,6 @@ int x_path_setcwd(const x_uchar *path);
 x_uchar *x_path_homedir(x_uchar *path, size_t size);
 x_uchar *x_path_tmpdir(x_uchar *path, size_t size);
 int x_path_root_len(const x_uchar *path);
-
 
 #endif
 
