@@ -35,10 +35,15 @@
 #include <time.h>
 #include <limits.h>
 
-static int s_mode = 0;
-static x_log_handler_fn *s_handler = NULL;
-static void *s_handler_arg = NULL;
-static x_mutex s_lock = X_MUTEX_INIT;
+#ifdef X_OS_WIN
+#define share __attribute__((section("shared")))
+#else
+#define share
+#endif
+static int s_mode share = 0;
+static x_log_handler_fn *s_handler share = NULL;
+static void *s_handler_arg share = NULL;
+static x_mutex s_lock share = X_MUTEX_INIT;
 
 int x_log_mode(void)
 {
