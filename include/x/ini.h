@@ -102,13 +102,11 @@ char *x_ini_get_str(const x_ini *d, const char *path_fmt, char *dft_value, ...);
 void x_ini_pure(x_ini *d);
 
 #define x_ini_foreach_section(sec, d) \
-	x_block_var(x_link *__x_ini_foreach_link) \
 		x_list_foreach(__x_ini_foreach_link, &(d)->sec_list) \
 			x_block_var(struct x_ini_section_st *sec = x_container_of( \
 						__x_ini_foreach_link, struct x_ini_section_st, link))
 
 #define x_ini_foreach_option(opt, sec) \
-	x_block_var(x_link *__x_ini_foreach_link) \
 		x_list_foreach(__x_ini_foreach_link, &(sec)->opt_list) \
 			x_block_var(struct x_ini_option_st *opt = x_container_of( \
 						__x_ini_foreach_link, struct x_ini_option_st, link))
