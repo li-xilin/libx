@@ -267,6 +267,7 @@ global:
 	x_lstat;
 	x_malloc;
 	x_mattach;
+	x_mcopy;
 	x_mdetach;
 	x_membyhex;
 	x_memdup;

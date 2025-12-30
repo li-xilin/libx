@@ -96,6 +96,11 @@ typedef struct x_once_st x_once;
 typedef struct x_mset_st x_mset;
 #endif
 
+#ifndef X_MBLOCK_DEFINED
+#define X_MBLOCK_DEFINED
+typedef struct x_mblock_st x_mblock;
+#endif
+
 #ifndef X_LINK_DEFINED
 #define X_LINK_DEFINED
 typedef struct x_link_st x_link;

@@ -25,7 +25,6 @@
 #include "x/thread.h"
 #include "x/mutex.h"
 #include "x/once.h"
-#include <stdlib.h>
 #include <string.h>
 
 #define RETRY_INTERVAL 20
@@ -40,8 +39,8 @@ static void init_default_mset(void)
 {
 #ifdef X_OS_WIN
 	// Prevent infinite loop
-	size_t size = sizeof(struct block_st) + sizeof *s_mset.lock.section;
-	struct block_st *b = malloc(size);
+	size_t size = sizeof(x_mblock) + sizeof *s_mset.lock.section;
+	x_mblock *b = malloc(size);
 	while (!b) {
 		x_thread_sleep(RETRY_INTERVAL);
 		b = malloc(size);
@@ -65,7 +64,7 @@ void x_mset_clear(x_mset *mset)
 	while (!x_list_is_empty(&mset->list)) {
 		x_link *pos = x_list_first(&mset->list);
 		x_list_del(pos);
-		free(x_container_of(pos, struct block_st, link));
+		free(x_container_of(pos, x_mblock, link));
 	}
 }
 
@@ -81,14 +80,14 @@ void x_mset_free(x_mset *mset)
 	while (!x_list_is_empty(&mset->list)) {
 		x_link *pos = x_list_first(&mset->list);
 		x_list_del(pos);
-		free(x_container_of(pos, struct block_st, link));
+		free(x_container_of(pos, x_mblock, link));
 	}
 	x_mutex_destroy(&mset->lock);
 }
 
 void *x_malloc(x_mset *mset, size_t size)
 {
-	struct block_st *b = malloc(sizeof *b + size);
+	x_mblock *b = malloc(sizeof *b + size);
 	while (!b) {
 		x_thread_sleep(RETRY_INTERVAL);
 		b = malloc(sizeof *b + size);
@@ -122,17 +121,17 @@ void *x_realloc(void *ptr, size_t size)
 {
 	if (!ptr)
 		return x_malloc(NULL, size);
-	struct block_st *b = x_container_of(ptr, struct block_st, data);
+	x_mblock *b = x_container_of(ptr, x_mblock, data);
 	assert(b->mset);
 	x_mutex_lock(&b->mset->lock);
 	x_list_del(&b->link);
 	x_mutex_unlock(&b->mset->lock);
-	struct block_st *new_blk = realloc(b, sizeof *b + size);
+	x_mblock *new_blk = realloc(b, sizeof *b + size);
 	if (new_blk)
 		b = NULL;
 	while (!new_blk) {
 		x_thread_sleep(RETRY_INTERVAL);
-		struct block_st **bp = &b;
+		x_mblock **bp = &b;
 		new_blk = realloc(*bp, sizeof *b + size);
 	}
 	if (new_blk->mset) {
@@ -147,7 +146,7 @@ void x_free(void *ptr)
 {
 	if (!ptr)
 		return;
-	struct block_st *b = x_container_of(ptr, struct block_st, data);
+	x_mblock *b = x_container_of(ptr, x_mblock, data);
 	assert(b->mset);
 	x_mutex_lock(&b->mset->lock);
 	x_list_del(&b->link);
@@ -157,7 +156,7 @@ void x_free(void *ptr)
 
 void x_mdetach(void *ptr)
 {
-	struct block_st *b = x_container_of(ptr, struct block_st, data);
+	x_mblock *b = x_container_of(ptr, x_mblock, data);
 	if (b->mset) {
 		x_mutex_lock(&b->mset->lock);
 		b->mset = NULL;
@@ -169,7 +168,7 @@ void x_mdetach(void *ptr)
 
 void x_mattach(x_mset *mset, void *ptr)
 {
-	struct block_st *b = x_container_of(ptr, struct block_st, data);
+	x_mblock *b = x_container_of(ptr, x_mblock, data);
 	x_mdetach(ptr);
 	b->mset = mset;
 	if (!mset)
@@ -179,3 +178,9 @@ void x_mattach(x_mset *mset, void *ptr)
 	x_mutex_unlock(&b->mset->lock);
 }
 
+void *x_mcopy(x_mset *mset, void *ptr, size_t size)
+{
+	void *new_ptr = x_malloc(mset, size);
+	memcpy(new_ptr, ptr, size);
+	return new_ptr;
+}

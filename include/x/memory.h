@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct block_st
+struct x_mblock_st
 {
 	x_mset *mset;
 	x_link link;
@@ -47,6 +47,7 @@ void x_mset_clear(x_mset *mset);
 void x_mset_free(x_mset *mset);
 void *x_calloc(x_mset *mset, size_t nmemb, size_t size);
 void *x_malloc(x_mset *mset, size_t size);
+void *x_mcopy(x_mset *mset, void *ptr, size_t size);
 void *x_zalloc(x_mset *mset, size_t size);
 void *x_realloc(void *ptr, size_t size);
 void x_free(void *ptr);
