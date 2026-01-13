@@ -47,7 +47,7 @@ void x_mset_clear(x_mset *mset);
 void x_mset_free(x_mset *mset);
 void *x_calloc(x_mset *mset, size_t nmemb, size_t size);
 void *x_malloc(x_mset *mset, size_t size);
-void *x_mcopy(x_mset *mset, void *ptr, size_t size);
+void *x_mcopy(x_mset *mset, const void *ptr, size_t size);
 void *x_zalloc(x_mset *mset, size_t size);
 void *x_realloc(void *ptr, size_t size);
 void x_free(void *ptr);

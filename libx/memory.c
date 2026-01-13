@@ -178,7 +178,7 @@ void x_mattach(x_mset *mset, void *ptr)
 	x_mutex_unlock(&b->mset->lock);
 }
 
-void *x_mcopy(x_mset *mset, void *ptr, size_t size)
+void *x_mcopy(x_mset *mset, const void *ptr, size_t size)
 {
 	void *new_ptr = x_malloc(mset, size);
 	memcpy(new_ptr, ptr, size);
