@@ -21,6 +21,7 @@
  */
 
 #include "x/assert.h"
+#include "x/memory.h"
 #include <stdlib.h>
 
 #ifdef WIDE_CHAR
@@ -110,9 +111,7 @@ CHAR_TYPE **STRARGV(const CHAR_TYPE *cmdline, int* count)
 	 * with it. This way the caller can make a single LocalFree() call to free
 	 * both, as per MSDN.
 	 */
-	argv = malloc((argc+1) * sizeof(CHAR_TYPE *) + (STRLEN(cmdline) + 1) * sizeof(CHAR_TYPE));
-	if (!argv)
-		return NULL;
+	argv = x_malloc(NULL, (argc+1) * sizeof(CHAR_TYPE *) + (STRLEN(cmdline) + 1) * sizeof(CHAR_TYPE));
 	CHAR_TYPE *cmdline1 = (CHAR_TYPE *)(argv + argc + 1);
 	STRCPY(cmdline1, cmdline);
 	/* --- Then split and copy the arguments */
@@ -202,7 +201,7 @@ CHAR_TYPE **STRARGV(const CHAR_TYPE *cmdline, int* count)
 				qcount = 0;
 		}
 		else {
-			/* a regular CHAR_TYPEacter */
+			/* a regular character */
 			*d++ = *s++;
 			bcount = 0;
 		}
