@@ -1,5 +1,6 @@
 xincludedir = $(includedir)/x
 xinclude_HEADERS = \
+	x/version.h \
 	x/assert.h \
 	x/base64.h \
 	x/bitmap.h \
@@ -74,13 +75,15 @@ if ENABLE_CRYPTO
 xinclude_HEADERS +=  x/aes.h x/sha256.h x/random.h
 endif
 
+BUILT_SOURCES = x/version.h
 x/version.h: x/version.h.in $(top_builddir)/config.status
+	$(MKDIR_P) x
 	$(AM_V_GEN)$(SED) -e 's|@VERSION_MAJOR[@]|$(VERSION_MAJOR)|g' \
 	                  -e 's|@VERSION_MINOR[@]|$(VERSION_MINOR)|g' \
 	                  -e 's|@VERSION_PATCH[@]|$(VERSION_PATCH)|g' \
 	                  $< > $@
 CLEANFILES = x/version.h
-DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in x/version.h
 EXTRA_DIST = x/version.h.in
 
 dist-hook:
