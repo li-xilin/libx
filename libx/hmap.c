@@ -58,7 +58,7 @@ static void x_hmap_expand(x_hmap *ht, int elem_cnt)
 			x_list_add_back(new_table + h, cur);
 		}
 	}
-	free(ht->table);
+	x_free(ht->table);
 	ht->prime_idx = new_idx;
 	ht->table = new_table;
 	ht->slot_cnt = new_slot_cnt;
@@ -151,6 +151,6 @@ void x_hmap_remove(x_hmap *ht, x_link *link)
 
 void x_hmap_free(x_hmap * ht)
 {
-	free(ht->table);
+	x_free(ht->table);
 }
 
