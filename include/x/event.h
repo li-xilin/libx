@@ -27,14 +27,14 @@
 #include "time.h"
 #include "list.h"
 #include "heap.h"
+#include <stdint.h>
 
 #define X_EV_REACTING (1 << 0)
 #define X_EV_ERROR    (1 << 1)
 #define X_EV_ONCE     (1 << 2)
-
 #define X_EV_READ     (1 << 3)
 #define X_EV_WRITE    (1 << 4)
-#define X_EV_ACCURATE (1 << 3)
+#define X_EV_ACCURATE (1 << 5)
 
 enum {
 	X_EVENT_SOCKET,
@@ -44,9 +44,9 @@ enum {
 
 struct x_event_st
 {
-	short type;
-	short ev_flags;
-	short res_flags;
+	uint16_t type;
+	uint16_t label;
+	short ev_flags, res_flags;
 	x_link event_link;
 	x_link pending_link;
 	x_reactor *reactor;
@@ -81,3 +81,4 @@ void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, void *data);
 void x_evobject_init(x_evobject *event, short flags, void *data);
 
 #endif
+
