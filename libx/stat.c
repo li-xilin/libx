@@ -158,11 +158,12 @@ out:
 
 #else
 #  include <sys/stat.h>
-
-#if defined(__linux__) && defined(SYS_statx)
-#include <linux/stat.h>
-#include <fcntl.h>
-#endif
+#  if defined(__linux__) && defined(SYS_statx)
+#    if !defined(STATX_TYPE)
+#      include <linux/stat.h>
+#    endif
+#    include <fcntl.h>
+#  endif
 
 static int get_file_creation_time(const char *filename, const struct stat *st, time_t *creat_time)
 {
