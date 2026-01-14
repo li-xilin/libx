@@ -25,6 +25,7 @@
 #include "x/string.h"
 #include "x/trick.h"
 #include "x/detect.h"
+#include "x/errno.h"
 
 #ifdef X_OS_WIN32
 #include <ws2tcpip.h>
@@ -362,56 +363,56 @@ int x_sock_pair(int family, int type, int protocol, x_sock fd[2])
 
 int x_sock_sendall(x_sock sock, const void *data, size_t len)
 {
-        size_t sent = 0;
+	size_t sent = 0;
 	int flags = 0;
 #ifndef X_OS_WIN32
 	flags = MSG_NOSIGNAL;
 #endif
-        while (sent != len) {
-                ssize_t ret = send(sock, (char *)data + sent, len - sent, flags);
-                if (ret <  0) {
+	while (sent != len) {
+		ssize_t ret = send(sock, (char *)data + sent, len - sent, flags);
+		if (ret <  0) {
 #ifndef X_OS_WIN32
-                        if (errno == EINTR)
-                                continue;
+			if (errno == X_EINTR)
+				continue;
 #endif
-                        return -1;
-                }
-                sent += ret;
+			return -1;
+		}
+		sent += ret;
 
-        }
-        return 0;
+	}
+	return 0;
 }
 
 int x_sock_recvall(x_sock sock, void *buf, size_t len)
 {
-        if (len == 0)
-                return 0;
-        size_t received = 0;
-        while (received != len) {
-                ssize_t ret = recv(sock, (char *)buf + received, len - received, MSG_WAITALL);
-                if (ret <  0) {
+	if (len == 0)
+		return 0;
+	size_t received = 0;
+	while (received != len) {
+		ssize_t ret = recv(sock, (char *)buf + received, len - received, MSG_WAITALL);
+		if (ret <  0) {
 #ifndef X_OS_WIN32
-                        if (errno == EINTR) {
-                                continue;
+			if (errno == X_EINTR) {
+				continue;
 			}
 #endif
-                        return -1;
-                }
-                if (ret == 0) {
-                        /* 意外的文件结尾，数据读取不完整 */
-                        errno = ENODATA;
-                        return -1;
-                }
-                received += ret;
+			return -1;
+		}
+		if (ret == 0) {
+			errno = X_ENODATA;
+			return -1;
+		}
+		received += ret;
 
-        }
-        return 0;
+	}
+	return 0;
 }
 
-int x_sock_recv_wait(x_sock sock, size_t millise)
+int x_sock_wait_readable(x_sock sock, size_t millise)
 {
 	fd_set fdset;
 	FD_ZERO(&fdset);
+	FD_SET(sock, &fdset);
 	x_sock fd_max = sock;
 	struct timeval timeout = {
 		.tv_sec = millise / 1000,
@@ -422,15 +423,47 @@ redo:
 #endif
 	 ;
 	 int nreadys = select(fd_max + 1, &fdset, NULL, NULL, &timeout);
-
+	 if (nreadys == 0) {
+		 errno = X_ETIMEDOUT;
+		 return -1;
+	 }
 	 if (nreadys < 0) {
 #ifndef X_OS_WIN32
-		 if (errno == EINTR)
+		 if (errno == X_EINTR)
 			 goto redo;
 #endif
 		 return -1;
 	 }
 	 return 0;
+}
+
+int x_sock_wait_writable(x_sock sock, size_t millise)
+{
+	fd_set fdset;
+	FD_ZERO(&fdset);
+	FD_SET(sock, &fdset);
+	x_sock fd_max = sock;
+	struct timeval timeout = {
+		.tv_sec = millise / 1000,
+		.tv_usec = millise % 1000 * 1000,
+	};
+#ifndef X_OS_WIN32
+redo:
+#endif
+	;
+	int nreadys = select(fd_max + 1, NULL, &fdset, NULL, &timeout);
+	if (nreadys == 0) {
+		errno = X_ETIMEDOUT;
+		return -1;
+	}
+	if (nreadys < 0) {
+#ifndef X_OS_WIN32
+		if (errno == X_EINTR)
+			goto redo;
+#endif
+		return -1;
+	}
+	return 0;
 }
 
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)

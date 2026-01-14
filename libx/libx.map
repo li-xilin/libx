@@ -387,11 +387,12 @@ global:
 	x_sock_exit;
 	x_sock_init;
 	x_sock_pair;
-	x_sock_recv_wait;
 	x_sock_recvall;
 	x_sock_sendall;
 	x_sock_set_keepalive;
 	x_sock_set_nonblocking;
+	x_sock_wait_readable;
+	x_sock_wait_writable;
 	x_splay_find;
 	x_splay_find_or_insert;
 	x_splay_remove;

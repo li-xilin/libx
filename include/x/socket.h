@@ -70,7 +70,9 @@ int x_sock_sendall(x_sock sock, const void *data, size_t len);
 
 int x_sock_recvall(x_sock sock, void *buf, size_t len);
 
-int x_sock_recvable(x_sock sock, size_t millise);
+int x_sock_wait_readable(x_sock sock, size_t millise);
+
+int x_sock_wait_writable(x_sock sock, size_t millise);
 
 inline static int x_sock_recv_u16(x_sock sock, uint16_t *valuep)
 {
