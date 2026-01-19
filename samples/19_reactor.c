@@ -23,7 +23,7 @@ static x_sock sock_listen(short port)
 		.sin_port = htons(port),
 	};
 	if (bind(sock, (struct sockaddr *)&si, sizeof si) == -1) {
-		fprintf(stderr, "bind error (%s)\n", x_last_error(errno));
+		fprintf(stderr, "bind error (%s)\n", strerror(errno));
 		exit(1);
 	}
 
