@@ -28,6 +28,7 @@
 #include "x/time.h"
 #include "x/log.h"
 #include "x/reactor.h"
+#include "x/errno.h"
 #ifdef X_OS_WIN32
 #include <windows.h>
 #else
@@ -38,9 +39,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <errno.h>
 
 static void ioevent_reset(x_reactor *r);
+static void ioevent_set(x_reactor *r);
 
 static void reset_all_timer(x_reactor *r, struct timeval *now)
 {
@@ -121,8 +122,10 @@ static int reactor_pend_object(x_reactor *r)
 
 void x_reactor_break(x_reactor *r)
 {
-	char octet = 0;
-	send(r->io_pipe[1], &octet, sizeof(octet), 0);
+	x_mutex_lock(&r->lock);
+	r->breaking = true;
+	x_mutex_unlock(&r->lock);
+	ioevent_set(r);
 }
 
 static size_t evsocket_hash(const x_link *node)
@@ -146,26 +149,29 @@ static bool timer_ordered(const x_ranode *p1, const x_ranode *p2)
 
 int x_reactor_init(x_reactor *r)
 {
+	x_sock pair[2] = { -1, -1 };
 	memset(r, 0, sizeof(x_reactor));
 
 	r->mux_ops = &x_sockmux_epoll;
 	r->mux = r->mux_ops->m_create();
 	if (!r->mux)
 		goto fail;
-	if (x_sock_pair(AF_UNIX, SOCK_STREAM, 0, r->io_pipe) == -1)
+	if (x_sock_pair(AF_UNIX, SOCK_STREAM, 0, pair) == -1)
 		goto fail;
 	x_mutex_init(&r->lock);
 	x_hmap_init(&r->sock_ht, 0.5, evsocket_hash, evsocket_equal);
 	x_list_init(&r->pending_list);
 	x_list_init(&r->obj_list);
 	x_heap_init(&r->timer_heap, timer_ordered);
-	x_evsocket_init(&r->io_event, r->io_pipe[0], X_EV_READ, NULL);
+	x_evsocket_init(&r->io_event, pair[0], X_EV_READ, NULL);
 	x_reactor_add(r, &r->io_event.base);
+	r->breaking = false;
+	r->io_pipe1 = pair[1];
 	return 0;
 fail:
-	if (r->io_pipe[0]) {
-		x_sock_close(r->io_pipe[0]);
-		x_sock_close(r->io_pipe[1]);
+	if (pair[0] != -1) {
+		x_sock_close(pair[0]);
+		x_sock_close(pair[1]);
 	}
 	if (r->mux)
 		r->mux_ops->m_free(r->mux);
@@ -197,9 +203,8 @@ void x_reactor_free(x_reactor *r)
 {
 	reactor_clean_events(r);
 	r->mux_ops->m_free(r->mux);
-	x_sock_close(r->io_pipe[0]);
-	x_sock_close(r->io_pipe[1]);
-
+	x_sock_close(r->io_event.sock);
+	x_sock_close(r->io_pipe1);
 	x_mutex_destroy(&r->lock);
 	x_hmap_free(&r->sock_ht);
 	free(r);
@@ -209,6 +214,10 @@ int x_reactor_add(x_reactor *r, x_event *e)
 {
 	int retval = -1;
 	assert(r != NULL && e != NULL);
+	if (e->ev_flags & X_EV_REACTING) {
+		errno = X_EALREADY;
+		return -1;
+	}
 	x_evsocket *esock = x_container_of(e, x_evsocket, base);
 	x_evobject *eobj = x_container_of(e, x_evobject, base);
 	x_evtimer *etimer = x_container_of(e, x_evtimer, base);
@@ -221,7 +230,7 @@ int x_reactor_add(x_reactor *r, x_event *e)
 			break;
 		case X_EVENT_SOCKET:
 			if (x_hmap_find_or_insert(&r->sock_ht, &esock->hash_link)) {
-				errno = EEXIST;
+				errno = X_EEXIST;
 				goto out;
 			}
 			if (r->mux_ops->m_add(r->mux, esock->sock, e->ev_flags) == -1) {
@@ -233,22 +242,27 @@ int x_reactor_add(x_reactor *r, x_event *e)
 			x_list_add_back(&r->obj_list, &eobj->link);
 			break;
 		default:
-			errno = EINVAL;
+			errno = X_EINVAL;
 			goto out;
 	}
 	e->reactor = r;
 	e->ev_flags |= X_EV_REACTING;
-	x_reactor_break(r);
+	ioevent_set(r);
 	retval = 0;
 out:
 	x_mutex_unlock(&r->lock);
 	return retval;
 }
 
-int x_reactor_modify(x_reactor *r, x_event *e)
+int x_reactor_modify(x_event *e)
 {
 	int retval = -1;
-	assert(r != NULL && e != NULL);
+	assert(e != NULL);
+	if (!(e->ev_flags & X_EV_REACTING)) {
+		errno = X_EINVAL;
+		return -1;
+	}
+	x_reactor *r = e->reactor;
 	x_evsocket *esock = x_container_of(e, x_evsocket, base);
 	x_evtimer *etimer = x_container_of(e, x_evtimer, base);
 	x_mutex_lock(&r->lock);
@@ -264,11 +278,10 @@ int x_reactor_modify(x_reactor *r, x_event *e)
 		case X_EVENT_OBJECT:
 			break;
 		default:
-			errno = EINVAL;
+			errno = X_EINVAL;
 			goto out;
 	}
-
-	x_reactor_break(r);
+	ioevent_set(r);
 	retval = 0;
 out:
 	x_mutex_unlock(&r->lock);
@@ -283,7 +296,7 @@ void x_reactor_pend(x_reactor *r, x_event *e, short res_flags)
 	x_list_add_back(&r->pending_list, &e->pending_link);
 }
 
-int x_reactor_remove(x_reactor *r, x_event *e)
+void x_reactor_remove(x_reactor *r, x_event *e)
 {
 	assert(r != NULL && e != NULL);
 	assert(e->ev_flags & X_EV_REACTING);
@@ -296,32 +309,33 @@ int x_reactor_remove(x_reactor *r, x_event *e)
 			x_heap_remove(&r->timer_heap, &etimer->node);
 			break;
 		case X_EVENT_SOCKET:
-			if (x_hmap_find_and_remove(&r->sock_ht, &esock->hash_link)) {
-				errno = EEXIST;
-				goto out;
-			}
-			if (r->mux_ops->m_add(r->mux, esock->sock, e->ev_flags) == -1)
+			r->mux_ops->m_del(r->mux, esock->sock, e->ev_flags);
 				goto out;
 			break;
 		case X_EVENT_OBJECT:
-			x_list_add_back(&r->obj_list, &eobj->link);
+			x_list_del(&eobj->link);
 			break;
 		default:
-			errno = EINVAL;
+			errno = X_EINVAL;
 			goto out;
 	}
 	e->reactor = NULL;
 	e->ev_flags &= ~X_EV_REACTING;
+	ioevent_set(r);
 out:
-	x_reactor_break(r);
 	x_mutex_unlock(&r->lock);
-	return 0;
 }
 
 static void ioevent_reset(x_reactor *r)
 {
 	char buf[1024];
-	(void)recv(r->io_pipe[0], buf, sizeof buf, 0);
+	while (recv(r->io_event.sock, buf, sizeof buf, 0) == sizeof buf);
+}
+
+static void ioevent_set(x_reactor *r)
+{
+	char octet = 0;
+	send(r->io_pipe1, &octet, sizeof(octet), 0);
 }
 
 int x_reactor_wait(x_reactor *r)
@@ -330,6 +344,11 @@ int x_reactor_wait(x_reactor *r)
 	struct timeval tv, *ptv = NULL;
 	int npendings = -1;
 	x_mutex_lock(&r->lock);
+	if (r->breaking) {
+		r->breaking = false;
+		x_mutex_unlock(&r->lock);
+		return 0;
+	}
 	do {
 		struct timeval now;
 		x_time_now(&now);
@@ -348,20 +367,31 @@ int x_reactor_wait(x_reactor *r)
 			}
 			ptv = &tv;
 		}
-		npendings = 0;
 		x_mutex_unlock(&r->lock);
 		int nreadys = r->mux_ops->m_poll(r->mux, ptv);
 		x_mutex_lock(&r->lock);
-		if (nreadys < 0)
+		if (nreadys < 0) {
+			npendings = -1;
 			goto out;
+		}
+		npendings = 0;
 		if (timer_node)
 			npendings += reactor_pend_timer(r, &now);
 		npendings += reactor_pend_socket(r);
 		npendings += reactor_pend_object(r);
-	} while (!npendings);
+	} while (!r->breaking && !npendings);
+	if (!npendings)
+		r->breaking = false;
 out:
 	x_mutex_unlock(&r->lock);
 	return npendings;
+}
+
+
+void x_reactor_signal(x_reactor *r)
+{
+	assert(r != NULL);
+	ioevent_set(r);
 }
 
 x_event *x_reactor_pop_event(x_reactor *r)

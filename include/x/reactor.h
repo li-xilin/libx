@@ -37,7 +37,8 @@ struct x_reactor_st
 	x_list pending_list;
 	x_mutex lock;
 	x_evsocket io_event;
-	x_sock io_pipe[2];
+	x_sock io_pipe1;
+	bool breaking;
 
 	const struct x_sockmux_ops_st *mux_ops;
 	x_sockmux *mux;
@@ -49,14 +50,15 @@ struct x_reactor_st
 	x_list obj_list;
 };
 
-void x_reactor_break(x_reactor *r);
 int x_reactor_init(x_reactor *r);
 void x_reactor_clear(x_reactor *r);
 void x_reactor_free(x_reactor *r);
 int x_reactor_add(x_reactor *r, x_event *e);
 void x_reactor_pend(x_reactor *r, x_event *e, short res_flags);
-int x_reactor_remove(x_reactor *r, x_event *e);
+void x_reactor_remove(x_reactor *r, x_event *e);
 int x_reactor_wait(x_reactor *r);
+void x_reactor_signal(x_reactor *r);
+void x_reactor_break(x_reactor *r);
 x_event *x_reactor_pop_event(x_reactor *r);
 
 #endif

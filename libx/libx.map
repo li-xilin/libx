@@ -339,6 +339,7 @@ global:
 	x_reactor_pend;
 	x_reactor_pop_event;
 	x_reactor_remove;
+	x_reactor_signal;
 	x_reactor_wait;
 	x_realloc;
 	x_rematch;

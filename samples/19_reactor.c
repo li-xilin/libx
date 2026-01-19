@@ -2,6 +2,8 @@
 #include "x/socket.h"
 #include "x/thread.h"
 #include "x/types.h"
+#include "x/tsignal.h"
+#include "x/errno.h"
 #include <stdio.h>
 
 #define LISTEN_PORT 9999
@@ -21,7 +23,7 @@ static x_sock sock_listen(short port)
 		.sin_port = htons(port),
 	};
 	if (bind(sock, (struct sockaddr *)&si, sizeof si) == -1) {
-		fprintf(stderr, "bind error (%s)", strerror(errno));
+		fprintf(stderr, "bind error (%s)\n", x_last_error(errno));
 		exit(1);
 	}
 
@@ -36,7 +38,7 @@ static int another_thread(void)
 	while (1) {
 		x_thread_sleep(3500);
 		evobj1.base.res_flags |= X_EV_READ;
-		x_reactor_break(&r);
+		x_reactor_signal(&r);
 	}
 	return 0;
 }
@@ -86,6 +88,13 @@ static void on_sock2_event(x_evsocket *ev)
 	}
 }
 
+void signal_handler(int sig)
+{
+	if (sig == X_TSIGNAL_INT) {
+		x_reactor_break(&r);
+	}
+}
+
 int main(void)
 {
 	x_reactor_init(&r);
@@ -104,7 +113,9 @@ int main(void)
 
 	x_thread_create(another_thread, NULL, NULL);
 
-	while (x_reactor_wait(&r)) {
+	x_tsignal_set(signal_handler);
+
+	while (x_reactor_wait(&r) > 0) {
 		x_event *e = NULL;
 		while ((e = x_reactor_pop_event(&r))) {
 			if (e == &timer1.base)
@@ -121,5 +132,6 @@ int main(void)
 			}
 		}
 	}
+	fprintf(stderr, "event loop exited\n");
 }
 

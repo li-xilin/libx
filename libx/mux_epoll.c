@@ -3,6 +3,7 @@
 #include "x/socket.h"
 #include "x/time.h"
 #include "x/memory.h"
+#include "x/errno.h"
 
 #ifdef X_OS_WIN32
 #include "wepoll.h"
@@ -96,6 +97,7 @@ static int epoll_mux_add(x_sockmux *mux, x_sock fd, short flags)
 			ret = epoll_ctl(mux->epoll_fd, EPOLL_CTL_MOD, fd, &e);
 			if (ret == 0) 
 				goto out;
+			x_eval_errno();
 		}
 		return -1;
 	}
@@ -110,7 +112,11 @@ static int epoll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 	struct epoll_event e;
 	e.data.fd = fd;
 	e.events = epoll_setup_mask(flags);
-	return epoll_ctl(mux->epoll_fd, EPOLL_CTL_MOD, fd, &e);
+	if (epoll_ctl(mux->epoll_fd, EPOLL_CTL_MOD, fd, &e)) {
+		x_eval_errno();
+		return -1;
+	}
+	return 0;
 }
 
 static void epoll_mux_del(x_sockmux *mux, x_sock fd, short flags)
@@ -132,6 +138,8 @@ static int epoll_mux_poll(x_sockmux *mux, struct timeval * timeout)
 			timeout ? timeout->tv_sec * 1000 + timeout->tv_usec / 1000 : -1 );
 	if (nreadys > 0)
 		mux->nreadys = nreadys;
+	else if (nreadys < 0)
+		x_eval_errno();
 	return nreadys;
 }
 
