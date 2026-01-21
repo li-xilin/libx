@@ -57,22 +57,18 @@ typedef int x_sock;
 struct timeval;
 
 int x_sock_init(void);
-
 void x_sock_exit(void);
-
-int x_sock_pair(int family, int type, int protocol, x_sock fd[2]);
-
 int x_sock_close(x_sock fd);
 
+int x_sock_pair(int family, int type, int protocol, x_sock fd[2]);
 int x_sock_set_nonblocking(x_sock fd);
+int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec);
 
 int x_sock_sendall(x_sock sock, const void *data, size_t len);
-
 int x_sock_recvall(x_sock sock, void *buf, size_t len);
 
-int x_sock_wait_readable(x_sock sock, size_t millise);
-
-int x_sock_wait_writable(x_sock sock, size_t millise);
+int x_sock_wait_writable(const x_sock *sock, size_t cnt, size_t millise);
+int x_sock_wait_readable(const x_sock *sock, size_t cnt, size_t millise);
 
 inline static int x_sock_recv_u16(x_sock sock, uint16_t *valuep)
 {
@@ -108,6 +104,5 @@ inline static int x_sock_send_u32(x_sock sock, uint32_t value)
         return 0;
 }
 
-int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec);
-
 #endif
+

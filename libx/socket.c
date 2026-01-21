@@ -408,21 +408,25 @@ int x_sock_recvall(x_sock sock, void *buf, size_t len)
 	return 0;
 }
 
-int x_sock_wait_readable(x_sock sock, size_t millise)
+static int wait_socket(const x_sock *sock, size_t cnt, bool readable, size_t millise)
 {
+	int nreadys;
+	x_sock fd_max = 0;
 	fd_set fdset;
 	FD_ZERO(&fdset);
-	FD_SET(sock, &fdset);
-	x_sock fd_max = sock;
+	for (int i = 0; i < cnt; i++) {
+		if (sock[i] > fd_max)
+			fd_max = sock[i];
+		FD_SET(sock[i], &fdset);
+	}
 	struct timeval timeout = {
 		.tv_sec = millise / 1000,
 		.tv_usec = millise % 1000 * 1000,
 	};
-#ifndef X_OS_WIN32
 redo:
-#endif
-	 ;
-	 int nreadys = select(fd_max + 1, &fdset, NULL, NULL, &timeout);
+	 nreadys = readable
+		 ? select(fd_max + 1, &fdset, NULL, NULL, &timeout)
+		 : select(fd_max + 1, NULL, &fdset, NULL, &timeout);
 	 if (nreadys == 0) {
 		 errno = X_ETIMEDOUT;
 		 return -1;
@@ -434,36 +438,22 @@ redo:
 #endif
 		 return -1;
 	 }
-	 return 0;
+	 for (int i = 0; i < cnt; i++) {
+		 if (FD_ISSET(sock[i], &fdset))
+			 return i;
+	 }
+	 goto redo;
+	 return -1;
 }
 
-int x_sock_wait_writable(x_sock sock, size_t millise)
+int x_sock_wait_writable(const x_sock *sock, size_t cnt, size_t millise)
 {
-	fd_set fdset;
-	FD_ZERO(&fdset);
-	FD_SET(sock, &fdset);
-	x_sock fd_max = sock;
-	struct timeval timeout = {
-		.tv_sec = millise / 1000,
-		.tv_usec = millise % 1000 * 1000,
-	};
-#ifndef X_OS_WIN32
-redo:
-#endif
-	;
-	int nreadys = select(fd_max + 1, NULL, &fdset, NULL, &timeout);
-	if (nreadys == 0) {
-		errno = X_ETIMEDOUT;
-		return -1;
-	}
-	if (nreadys < 0) {
-#ifndef X_OS_WIN32
-		if (errno == X_EINTR)
-			goto redo;
-#endif
-		return -1;
-	}
-	return 0;
+	return wait_socket(sock, cnt, true, millise);
+}
+
+int x_sock_wait_readable(const x_sock *sock, size_t cnt, size_t millise)
+{
+	return wait_socket(sock, cnt, false, millise);
 }
 
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
