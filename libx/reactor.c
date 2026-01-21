@@ -308,8 +308,10 @@ void x_reactor_remove(x_reactor *r, x_event *e)
 			x_heap_remove(&r->timer_heap, &etimer->node);
 			break;
 		case X_EVENT_SOCKET:
-			r->mux_ops->m_del(r->mux, esock->sock, e->ev_flags);
+			if (x_hmap_find_and_remove(&r->sock_ht, &esock->hash_link)) {
+				r->mux_ops->m_del(r->mux, esock->sock, e->ev_flags);
 				goto out;
+			}
 			break;
 		case X_EVENT_OBJECT:
 			x_list_del(&eobj->link);
