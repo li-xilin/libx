@@ -207,7 +207,6 @@ void x_reactor_free(x_reactor *r)
 	x_sock_close(r->io_pipe1);
 	x_mutex_destroy(&r->lock);
 	x_hmap_free(&r->sock_ht);
-	free(r);
 }
 
 int x_reactor_add(x_reactor *r, x_event *e)
