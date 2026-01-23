@@ -448,12 +448,12 @@ redo:
 
 int x_sock_wait_writable(const x_sock *sock, size_t cnt, size_t millise)
 {
-	return wait_socket(sock, cnt, true, millise);
+	return wait_socket(sock, cnt, false, millise);
 }
 
 int x_sock_wait_readable(const x_sock *sock, size_t cnt, size_t millise)
 {
-	return wait_socket(sock, cnt, false, millise);
+	return wait_socket(sock, cnt, true, millise);
 }
 
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
