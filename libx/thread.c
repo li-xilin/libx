@@ -109,10 +109,9 @@ static int init_thread_info(struct thread_info *info)
 		info->error = errno;
 	info->finished = true;
 	x_cond_wake(&info->finished_cond);
+	int err = info->error;
 	x_mutex_unlock(&info->mutex);
-	if (info->error)
-		return -1;
-	return 0;
+	return err;
 }
 
 static void free_thread(x_thread *thread)
@@ -211,12 +210,19 @@ x_thread *x_thread_create(x_thread_fn *thread_func, x_thread_clean_fn *cleanup, 
 		x_cond_sleep(&info->finished_cond, &info->mutex, -1);
 	x_mutex_unlock(&info->mutex);
 
+	x_cond_destroy(&info->finished_cond);
+	x_mutex_destroy(&info->mutex);
 	if (info->error) {
+#ifdef X_OS_WIN
+		(void)CloseHandle(t->hThread);
+#else
+		void *retptr;
+		(void)pthread_join(t->pthread, &retptr);
+#endif
 		errno = info->error;
-		x_cond_destroy(&info->finished_cond);
-		x_mutex_destroy(&info->mutex);
 		goto fail;
 	}
+	free(info);
 	return t;
 fail:
 	free(t);
