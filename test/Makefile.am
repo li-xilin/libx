@@ -14,6 +14,11 @@ test_SOURCES += test_aes.c test_sha256.c
 AM_CFLAGS += -DTEST_CRYPTO
 endif
 
+if ENABLE_CHARMAP
+test_SOURCES += test_charmap.c
+AM_CFLAGS += -DTEST_CHARMAP
+endif
+
 DISTCLEANFILES = Makefile.in
 dist-hook:
 	$(RM) $(distdir)/Makefile.in

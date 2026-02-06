@@ -43,6 +43,12 @@ AC_ARG_ENABLE([crypto], [AS_HELP_STRING([--disable-crypto], [Disable crypto func
 			  [disable_crypto=no])
 AM_CONDITIONAL([ENABLE_CRYPTO], [test "x$disable_crypto" = "xno"])
 
+AC_ARG_ENABLE([charmap], [AS_HELP_STRING([--disable-charmap], [Disable charactor encoding convertion])],
+			  [disable_charmap=yes],
+			  [disable_charmap=no])
+AM_CONDITIONAL([ENABLE_CHARMAP], [test "x$disable_charmap" = "xno"])
+
+
 regular_CFLAGS="-Wall -Werror --pedantic -std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],

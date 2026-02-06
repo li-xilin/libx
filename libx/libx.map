@@ -55,6 +55,8 @@ global:
 	x_btnode_zigzag;
 	x_btnode_zigzig;
 	x_calloc;
+	x_charmap_get;
+	x_charmap_gets;
 	x_cliarg_arg;
 	x_cliarg_getopt;
 	x_cliarg_getopt_long;

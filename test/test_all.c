@@ -28,9 +28,11 @@ int main(int argc, char *argv[])
 	ADD_SUITE(aes_test);
 	ADD_SUITE(sha256_test);
 #endif
-
 #ifdef TEST_REGEX
 	ADD_SUITE(regex_test);
+#endif
+#ifdef TEST_CHARMAP
+	ADD_SUITE(charmap_test);
 #endif
 	ADD_SUITE(future_test);
 	ADD_SUITE(pathset_test);

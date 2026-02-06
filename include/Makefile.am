@@ -75,6 +75,10 @@ if ENABLE_CRYPTO
 xinclude_HEADERS +=  x/aes.h x/sha256.h x/random.h
 endif
 
+if ENABLE_CHARMAP
+xinclude_HEADERS +=  x/charmap.h
+endif
+
 BUILT_SOURCES = x/version.h
 x/version.h: x/version.h.in $(top_builddir)/config.status
 	$(MKDIR_P) x
