@@ -27,6 +27,7 @@ File and Path:
 
 String Operations:
     x/unicode.h      UNICODE operations
+    x/charmap.h      String coding convertion
     x/uchar.h        Cross-platform string handling
     x/printf.h       String formatting and printing
     x/string.h       String manipulation functions

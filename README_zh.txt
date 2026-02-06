@@ -27,11 +27,12 @@
 
 字符串操作：
     x/unicode.h      UNICODE操作
+    x/charmap.h      字符串编码转换
     x/uchar.h        跨平台字符串
     x/printf.h       字符串格式化打印
     x/string.h       串操作函数
     x/cliarg.h       CLI参数解析
-	x/regex.h        正则表达式
+    x/regex.h        正则表达式
 
 数据表示：
     x/json.h         Json字符串解析
