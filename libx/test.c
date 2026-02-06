@@ -115,25 +115,27 @@ void ut_runner_free(ut_runner *r)
 	}
 }
 
+#define TITLE_FMT "testting %-10s :"
+
 void ut_case_dump_rope(const char *suite_name, ut_case *tc, void *arg)
 {
 	x_rope *out = arg;
 	assert(tc->state != UT_CS_READY);
 	x_list_foreach(link, &tc->msg_list) {
 		struct notice *m = x_container_of(link, struct notice, link);
-		x_rope_printf(out, x_rope_length(out),"[INFO] %-8s : %s:%s:%d: %s\n",
+		x_rope_printf(out, x_rope_length(out),"[INFO] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, m->file, m->line, m->text);
 	}
 	switch (tc->state) {
 		case UT_CS_PASS:
-			x_rope_printf(out, x_rope_length(out), "[ OK ] %-8s : %s\n", suite_name, tc->name);
+			x_rope_printf(out, x_rope_length(out), "[ OK ] " TITLE_FMT " %s\n", suite_name, tc->name);
 			break;
 		case UT_CS_FAIL:
-			x_rope_printf(out, x_rope_length(out), "[FAIL] %-8s : %s:%s:%d: %s\n",
+			x_rope_printf(out, x_rope_length(out), "[FAIL] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, tc->file, tc->line, tc->log ? tc->log : "none");
 			break;
 		case UT_CS_TERM:
-			x_rope_printf(out, x_rope_length(out), "[TERM] %-8s : %s:%s:%d: %s\n",
+			x_rope_printf(out, x_rope_length(out), "[TERM] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, tc->file, tc->line, tc->log ? tc->log : "none");
 			break;
 	}
@@ -145,19 +147,19 @@ void ut_case_dump_file(const char *suite_name, ut_case *tc, void *arg)
 	assert(tc->state != UT_CS_READY);
 	x_list_foreach(link, &tc->msg_list) {
 		struct notice *m = x_container_of(link, struct notice, link);
-		fprintf(fp, "[INFO] %-8s : %s:%s:%d: %s\n",
+		fprintf(fp, "[INFO] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, m->file, m->line, m->text);
 	}
 	switch (tc->state) {
 		case UT_CS_PASS:
-			fprintf(fp, "[ OK ] %-8s : %s\n", suite_name, tc->name);
+			fprintf(fp, "[ OK ] " TITLE_FMT " %s\n", suite_name, tc->name);
 			break;
 		case UT_CS_FAIL:
-			fprintf(fp, "[FAIL] %-8s : %s:%s:%d: %s\n",
+			fprintf(fp, "[FAIL] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, tc->file, tc->line, tc->log ? tc->log : "none");
 			break;
 		case UT_CS_TERM:
-			fprintf(stderr, "[TERM] %-8s : %s:%s:%d: %s\n",
+			fprintf(stderr, "[TERM] " TITLE_FMT " %s:%s:%d: %s\n",
 				suite_name, tc->name, tc->file, tc->line, tc->log ? tc->log : "none");
 			break;
 	}
@@ -318,14 +320,17 @@ void __ut_assert_mem_equal(ut_runner *r, const void *ex, size_t exsize, const vo
 		return;
 	char ex_buf[66 + 1];
 	char ac_buf[66 + 1];
-	size_t left = x_max(index - 16, 0);
-	size_t right = x_min((index + 1) + 16, exsize);
+	size_t left = index - x_min(index, 16);
+	size_t right = index + x_min(exsize - (index + 1), 16 + 1);
+	
 	x_memtohex(exp + left, index - left, ex_buf);
-	sprintf(ex_buf + (index - left) * 2, "[%" PRIx8 "]", exp[index]);
-	x_memtohex(exp + index + 1, right - (index + 1), ex_buf + (index - left) * 2 + 4);
+	sprintf(ex_buf + (index - left) * 2, "[%hhX]", exp[index]);
+	x_memtohex(exp + index + 1, right - index, ex_buf + (index - left) * 2 + 4);
+
 	x_memtohex(acp + left, index - left, ac_buf);
-	sprintf(ac_buf + (index - left) * 2, "[%" PRIx8 "]", acp[index]);
-	x_memtohex(acp + index + 1, right - (index + 1), ac_buf + (index - left) * 2 + 4);
+	sprintf(ac_buf + (index - left) * 2, "[%hhX]", acp[index]);
+	x_memtohex(acp + index + 1, right - index, ac_buf + (index - left) * 2 + 4);
+
 	__ut_fail(r, file, line, "test failed: at offset +%d\n"
 			"\texpect: '%s'\n"
 			"\tactual: '%s'", index, ex_buf, ac_buf);

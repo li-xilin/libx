@@ -146,7 +146,7 @@ void find_top(ut_runner *r)
 
 void pathset_test_init(ut_suite *s)
 {
-	ut_suite_init(s, __FILE__);
+	ut_suite_init(s, "pathset.h");
 	ut_suite_add(s, insert);
 	ut_suite_add(s, find_top);
 }

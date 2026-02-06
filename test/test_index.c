@@ -45,7 +45,6 @@ static void basic(ut_runner *r)
 		x_index_init(&arr[i].index);
 	}
 
-
 	for (int i = 0; i < 10; i++) {
 		x_index_insert(&arr[i].index, &indexer);
 	}
@@ -70,6 +69,6 @@ static void basic(ut_runner *r)
 
 void index_test_init(ut_suite *s)
 {
-	ut_suite_init(s, __FILE__);
+	ut_suite_init(s, "index.h");
 	ut_suite_add(s, basic);
 }

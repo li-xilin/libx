@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 #endif
 	ADD_SUITE(future_test);
 	ADD_SUITE(pathset_test);
+	ADD_SUITE(index_test);
 
 	ut_runner_run(&r, process);
 }

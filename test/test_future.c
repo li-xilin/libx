@@ -17,7 +17,7 @@ static int thread(void)
 	if (p) {
 		*p = *p + 1;
 	}
-	x_thread_sleep(rand() % 1000);
+	x_thread_sleep(rand() % 100);
 	x_promise_commit(&prom, 0);
 	return 0;
 }

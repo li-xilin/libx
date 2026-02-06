@@ -1346,7 +1346,7 @@ static void test_utf8(ut_runner *r)
 
 void regex_test_init(ut_suite *s)
 {
-	ut_suite_init(s, "suite1");
+	ut_suite_init(s, "regex.h");
 	ut_suite_add(s, retcode);
 	ut_suite_add(s, fetch);
 	ut_suite_add(s, put);
