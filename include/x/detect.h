@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Li hsilin <lihsilyn@gmail.com>
+ * Copyright (c) 2021,2022,2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -312,6 +312,8 @@
 /* RVCT compiler also defines __EDG__ and __GNUC__ , so check for it before that */
 #elif defined(__ARMCC__) || defined(__CC_ARM)
 #  define X_CC_RVCT
+#elif defined(__IBMC__)
+#  define X_CC_IBM
 #elif defined(__GNUC__)
 #  define X_CC_GNU
 #  if defined(__MINGW32__)
@@ -410,6 +412,17 @@
 #  endif
 #endif
 
+#if defined(__STDC_VERSION__)
+#  define X_C_VERSION __STDC_VERSION__
+#else
+#  define X_C_VERSION 0
+#endif
 
+#if defined(__cplusplus)
+#  define X_CPP_VERSION __cplusplus
+#else
+#  define X_CPP_VERSION 0
+#endif
 
 #endif
+
