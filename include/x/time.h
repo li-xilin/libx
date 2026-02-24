@@ -30,6 +30,7 @@
 #else
 #include <sys/time.h>
 #endif
+#include <stdint.h>
 
 #define x_time_diff(tv1, tv2, tv_out) \
 	do { \
@@ -75,6 +76,8 @@
 	((t1).tv_sec < (t2).tv_sec || ((t1).tv_sec == (t2).tv_sec && (t1).tv_usec < (t2).tv_usec))
 
 int x_time_now(struct timeval *tv);
+int x_time_from_iso8601(const char *datetime, struct timeval *tv);
+uint64_t x_time_tick(void);
 
 #endif
 

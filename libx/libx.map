@@ -460,7 +460,9 @@ global:
 	x_thread_sleep;
 	x_thread_testcancel;
 	x_thread_yield;
+	x_time_from_iso8601;
 	x_time_now;
+	x_time_tick;
 	x_tpool_add_work;
 	x_tpool_destroy;
 	x_tpool_init;
