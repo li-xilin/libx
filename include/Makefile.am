@@ -1,6 +1,7 @@
 xincludedir = $(includedir)/x
 xinclude_HEADERS = \
 	x/version.h \
+	x/compiler.h \
 	x/assert.h \
 	x/base64.h \
 	x/bitmap.h \
