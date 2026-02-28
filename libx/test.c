@@ -324,11 +324,11 @@ void __ut_assert_mem_equal(ut_runner *r, const void *ex, size_t exsize, const vo
 	size_t right = index + x_min(exsize - (index + 1), 16 + 1);
 	
 	x_memtohex(exp + left, index - left, ex_buf);
-	sprintf(ex_buf + (index - left) * 2, "[%hhX]", exp[index]);
+	sprintf(ex_buf + (index - left) * 2, "[%02X]", (unsigned int)exp[index]);
 	x_memtohex(exp + index + 1, right - index, ex_buf + (index - left) * 2 + 4);
 
 	x_memtohex(acp + left, index - left, ac_buf);
-	sprintf(ac_buf + (index - left) * 2, "[%hhX]", acp[index]);
+	sprintf(ac_buf + (index - left) * 2, "[%02X]", (unsigned int)acp[index]);
 	x_memtohex(acp + index + 1, right - index, ac_buf + (index - left) * 2 + 4);
 
 	__ut_fail(r, file, line, "test failed: at offset +%d\n"
