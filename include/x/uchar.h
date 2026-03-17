@@ -128,6 +128,7 @@ int x_umain(x_umain_fn *umain, int argc, char *argv[]);
 static inline x_uchar *__x_uconv(int char_size, const void *s, wchar_t test)
 {
 	x_static_assert(char_size == 1 || char_size == 2);
+	(void)test;
 	switch (char_size) {
 		case 1: return x_utss_utf8((char *)s);
 		case 2: return x_utss_utf16((wchar_t *)s);
