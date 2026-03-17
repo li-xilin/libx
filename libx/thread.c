@@ -102,7 +102,7 @@ x_thread *x_thread_self(void)
 	return  x_tss_get(&s_thread_ptr);
 }
 
-static int init_thread_info(struct thread_info *info)
+static int commit_thread_info(struct thread_info *info)
 {
 	x_mutex_lock(&info->mutex);
 	if (x_tss_set(&s_thread_ptr, info->thread))
@@ -131,13 +131,14 @@ static DWORD WINAPI __x_thread_proc(void *arg)
 {
 	struct thread_info *info = arg;
 	x_thread *thread = info->thread;
-	if (init_thread_info(info))
+	x_thread_fn *entry = info->func;
+	if (commit_thread_info(info))
 		return 0;
-	DWORD dwRetCode = setjmp(info->thread->jmp_exit);
+	DWORD dwRetCode = setjmp(thread->jmp_exit);
 	BOOL bIsJump = FALSE;
 	if (!bIsJump && dwRetCode == 0) {
 		bIsJump = TRUE;
-		dwRetCode = info->func();
+		dwRetCode = entry();
 	}
 	void __x_tss_free_all_win32(void);
 	__x_tss_free_all_win32();
@@ -154,17 +155,18 @@ static void * __x_thread_proc(void *arg)
 {
 	struct thread_info *info = arg;
 	x_thread *thread = info->thread;
-	if (init_thread_info(info))
+	x_thread_fn *entry = info->func;
+	if (commit_thread_info(info))
 		return NULL;
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 	bool is_jmp = false;
 	int retval;
 	pthread_cleanup_push(thread_exit_unexpected, thread);
-	retval = setjmp(info->thread->jmp_exit);;
+	retval = setjmp(thread->jmp_exit);
 	if (!is_jmp && retval == 0) {
 		is_jmp = true;
-		retval = info->func();
+		retval = entry();
 	}
 	pthread_cleanup_pop(0);
 	free_thread(thread);
