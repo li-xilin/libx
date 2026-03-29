@@ -71,6 +71,18 @@ void x_sock_exit(void)
 #endif
 }
 
+int x_sock_send_reset(x_sock sockfd)
+{
+    struct linger lin;
+    lin.l_onoff = 1;
+    lin.l_linger = 0;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_LINGER, (char *)&lin, sizeof(lin))) {
+		x_eval_errno();
+		return -1;
+	}
+	return 0;
+}
+
 int x_sock_close(x_sock fd) {
 	if (fd == X_BADSOCK)
 		return 0;
@@ -82,10 +94,10 @@ int x_sock_close(x_sock fd) {
 }
 
 
-int x_sock_set_nonblocking(x_sock fd)
+int x_sock_set_nonblocking(x_sock fd, bool enable)
 {
 #ifdef X_OS_WIN32
-	ULONG nonBlock = 1;
+	ULONG nonBlock = enable;
 	if (ioctlsocket(fd, FIONBIO, &nonBlock)) {
 		x_perror("failed on ioctlsocket");
 		return (-1);
@@ -99,7 +111,7 @@ int x_sock_set_nonblocking(x_sock fd)
 		return (-1);
 	}
 
-	opts |= O_NONBLOCK;
+	opts = enable ? (opts | O_NONBLOCK) : (opts & ~O_NONBLOCK);
 	if (fcntl(fd, F_SETFL, opts) < 0) {
 		x_perror("failed on fcntl after: %s", strerror(errno));
 		return (-1);
