@@ -84,7 +84,7 @@ static void on_sock2_event(x_evsocket *ev)
 			fprintf(stderr, "\nsocket %d closed\n", (int)evsock2.sock);
 		x_sock_close(evsock2.sock);
 		have_client = false;
-		x_reactor_remove(&r, &evsock2.base);
+		x_reactor_remove(&evsock2.base);
 	}
 }
 

@@ -33,7 +33,7 @@ struct x_sockmux_ops_st {
 	x_sockmux *(*m_create)(void);
 	int (*m_add)(x_sockmux *mux, x_sock fd, short flags);
 	int (*m_mod)(x_sockmux *mux, x_sock fd, short flags);
-	void (*m_del)(x_sockmux *mux, x_sock fd, short flags);
+	int (*m_del)(x_sockmux *mux, x_sock fd);
 	int (*m_poll)(x_sockmux *mux, struct timeval * timeout);
 	void (*m_free)(x_sockmux *mux);
 	x_sock (*m_next)(x_sockmux *mux, short *res_flags);

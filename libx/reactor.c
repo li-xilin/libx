@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,7 @@
 
 static void ioevent_reset(x_reactor *r);
 static void ioevent_set(x_reactor *r);
+static int reactor_add_event(x_reactor *r, x_event *e);
 
 static void reset_all_timer(x_reactor *r, struct timeval *now)
 {
@@ -164,7 +165,7 @@ int x_reactor_init(x_reactor *r)
 	x_list_init(&r->obj_list);
 	x_heap_init(&r->timer_heap, timer_ordered);
 	x_evsocket_init(&r->io_event, pair[0], X_EV_READ, NULL);
-	x_reactor_add(r, &r->io_event.base);
+	reactor_add_event(r, &r->io_event.base);
 	r->breaking = false;
 	r->io_pipe1 = pair[1];
 	return 0;
@@ -184,7 +185,7 @@ static void reactor_clean_events(x_reactor *r)
 	for (int i = 0; i < r->sock_ht.slot_cnt; i++) {
 		x_list_popeach(cur, &r->sock_ht.table[i]) {
 			e = x_container_of(cur, x_evsocket, hash_link);
-			r->mux_ops->m_del(r->mux, e->sock, e->base.ev_flags);
+			r->mux_ops->m_del(r->mux, e->sock);
 		}
 	}
 	x_heap_free(&r->timer_heap);
@@ -195,7 +196,7 @@ void x_reactor_clear(x_reactor *r)
 {
 	x_mutex_lock(&r->lock);
 	reactor_clean_events(r);
-	x_reactor_add(r, &r->io_event.base);
+	reactor_add_event(r, &r->io_event.base);
 	x_mutex_unlock(&r->lock);
 }
 
@@ -209,7 +210,7 @@ void x_reactor_free(x_reactor *r)
 	x_hmap_free(&r->sock_ht);
 }
 
-int x_reactor_add(x_reactor *r, x_event *e)
+static int reactor_add_event(x_reactor *r, x_event *e)
 {
 	int retval = -1;
 	assert(r != NULL && e != NULL);
@@ -220,14 +221,15 @@ int x_reactor_add(x_reactor *r, x_event *e)
 	x_evsocket *esock = x_container_of(e, x_evsocket, base);
 	x_evobject *eobj = x_container_of(e, x_evobject, base);
 	x_evtimer *etimer = x_container_of(e, x_evtimer, base);
-	x_mutex_lock(&r->lock);
 	switch (e->type) {
 		case X_EVENT_TIMER:
-			 x_time_now(&etimer->expiration);
-			 x_time_forward(etimer->expiration, etimer->interval);
+			e->ev_flags = e->ev_flags & (X_EV_ACCURATE | X_EV_ONCE);
+			x_time_now(&etimer->expiration);
+			x_time_forward(etimer->expiration, etimer->interval);
 			x_heap_push(&r->timer_heap, &etimer->node);
 			break;
 		case X_EVENT_SOCKET:
+			e->ev_flags = e->ev_flags & (X_EV_READ | X_EV_WRITE);
 			if (x_hmap_find_or_insert(&r->sock_ht, &esock->hash_link)) {
 				errno = X_EEXIST;
 				goto out;
@@ -238,6 +240,7 @@ int x_reactor_add(x_reactor *r, x_event *e)
 			}
 			break;
 		case X_EVENT_OBJECT:
+			e->ev_flags = e->ev_flags & (X_EV_READ | X_EV_WRITE);
 			x_list_add_back(&r->obj_list, &eobj->link);
 			break;
 		default:
@@ -249,6 +252,13 @@ int x_reactor_add(x_reactor *r, x_event *e)
 	ioevent_set(r);
 	retval = 0;
 out:
+	return retval;
+}
+
+int x_reactor_add(x_reactor *r, x_event *e)
+{
+	x_mutex_lock(&r->lock);
+	int retval = reactor_add_event(r, e);
 	x_mutex_unlock(&r->lock);
 	return retval;
 }
@@ -268,6 +278,8 @@ int x_reactor_modify(x_event *e)
 	switch (e->type) {
 		case X_EVENT_TIMER:
 			x_heap_remove(&r->timer_heap, &etimer->node);
+			x_time_now(&etimer->expiration);
+			x_time_forward(etimer->expiration, etimer->interval);
 			x_heap_push(&r->timer_heap, &etimer->node);
 			break;
 		case X_EVENT_SOCKET:
@@ -289,16 +301,21 @@ out:
 
 void x_reactor_pend(x_reactor *r, x_event *e, short res_flags)
 {
+	x_mutex_lock(&r->lock);
 	assert(r != NULL && e != NULL);
 	assert(e->ev_flags & X_EV_REACTING);
 	e->res_flags = res_flags;
+	if (e->pending_link.next)
+		x_list_del(&e->pending_link);
 	x_list_add_back(&r->pending_list, &e->pending_link);
+	x_mutex_unlock(&r->lock);
 }
 
-void x_reactor_remove(x_reactor *r, x_event *e)
+void x_reactor_remove(x_event *e)
 {
-	assert(r != NULL && e != NULL);
+	assert(e != NULL);
 	assert(e->ev_flags & X_EV_REACTING);
+	x_reactor *r = e->reactor;
 	x_evsocket *esock = x_container_of(e, x_evsocket, base);
 	x_evobject *eobj = x_container_of(e, x_evobject, base);
 	x_evtimer *etimer = x_container_of(e, x_evtimer, base);
@@ -308,10 +325,8 @@ void x_reactor_remove(x_reactor *r, x_event *e)
 			x_heap_remove(&r->timer_heap, &etimer->node);
 			break;
 		case X_EVENT_SOCKET:
-			if (x_hmap_find_and_remove(&r->sock_ht, &esock->hash_link)) {
-				r->mux_ops->m_del(r->mux, esock->sock, e->ev_flags);
-				goto out;
-			}
+			(void)r->mux_ops->m_del(r->mux, esock->sock);
+			x_hmap_remove(&r->sock_ht, &esock->hash_link);
 			break;
 		case X_EVENT_OBJECT:
 			x_list_del(&eobj->link);
@@ -320,6 +335,8 @@ void x_reactor_remove(x_reactor *r, x_event *e)
 			errno = X_EINVAL;
 			goto out;
 	}
+	if (e->pending_link.next)
+		x_list_del(&e->pending_link);
 	e->reactor = NULL;
 	e->ev_flags &= ~X_EV_REACTING;
 	ioevent_set(r);
@@ -388,7 +405,6 @@ out:
 	return npendings;
 }
 
-
 void x_reactor_signal(x_reactor *r)
 {
 	assert(r != NULL);
@@ -397,11 +413,12 @@ void x_reactor_signal(x_reactor *r)
 
 x_event *x_reactor_pop_event(x_reactor *r)
 {
-	if (x_list_is_empty(&r->pending_list))
-		return NULL;
-	x_event *e = x_container_of(x_list_first(&r->pending_list), x_event, pending_link);
-	x_list_del(&e->pending_link);
-	return e;
+	while (!x_list_is_empty(&r->pending_list)) {
+		x_event *e = x_container_of(x_list_first(&r->pending_list), x_event, pending_link);
+		x_list_del(&e->pending_link);
+		if (e->ev_flags & X_EV_REACTING)
+			return e;
+	}
+	return NULL;
 }
-
 

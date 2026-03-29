@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,14 +94,12 @@ static x_link *hmap_locate(x_hmap *ht, const x_link *link, size_t *slot)
 x_link *x_hmap_find(x_hmap *ht, const x_link *link)
 {
 	size_t slot;
-	assert(link->prev == NULL && link->prev == NULL);
 	return hmap_locate(ht, link, &slot);
 }
 
 x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *link)
 {
 	size_t slot;
-	assert(link->prev == NULL && link->prev == NULL);
 	x_link *result = hmap_locate(ht, link, &slot);
 	if (result)
 		return result;
@@ -117,7 +115,6 @@ x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *link)
 x_link *x_hmap_replace_or_insert(x_hmap *ht, x_link *link)
 {
 	size_t slot;
-	assert(link->prev == NULL && link->prev == NULL);
 	x_link *result = hmap_locate(ht, link, &slot);
 	if (result) {
 		x_list_replace(result, link);
@@ -153,4 +150,5 @@ void x_hmap_free(x_hmap * ht)
 {
 	x_free(ht->table);
 }
+
 

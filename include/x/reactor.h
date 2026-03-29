@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,7 +55,8 @@ void x_reactor_clear(x_reactor *r);
 void x_reactor_free(x_reactor *r);
 int x_reactor_add(x_reactor *r, x_event *e);
 void x_reactor_pend(x_reactor *r, x_event *e, short res_flags);
-void x_reactor_remove(x_reactor *r, x_event *e);
+void x_reactor_remove(x_event *e);
+int x_reactor_modify(x_event *e);
 int x_reactor_wait(x_reactor *r);
 void x_reactor_signal(x_reactor *r);
 void x_reactor_break(x_reactor *r);

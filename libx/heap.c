@@ -96,6 +96,13 @@ static void heap_shrink(x_heap* h)
 	}
 }
 
+static void sanitize(x_heap* h)
+{
+	for (int i = 0; i < h->entry_cnt; i++) {
+		assert(h->table[i]->index == i);
+	}
+}
+
 x_ranode * x_heap_pop(x_heap* h)
 {
 	if (!h->entry_cnt)
@@ -107,8 +114,9 @@ x_ranode * x_heap_pop(x_heap* h)
 	x_ranode **current = h->table + current_index;
 	int entries = h->entry_cnt;
 	if (h->entry_cnt > 0) {
+		h->table[entries]->index = (*current)->index;
 		*current = h->table[entries];
-		(*current)->index = entries;
+		sanitize(h);
 		x_ranode **left_child, **right_child;
 		int left_child_index;
 		while (left_child_index = LEFT_CHILD(current_index), left_child_index < entries) {
@@ -121,6 +129,7 @@ x_ranode * x_heap_pop(x_heap* h)
 						x_swap(*current, *left_child, x_ranode);
 						current_index = left_child_index;
 						current = left_child;
+						sanitize(h);
 					}
 					else
 						break;
@@ -131,6 +140,7 @@ x_ranode * x_heap_pop(x_heap* h)
 						x_swap(*current, *right_child, x_ranode);
 						current_index = left_child_index+1;
 						current = right_child;
+						sanitize(h);
 					}
 					else
 						break;
@@ -141,12 +151,15 @@ x_ranode * x_heap_pop(x_heap* h)
 				x_swap(*current, *left_child, x_ranode);
 				current_index = left_child_index;
 				current = left_child;
+				sanitize(h);
 			}
 			else
 				break;
 		}
 	}
+	sanitize(h);
 	heap_shrink(h);
+	sanitize(h);
 	return top_value;
 }
 
@@ -156,37 +169,39 @@ void x_heap_remove(x_heap *h, x_ranode *n)
 	assert(n != NULL);
 	assert(n->index < h->entry_cnt);
 	h->entry_cnt--;
-    if (n->index == h->entry_cnt) {
+	if (n->index == h->entry_cnt) {
 		n->index = SIZE_MAX;
 		return;
 	}
 	h->table[h->entry_cnt]->index = n->index;
 	h->table[n->index] = h->table[h->entry_cnt];
-    size_t current_idx = n->index;
-    while (current_idx > 0) {
-        size_t parent_idx = PARENT_ENTRY(current_idx);
+	size_t current_idx = n->index;
+	while (current_idx > 0) {
+		size_t parent_idx = PARENT_ENTRY(current_idx);
 		if (!h->cmp(h->table[current_idx], h->table[parent_idx]))
 			break;
 		x_swap(h->table + current_idx, h->table + parent_idx, x_ranode *);
 		x_swap(h->table[current_idx], h->table[parent_idx], x_ranode);
 		current_idx = parent_idx;
-    }
-    while (1) {
-        size_t left = LEFT_CHILD(current_idx);
-        size_t right = right = left + 1;
-        size_t best = current_idx;
+	}
+	while (1) {
+		size_t left = LEFT_CHILD(current_idx);
+		size_t right = right = left + 1;
+		size_t best = current_idx;
 
-        if (left < h->entry_cnt && h->cmp(h->table[left], h->table[best]))
-            best = left;
-        if (right < h->entry_cnt && h->cmp(h->table[right], h->table[best]))
-            best = right;
+		if (left < h->entry_cnt && h->cmp(h->table[left], h->table[best]))
+			best = left;
+		if (right < h->entry_cnt && h->cmp(h->table[right], h->table[best]))
+			best = right;
 
-        if (best == current_idx)
-            break;
+		if (best == current_idx)
+			break;
 		x_swap(h->table + current_idx, h->table + best, x_ranode *);
 		x_swap(h->table[current_idx], h->table[best], x_ranode);
 		current_idx = best;
-    }
+	}
+	sanitize(h);
 	heap_shrink(h);
+	sanitize(h);
 }
 

@@ -119,27 +119,35 @@ static int epoll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 	return 0;
 }
 
-static void epoll_mux_del(x_sockmux *mux, x_sock fd, short flags)
+static int epoll_mux_del(x_sockmux *mux, x_sock fd)
 {
 	assert(mux != NULL);
-	struct epoll_event e;
-	e.data.fd = fd;
-	e.events = epoll_setup_mask(flags);
-	(void)epoll_ctl(mux->epoll_fd, EPOLL_CTL_DEL, fd, &e);
-	--mux->n_events;
+	struct epoll_event e; // must be specified before linux 2.6.9
+	if (epoll_ctl(mux->epoll_fd, EPOLL_CTL_DEL, fd, &e)) {
+		x_eval_errno();
+		return -1;
+	}
+	mux->n_events--;
+	mux->iterator = 0;
+	return 0;
 }
 
 static int epoll_mux_poll(x_sockmux *mux, struct timeval * timeout)
 {
+	int nreadys;
 	assert(mux != NULL);
 	mux->iterator = 0;
 	mux->nreadys = 0;
-	int nreadys = epoll_wait(mux->epoll_fd, mux->events, mux->n_events,
+redo:
+	nreadys = epoll_wait(mux->epoll_fd, mux->events, mux->n_events,
 			timeout ? timeout->tv_sec * 1000 + timeout->tv_usec / 1000 : -1 );
 	if (nreadys > 0)
 		mux->nreadys = nreadys;
-	else if (nreadys < 0)
+	else if (nreadys < 0) {
 		x_eval_errno();
+		if (errno == X_EINTR)
+			goto redo;
+	}
 	return nreadys;
 }
 
