@@ -26,8 +26,10 @@
 #include "x/mutex.h"
 #include "x/once.h"
 #include <string.h>
+#include <stdio.h>
 
 #define RETRY_INTERVAL 20
+#define DOUBLE_FREE_MAGIC (-(intptr_t)0xCCCC)
 
 static x_once s_mset_once = X_ONCE_INIT;
 static x_mset s_mset = {
@@ -148,9 +150,14 @@ void x_free(void *ptr)
 		return;
 	x_mblock *b = x_container_of(ptr, x_mblock, data);
 	assert(b->mset);
+	if ((uintptr_t)b->mset == DOUBLE_FREE_MAGIC) {
+		fprintf(stderr, "memory 0x%p maybe double freed", ptr);
+		return;
+	}
 	x_mutex_lock(&b->mset->lock);
 	x_list_del(&b->link);
 	x_mutex_unlock(&b->mset->lock);
+	b->mset = (void *)DOUBLE_FREE_MAGIC;
 	free(b);
 }
 
