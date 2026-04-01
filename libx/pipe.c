@@ -61,25 +61,30 @@ size_t x_pipe_read(x_pipe *pipe, void *buf, size_t size)
 	return read_size;
 }
 
-void *x_pipe_change_buffer(x_pipe *pipe, void *buf, size_t size)
+void x_pipe_resize(x_pipe *pipe, size_t size)
 {
 	assert(pipe);
-	assert(buf);
 	assert(size > 1);
-	if (x_pipe_data_size(pipe) < size - 1) {
-		errno = EINVAL;
-		return NULL;
+	assert(x_pipe_data_size(pipe) < size - 1);
+	if (pipe->front > pipe->rear) {
+		long shift = (long)size - (long)pipe->size;
+		memmove(pipe->buf + pipe->front + shift, pipe->buf + pipe->front, pipe->size - pipe->front);
+		pipe->front += shift;
 	}
-	if (pipe->front <= pipe->rear)
-		memcpy(buf, pipe->buf + pipe->front, pipe->rear - pipe->front);
-	else {
-		memcpy(buf, pipe->buf + pipe->front, pipe->size - pipe->front);
-		memcpy((uint8_t *)buf + pipe->size - pipe->front, pipe->buf , pipe->rear);
+	else if (pipe->rear > size - 1) {
+		memmove(pipe->buf, pipe->buf + pipe->front, pipe->rear - pipe->front);
+		pipe->rear -= pipe->front;
+		pipe->front = 0;
 	}
+	pipe->size = size;
+}
+
+void *x_pipe_change_buffer(x_pipe *pipe, void *buf, size_t size)
+{
+	void *orig_buf = pipe->buf;
 	pipe->buf = buf;
-	pipe->rear = x_pipe_data_size(pipe);
-	pipe->front = 0;
-	return pipe->buf;
+	x_pipe_resize(pipe, size);
+	return orig_buf;
 }
 
 size_t x_pipe_drain(x_pipe *pipe, size_t size, x_pipe_drain_f cb, void *arg)

@@ -33,6 +33,8 @@ struct x_pipe_st
 	uint8_t *buf;
 };
 
+#define X_PIPE_INIT(buf, size) { .size = (size), .front = 0, .rear = 0, .buf = (uint8_t *)(buf) }
+
 typedef void x_pipe_drain_f(void *data, size_t size, void *arg);
 
 inline static void x_pipe_init(x_pipe *b, void *buf, size_t size)
@@ -110,17 +112,12 @@ inline static void x_pipe_clear(x_pipe *b)
 }
 
 size_t x_pipe_write(x_pipe *b, void *p, size_t size);
-
 size_t x_pipe_pour(x_pipe *src, x_pipe *dst, size_t size);
-
 size_t x_pipe_peek(x_pipe *b, void *buf, size_t start, size_t size);
-
 size_t x_pipe_read(x_pipe *b, void *buf, size_t size);
-
-void *x_pipe_change_buffer(x_pipe *b, void *buf, size_t size);
-
+void x_pipe_resize(x_pipe *pipe, size_t size);
+void *x_pipe_change_buffer(x_pipe *pipe, void *buf, size_t size);
 size_t x_pipe_drain(x_pipe *b, size_t size, x_pipe_drain_f *cb, void *arg);
-
 void *x_pipe_pullup(x_pipe *b);
 
 inline static void x_pipe_refront(x_pipe *b)

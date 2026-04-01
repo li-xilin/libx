@@ -321,6 +321,7 @@ global:
 	x_pipe_pour;
 	x_pipe_pullup;
 	x_pipe_read;
+	x_pipe_resize;
 	x_pipe_write;
 	x_printf;
 	x_proc_close;
