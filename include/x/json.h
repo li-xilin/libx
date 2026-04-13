@@ -172,12 +172,13 @@ x_json* x_json_object_add_raw(x_json *const object, const char *const name, cons
 x_json* x_json_object_add_object(x_json *const object, const char *const name);
 x_json* x_json_object_add_array(x_json *const object, const char *const name);
 
-/* Macro for iterating over an array or object */
-#define x_json_array_foreach(element, array) \
-	for(element = (array != NULL) ? (array)->value.child : NULL; element != NULL; element = element->next)
+#define x_json_foreach(element, object) \
+	for (x_json *element = (object != NULL) ? (object)->value.child : NULL; element != NULL; element = element->next)
 
 #define x_json_object_foreach(element, object) \
-	for(element = (object != NULL) ? (object)->value.child : NULL; element != NULL; element = element->next)
+	for (element = (object != NULL) ? (object)->value.child : NULL; element != NULL; element = element->next)
+
+#define x_json_array_foreach(element, array) x_json_object_foreach(element, array)
 
 #ifdef __cplusplus
 }
