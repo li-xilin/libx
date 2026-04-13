@@ -158,9 +158,9 @@ inline static x_link *x_list_second(const x_list *list)
 }
 
 #define x_list_foreach(pos, list) \
-	for (x_link (*pos) = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
+	for (x_link *pos = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
 
 #define x_list_popeach(pos, list) \
-	for (x_link *(pos), __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
+	for (x_link *pos, __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
 
 #endif
