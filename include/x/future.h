@@ -39,7 +39,6 @@ struct x_fupool_st
 	x_mutex lock;
 	x_splay fut_set;
 	uint16_t last_id;
-	uint16_t xxx;
 };
 
 #define X_FUTURE_NULL 0
@@ -52,6 +51,11 @@ struct x_future_value_st
 	void *data;
 	int32_t retcode;
 	uint32_t status;
+};
+
+struct x_fuset_st
+{
+	x_list list;
 };
 
 struct x_future_st
@@ -72,11 +76,14 @@ struct x_promise_st
 
 void x_fupool_init(x_fupool *fup);
 void x_fupool_free(x_fupool *fup);
+void x_fuset_init(x_fuset *set);
+void x_fuset_add_many(x_fuset *set, x_future **fut, size_t n);
+void x_fuset_add(x_fuset *set, x_future *fut);
 uint16_t x_future_init(x_future *fut, x_fupool *fup, void *value);
 bool x_future_is_ready(x_future *fut);
 int x_future_wait(x_future *fut, int msec);
-int x_future_wait_any(x_future **fut, size_t cnt, int msec);
-int x_future_wait_all(x_future **fut, size_t cnt, int msec);
+x_future *x_fuset_wait_any(x_fuset *set, int msec);
+int x_fuset_wait_all(x_fuset *set, int msec);
 void x_future_free(x_future *fut);
 void *x_promise_start(x_promise *prom, x_fupool *fup, uint16_t seq);
 void x_promise_commit(x_promise *prom, int retcode);

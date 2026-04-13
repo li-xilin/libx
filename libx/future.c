@@ -24,10 +24,15 @@
 #include "x/errno.h"
 #include "x/list.h"
 #include "x/macros.h"
+#include "x/time.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 #define SEQ_ALIGN 0x10000
+
+#define CHECK_FUTURE(fut) assert((fut)->value.status == X_FUTURE_PENDING \
+		|| (fut)->value.status == X_FUTURE_READY \
+		|| (fut)->value.status == X_FUTURE_BUSY)
 
 static int future_cmp(const x_btnode *n1, const x_btnode *n2)
 {
@@ -59,7 +64,7 @@ void x_fupool_free(x_fupool *fup)
 	x_cond_destroy(&fup->seq_cond);
 }
 
-static int alloc_freed_seq(x_fupool *fup)
+static int alloc_freed_seq(x_fupool *fup, uint16_t *seq)
 {
 	int freed_bit, start_bit = x_cyclic_inc(fup->last_id, SEQ_ALIGN);
 	freed_bit = x_bitmap_find(&fup->id_map, 0, start_bit, SEQ_ALIGN - start_bit);
@@ -67,24 +72,25 @@ static int alloc_freed_seq(x_fupool *fup)
 		goto found;
 	freed_bit = x_bitmap_find(&fup->id_map, 0, 0, fup->last_id);
 	if (freed_bit == -1)
-		return freed_bit;
+		return -1;
 found:
+	*seq = freed_bit;
 	x_bitmap_set(&fup->id_map, freed_bit, 1);
 	fup->last_id = freed_bit;
-	return freed_bit;
+	return 0;
 }
 
 static void free_seq(x_fupool *fup, uint16_t seq)
 {
-	x_bitmap_set(&fup->id_map, seq, 1);
+	x_bitmap_set(&fup->id_map, seq, 0);
 	x_cond_wake_all(&fup->seq_cond);
 }
 
 uint16_t x_fupool_alloc_seq(x_fupool *fup)
 {
-	int freed_seq;
+	uint16_t freed_seq;
 	x_mutex_lock(&fup->lock);
-	while ((freed_seq = alloc_freed_seq(fup)) == -1)
+	while (alloc_freed_seq(fup, &freed_seq) == -1)
 		x_cond_sleep(&fup->seq_cond, &fup->lock, -1);
 	x_mutex_unlock(&fup->lock);
 	return freed_seq;
@@ -93,21 +99,22 @@ uint16_t x_fupool_alloc_seq(x_fupool *fup)
 void x_fupool_free_seq(x_fupool *fup, uint16_t seq)
 {
 	x_mutex_lock(&fup->lock);
-	free_seq(fup, seq);
+	free_seq(fup, (uint16_t)seq);
 	x_mutex_unlock(&fup->lock);
 }
 
 uint16_t x_future_init(x_future *fut, x_fupool *fup, void *value)
 {
 	memset(&fut->value, 0 , sizeof fut->value);
-	int freed_seq;
+	uint16_t freed_seq;
 	x_mutex_lock(&fup->lock);
-	while ((freed_seq = alloc_freed_seq(fup)) == -1)
+	while (alloc_freed_seq(fup, &freed_seq) == -1)
 		x_cond_sleep(&fup->seq_cond, &fup->lock, -1);
 	fut->fupool = fup;
 	fut->value.status = X_FUTURE_PENDING;
 	fut->value.data = value;
 	fut->seq = freed_seq;
+	fut->link.prev = fut->link.next = NULL;
 	x_splay_find_or_insert(&fup->fut_set, &fut->node);
 	x_mutex_unlock(&fup->lock);
 	return freed_seq;
@@ -115,113 +122,106 @@ uint16_t x_future_init(x_future *fut, x_fupool *fup, void *value)
 
 bool x_future_is_ready(x_future *fut)
 {
+	CHECK_FUTURE(fut);
 	return fut->value.status == X_FUTURE_READY;
 }
 
-static int link_all_fut(x_future **fut_buf, size_t cnt, x_list *list)
+void x_fuset_add_many(x_fuset *set, x_future **fut_buf, size_t n)
 {
-	x_list_init(list);
-	x_fupool *fup = NULL;
-	int total = 0;
-	for (int i = 0; i < cnt; i++) {
-		if (fut_buf[i]->value.status != X_FUTURE_NULL) {
-			if (!fup)
-				fup = fut_buf[i]->fupool;
-			else if (fup != fut_buf[i]->fupool) {
-				errno = X_EINVAL;
-				return -1;
-			}
-			x_list_add_back(list, &fut_buf[i]->link);
-			total++;
+	x_fupool *prev_fup = NULL;
+	if (!x_list_is_empty(&set->list))
+		prev_fup = x_container_of(x_list_last(&set->list), x_future, link)->fupool;
+	for (int i = 0; i < n; i++) {
+		if (!prev_fup)
+			prev_fup = fut_buf[i]->fupool;
+		else {
+			assert(prev_fup == fut_buf[i]->fupool);
 		}
+		assert(!fut_buf[i]->link.prev);
+		x_list_add_back(&set->list, &fut_buf[i]->link);
 	}
-	return total;
 }
 
-int x_future_wait_any(x_future **fut_buf, size_t cnt, int msec)
+void x_fuset_add(x_fuset *set, x_future *fut)
 {
-	int retval = -1;
+	x_fuset_add_many(set, &fut, 1);
+}
+
+ x_future *x_fuset_wait_any(x_fuset *set, int msec)
+{
+	x_future *any = NULL;
 	x_fupool *fup = NULL;
-	x_list fut_list;
-	int size = link_all_fut(fut_buf, cnt, &fut_list);
-	if (size == -1)
-		return -1;
-	if (size == 0)
-		return cnt;
-	fup = x_container_of(x_list_first(&fut_list), x_future, link)->fupool;
+	if (x_list_is_empty(&set->list))
+		return NULL;
+	fup = x_container_of(x_list_first(&set->list), x_future, link)->fupool;
 	x_mutex_lock(&fup->lock);
-	do {
-		for (x_link *cur = fut_list.head.next; cur != &fut_list.head; ) {
+	struct timeval tv1, tv2, diff;
+	x_time_now(&tv1);
+	while (1) {
+		x_list_foreach(cur, &set->list) {
 			x_future *fut = x_container_of(cur, x_future, link);
-			if (fut->value.status == X_FUTURE_NULL) {
-				cur = cur->next;
-				x_list_del(&fut->link);
-				if (x_list_is_empty(&fut_list)) {
-					retval = cnt;
-					goto out;
-				}
-				continue;
-			}
+			CHECK_FUTURE(fut);
 			if (fut->value.status == X_FUTURE_READY) {
-				for (int i = 0; i < cnt; i++)
-					if (fut_buf[i] == fut) {
-						retval = i;
-						goto out;
-					}
-				abort();
+				any = fut;
+				goto out;
 			}
-			cur = cur->next;
 		}
 		if (x_cond_sleep(&fup->status_cond, &fup->lock, msec))
 			goto out;
-	} while(1);
+		x_time_now(&tv2);
+		x_time_diff(tv2, tv1, &diff);
+		msec -= x_time_to_msec(diff);
+		tv1 = tv2;
+	}
 out:
 	x_mutex_unlock(&fup->lock);
-	return retval;
+	return any;
 }
 
-int x_future_wait_all(x_future **fut_buf, size_t cnt, int msec)
+int x_fuset_wait_all(x_fuset *set, int msec)
 {
-	int retval = -1, have_ready = 0;
+	int retval = -1;
 	x_fupool *fup = NULL;
-	x_list fut_list;
-	int size = link_all_fut(fut_buf, cnt, &fut_list);
-	if (size == -1)
-		return -1;
-	if (size == 0)
-		return cnt;
-	fup = x_container_of(x_list_first(&fut_list), x_future, link)->fupool;
+	if (x_list_is_empty(&set->list))
+		return 0;
+	fup = x_container_of(x_list_first(&set->list), x_future, link)->fupool;
 	x_mutex_lock(&fup->lock);
-	x_link *cur;
-	do {
-		for (cur = fut_list.head.next; cur != &fut_list.head; ) {
+	struct timeval tv1, tv2, diff;
+	x_time_now(&tv1);
+	while (1) {
+		x_list_foreach(cur, &set->list) {
 			x_future *fut = x_container_of(cur, x_future, link);
-			if (fut->value.status == X_FUTURE_NULL || fut->value.status == X_FUTURE_READY) {
-				if (fut->value.status == X_FUTURE_READY)
-					have_ready = 1;
-				cur = cur->next;
-				x_list_del(&fut->link);
+			CHECK_FUTURE(fut);
+			if (fut->value.status != X_FUTURE_READY) {
+				x_cond_sleep(&fup->status_cond, &fup->lock, msec);
+				x_time_now(&tv2);
+				x_time_diff(tv2, tv1, &diff);
+				msec -= x_time_to_msec(diff);
+				if (msec <= 0)
+					goto out;
+				tv1 = tv2;
 				continue;
 			}
-			if (fut->value.status == X_FUTURE_PENDING || fut->value.status == X_FUTURE_BUSY) {
-				if (x_cond_sleep(&fup->status_cond, &fup->lock, msec))
-					goto out;
-				break;
-			}
-			cur = cur->next;
 		}
-	} while (cur != fut_list.head.prev);
-
-	retval = have_ready ? 0 : cnt;
+		break;
+	}
+	retval = 0;
 out:
 	x_mutex_unlock(&fup->lock);
 	return retval;
 }
 
+void x_fuset_init(x_fuset *set)
+{
+	x_list_init(&set->list);
+}
 
 int x_future_wait(x_future *fut, int msec)
 {
-	return x_future_wait_any(&fut, 1, msec);
+	x_fuset set;
+	x_fuset_init(&set);
+	x_fuset_add(&set, fut);
+	return x_fuset_wait_all(&set, msec);
 }
 
 void x_future_free(x_future *fut)
@@ -229,13 +229,16 @@ void x_future_free(x_future *fut)
 	if (!fut->fupool)
 		return;
 	x_mutex_lock(&fut->fupool->lock);
-	while (fut->value.status == X_FUTURE_BUSY)
+	while (fut->value.status == X_FUTURE_BUSY) {
 		x_cond_sleep(&fut->fupool->status_cond, &fut->fupool->lock, -1);
-	free_seq(fut->fupool, fut->seq);
+	}
 	x_splay_remove(&fut->fupool->fut_set, &fut->node);
-	x_cond_wake_all(&fut->fupool->status_cond);
+	if (fut->value.status == X_FUTURE_PENDING)
+		free_seq(fut->fupool, fut->seq);
 	fut->value.status = X_FUTURE_NULL;
 	x_mutex_unlock(&fut->fupool->lock);
+	if (fut->link.prev)
+		x_list_del(&fut->link);
 	fut->fupool = NULL;
 }
 
@@ -243,8 +246,8 @@ void *x_promise_start(x_promise *prom, x_fupool *fup, uint16_t seq)
 {
 	void *data = NULL;
 	x_mutex_lock(&fup->lock);
-	x_future pattern = { .seq = seq };
-	x_btnode *matched_node = x_splay_find(&fup->fut_set, &pattern.node);
+	x_future pat = { .seq = seq };
+	x_btnode *matched_node = x_splay_find(&fup->fut_set, &pat.node);
 	prom->fupool = fup;
 	prom->seq = seq;
 	if (!matched_node) {
@@ -252,10 +255,8 @@ void *x_promise_start(x_promise *prom, x_fupool *fup, uint16_t seq)
 		goto out;
 	}
 	x_future *fut = x_container_of(matched_node, x_future, node);
-	if (fut->value.status != X_FUTURE_PENDING) {
-		prom->value = NULL;
-		goto out;
-	}
+	if (fut->value.status != X_FUTURE_PENDING)
+		abort();
 	prom->value = &fut->value;
 	fut->value.status = X_FUTURE_BUSY;
 	x_cond_wake_all(&prom->fupool->status_cond);
@@ -267,16 +268,16 @@ out:
 
 void x_promise_commit(x_promise *prom, int retcode)
 {
-	if (!prom->value) {
-		free_seq(prom->fupool, prom->seq);
-		goto out;
-	}
 	x_mutex_lock(&prom->fupool->lock);
+	if (!prom->value)
+		goto out;
+	assert(prom->value->status == X_FUTURE_BUSY);
 	prom->value->retcode = retcode;
 	prom->value->status = X_FUTURE_READY;
 	x_cond_wake_all(&prom->fupool->status_cond);
-	x_mutex_unlock(&prom->fupool->lock);
+	free_seq(prom->fupool, prom->seq);
 out:
+	x_mutex_unlock(&prom->fupool->lock);
 	prom->fupool = NULL;
 	prom->seq = 0;
 	prom->value = NULL;

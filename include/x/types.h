@@ -281,6 +281,11 @@ typedef struct x_recatch_st x_recatch;
 typedef struct x_future_st x_future;
 #endif
 
+#ifndef X_FUSET_DEFINED
+#define X_FUSET_DEFINED
+typedef struct x_fuset_st x_fuset;
+#endif
+
 #ifndef X_PROMISE_DEFINED
 #define X_PROMISE_DEFINED
 typedef struct x_promise_st x_promise;
