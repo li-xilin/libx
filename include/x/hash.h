@@ -29,8 +29,8 @@
 uint64_t x_hash64_jenkins(uint64_t key);
 uint64_t x_hash64_jenkins_inv(uint64_t key);
 
-uint32_t x_hash_murmur(const void *key, size_t len, uint32_t seed);
-uint64_t x_hash64_murmur(const void *key, size_t len, uint32_t seed);
+uint32_t x_hash_murmur2(const void *key, size_t len, uint32_t seed);
+uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed);
 uint32_t x_hash_lookup3(const void *data, size_t size, uint32_t seed);
 uint64_t x_hash64_lookup3(const void *data, size_t size, uint64_t seed);
 uint32_t x_hash_crc(const void *data, size_t size, uint32_t initval);
