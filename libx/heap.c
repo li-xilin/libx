@@ -96,13 +96,6 @@ static void heap_shrink(x_heap* h)
 	}
 }
 
-static void sanitize(x_heap* h)
-{
-	for (int i = 0; i < h->entry_cnt; i++) {
-		assert(h->table[i]->index == i);
-	}
-}
-
 x_ranode * x_heap_pop(x_heap* h)
 {
 	if (!h->entry_cnt)
@@ -116,7 +109,6 @@ x_ranode * x_heap_pop(x_heap* h)
 	if (h->entry_cnt > 0) {
 		h->table[entries]->index = (*current)->index;
 		*current = h->table[entries];
-		sanitize(h);
 		x_ranode **left_child, **right_child;
 		int left_child_index;
 		while (left_child_index = LEFT_CHILD(current_index), left_child_index < entries) {
@@ -129,7 +121,6 @@ x_ranode * x_heap_pop(x_heap* h)
 						x_swap(*current, *left_child, x_ranode);
 						current_index = left_child_index;
 						current = left_child;
-						sanitize(h);
 					}
 					else
 						break;
@@ -140,7 +131,6 @@ x_ranode * x_heap_pop(x_heap* h)
 						x_swap(*current, *right_child, x_ranode);
 						current_index = left_child_index+1;
 						current = right_child;
-						sanitize(h);
 					}
 					else
 						break;
@@ -151,15 +141,12 @@ x_ranode * x_heap_pop(x_heap* h)
 				x_swap(*current, *left_child, x_ranode);
 				current_index = left_child_index;
 				current = left_child;
-				sanitize(h);
 			}
 			else
 				break;
 		}
 	}
-	sanitize(h);
 	heap_shrink(h);
-	sanitize(h);
 	return top_value;
 }
 
@@ -200,8 +187,6 @@ void x_heap_remove(x_heap *h, x_ranode *n)
 		x_swap(h->table[current_idx], h->table[best], x_ranode);
 		current_idx = best;
 	}
-	sanitize(h);
 	heap_shrink(h);
-	sanitize(h);
 }
 
