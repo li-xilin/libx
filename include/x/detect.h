@@ -327,7 +327,6 @@
 /* Clang also masquerades as GCC 4.2.1 */
 #    define X_CC_CLANG
 #  endif
-#endif
 #elif defined(__xlC__)
 #  define X_CC_XLC
 #elif defined(__DECCXX) || defined(__DECC)
@@ -351,6 +350,7 @@
 #    define X_CC_USLC
 #  elif defined(CENTERLINE_CLPP) || defined(OBJECTCENTER)
 #    define X_CC_OC
+#  endif
 #elif defined(_DIAB_TOOL)
 #  define X_CC_DIAB
 #elif defined(__HIGHC__)
@@ -372,13 +372,16 @@
 #  error "Unknown compiler"
 #endif
 
+#define xxfoo 1
 /* Detect machine byte-order */
 #ifdef X_OS_WIN
+#define xxbar 1
 #    define X_BYTE_ORDER 1234
 #    define X_BIG_ENDIAN 4321
 #    define X_LITTLE_ENDIAN 1234
 #    define X_PDP_ENDIAN 3412
 #else
+#define xxbaz 1
 #  include <endian.h>
 #  if defined(__BYTE_ORDER__)
 #    define X_BYTE_ORDER __BYTE_ORDER__
