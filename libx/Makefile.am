@@ -38,8 +38,8 @@ if ENABLE_CHARMAP
 libx_la_SOURCES +=  charmap.c charmap_big5.c  charmap_euckr.c  charmap_gbk.c  charmap_sjis.c
 endif
 
-DISTCLEANFILES = Makefile.in
 EXTRA_DIST = libx.map strargv.inc wepoll.h
-dist-hook:
-	$(RM) $(distdir)/Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
+maintainer-clean-local:
+	$(RM) -r .deps .cache
 

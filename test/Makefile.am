@@ -19,7 +19,7 @@ test_SOURCES += test_charmap.c
 AM_CFLAGS += -DTEST_CHARMAP
 endif
 
-DISTCLEANFILES = Makefile.in
-dist-hook:
-	$(RM) $(distdir)/Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
+maintainer-clean-local:
+	$(RM) -r .deps .cache
 

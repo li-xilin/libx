@@ -87,9 +87,5 @@ x/version.h: x/version.h.in $(top_builddir)/config.status
 	                  -e 's|@VERSION_MINOR[@]|$(VERSION_MINOR)|g' \
 	                  -e 's|@VERSION_PATCH[@]|$(VERSION_PATCH)|g' \
 	                  $< > $@
-CLEANFILES = x/version.h
-DISTCLEANFILES = Makefile.in x/version.h
 EXTRA_DIST = x/version.h.in
-
-dist-hook:
-	$(RM) $(distdir)/Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
