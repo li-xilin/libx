@@ -136,6 +136,14 @@ global:
 	x_fwalker_read;
 	x_fwalker_rewind;
 	x_getchar;
+	x_hash64_crc;
+	x_hash64_jenkins;
+	x_hash64_jenkins_inv;
+	x_hash64_lookup3;
+	x_hash64_murmur;
+	x_hash_crc;
+	x_hash_lookup3;
+	x_hash_murmur;
 	x_heap_free;
 	x_heap_init;
 	x_heap_pop;
