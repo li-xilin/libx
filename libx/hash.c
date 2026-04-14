@@ -23,7 +23,6 @@
 #include "x/hash.h"
 #include "x/detect.h"
 #include <stdint.h>
-#include <limits.h>
 #include <stddef.h>
 
 #define x_int32_rotate(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
@@ -108,7 +107,7 @@ uint32_t x_hash_murmur2(const void *key, size_t len, uint32_t seed)
 	return h;
 }
 
-#if __WORDSIZE == 64
+#if X_WORDSIZE == 64
 uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed) {
 	const uint64_t m = 0xc6a4a7935bd1e995;
 	const int r = 47;
@@ -147,7 +146,7 @@ uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed) {
 	return h;
 }
 
-#elif __WORDSIZE == 32
+#elif X_WORDSIZE == 32
 uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed)
 {
 	const uint32_t m = 0x5bd1e995;
@@ -202,7 +201,7 @@ uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed)
 	return h;
 }
 #else
-#error "Unknown __WORDSIZE"
+#error "Unknown X_WORDSIZE"
 #endif
 
 

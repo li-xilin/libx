@@ -427,5 +427,24 @@
 #  define X_CPP_VERSION 0
 #endif
 
+#include <limits.h>
+#if defined(__WORDSIZE)
+#  define X_WORDSIZE __WORDSIZE
+#elif defined(__LP64__)
+#  define X_WORDSIZE 64
+#elif defined(__ILP32__)
+#  define X_WORDSIZE 32
+#elif defined(_WIN64)
+#  define X_WORDSIZE 64
+#elif defined(_WIN32)
+#  define X_WORDSIZE 32
+#elif defined(__INTPTR_WIDTH__)
+#  define X_WORDSIZE __INTPTR_WIDTH__
+#elif defined(__SIZE_WIDTH__)
+#  define X_WORDSIZE __SIZE_WIDTH__
+#else
+#  error "Unknown machine word size"
+#endif
+
 #endif
 
