@@ -37,5 +37,7 @@ int main(void)
 
 	x_ini_pure(d);
 	x_ini_dump(d, stdout);
+	x_ini_free(d);
+	fclose(fp);
 
 }

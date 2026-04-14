@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,14 +47,9 @@ static void free_option(struct x_ini_option_st *opt);
 
 x_ini *x_ini_create(const char *ext_keych)
 {
-	if (ext_keych && strlen(ext_keych) > 14) {
-		errno = ENAMETOOLONG;
-		return NULL;
-	}
-	x_ini *d = malloc(sizeof *d);
-	if (!d)
-		return NULL;
-
+	assert (!ext_keych || strlen(ext_keych) <= 14);
+	x_ini *d = x_malloc(NULL, sizeof *d);
+	x_mset_init(&d->mset);
 	if (ext_keych)
 		strcpy(d->allowed_ch, ext_keych);
 	else
@@ -68,18 +63,8 @@ void x_ini_free(x_ini * d)
 {
 	if (!d)
 		return;
-
-	while (!x_list_is_empty(&d->sec_list)) {
-		struct x_ini_section_st *sec = x_container_of(x_list_first(&d->sec_list), struct x_ini_section_st, link);
-		x_list_del(&sec->link);
-		while (!x_list_is_empty(&sec->opt_list)) {
-			struct x_ini_option_st *opt = x_container_of(x_list_first(&sec->opt_list), struct x_ini_option_st, link);
-			x_list_del(&opt->link);
-			free_option(opt);
-		}
-		free_section(sec);
-	}
-	free(d);
+	x_mset_free(&d->mset);
+	x_free(d);
 }
 
 static struct x_ini_option_st *find_option(struct x_ini_section_st *sec, const char *key)
@@ -122,9 +107,7 @@ static struct x_ini_section_st *find_section_with_len(const x_ini *d, const char
 		sec_name = DEFAULT_SEC_NAME;
 		sec_name_len = strlen(sec_name);
 	}
-
 	size_t sec_hash = x_strnihash(sec_name, sec_name_len);
-
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (sec_hash != sec->hash)
@@ -151,114 +134,85 @@ static void free_section(struct x_ini_section_st *sec)
 {
 	if (!sec)
 		return;
-	free(sec->name);
-	free(sec->comment);
-	free(sec);
+	x_free(sec->name);
+	x_free(sec->comment);
+	x_free(sec);
 }
 
 static void free_option(struct x_ini_option_st *opt)
 {
 	if (opt) {
-		free(opt->key);
-		free(opt->val);
-		free(opt->comment);
-		free(opt);
+		x_free(opt->key);
+		x_free(opt->val);
+		x_free(opt->comment);
+		x_free(opt);
 	}
 }
 
-static struct x_ini_section_st *alloc_section(const char *sec_name, const char *comment)
+static struct x_ini_section_st *alloc_section(x_mset *mset, const char *sec_name, const char *comment)
 {
 	struct x_ini_section_st *sec = NULL;
 
-	if (!(sec = calloc(1, sizeof *sec)))
-		goto fail;
+	sec = x_calloc(mset, 1, sizeof *sec);
 	sec->hash = x_strihash(sec_name);
-	if (!(sec->name = x_strdup(sec_name)))
-		goto fail;
-	
-	if (comment && !(sec->comment = x_strdup(comment)))
-		goto fail;
+	sec->name = x_mcopy(mset, sec_name, strlen(sec_name) + sizeof(char));
+	if (comment)
+		sec->comment = x_mcopy(mset, comment, strlen(comment) + sizeof(char));
 	x_list_init(&sec->opt_list);
 	x_link_init(&sec->link);
 	return sec;
-fail:
-	free_section(sec);
-	return NULL;
 }
 
-static struct x_ini_option_st *alloc_option(const char *key, const char *val, const char *comment)
+static struct x_ini_option_st *alloc_option(x_mset *mset, const char *key, const char *val, const char *comment)
 {
 	struct x_ini_option_st *opt = NULL;
-
-	if (!(opt = calloc(1, sizeof *opt)))
-		goto fail;
+	opt = x_calloc(mset, 1, sizeof *opt);
 	if (key) {
 		opt->hash = x_strihash(key);
-		if (!(opt->key = x_strdup(key)))
-			goto fail;
-		if (!(opt->val = x_strdup(val)))
-			goto fail;
+		opt->key = x_mcopy(mset, key, strlen(key) + sizeof(char));
+		opt->val = x_mcopy(mset, val, strlen(val) + sizeof(char));
 	}
-	if (comment && !(opt->comment = x_strdup(comment)))
-		goto fail;
+	if (comment)
+		opt->comment = x_mcopy(mset, comment, strlen(comment) + sizeof(char));
 	x_link_init(&opt->link);
 	return opt;
-fail:
-	free_option(opt);
-	return NULL;
 }
 
 int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, const char *comment)
 {
-	int retval = -1;
 	struct x_ini_option_st *opt = NULL;
 	struct x_ini_section_st *sec = NULL;
-
 	x_assert(key && val, "NULL pointer for sec_name, key or val");
-
 	if (sec_name && !x_ini_check_section_name(sec_name)) {
 		errno = EINVAL;
 		return -1;
 	}
-
 	if (!x_ini_check_key_name(key, d->allowed_ch)) {
 		errno = EINVAL;
 		return -1;
 	}
-
 	if (!(sec = find_section(d, sec_name))) {
-		if (!(sec = alloc_section(sec_name, NULL)))
-			goto out;
-		if (!(opt = alloc_option(key, val, comment))) {
-			free_section(sec);
-			goto out;
-		}
+		sec = alloc_section(&d->mset, sec_name, NULL);
+		opt = alloc_option(&d->mset, key, val, comment);
 		x_list_add_back(&d->sec_list, &sec->link);
 		x_list_add_back(&sec->opt_list, &opt->link);
 		d->size++;
 	}
 	else if (!(opt = find_option(sec, key))){
-		opt = alloc_option(key, val, comment);
-		if (!sec)
-			goto out;
+		opt = alloc_option(&d->mset, key, val, comment);
 		x_list_add_back(&sec->opt_list, &opt->link);
 		d->size++;
 	}
 	else {
-		char *val_dup = x_strdup(val);
-		if (!val_dup)
-			goto out;
-
-		free(opt->val);
+		char *val_dup = x_mcopy(&d->mset, val, strlen(val) + sizeof(char));
+		x_free(opt->val);
 		opt->val = val_dup;
 		if (comment) {
-			free(opt->comment);
-			opt->comment = x_strdup(comment);
+			x_free(opt->comment);
+			opt->comment = x_mcopy(&d->mset, comment, strlen(comment) + sizeof(char));
 		}
 	}
-	retval = 0;
-out:
-	return retval;
+	return 0;
 }
 
 int x_ini_push_sec(x_ini *d, const char *sec_name, const char *comment)
@@ -269,8 +223,7 @@ int x_ini_push_sec(x_ini *d, const char *sec_name, const char *comment)
 		errno = EEXIST;
 		goto out;
 	}
-	if (!(sec = alloc_section(sec_name, comment)))
-		goto out;
+	sec = alloc_section(&d->mset, sec_name, comment);
 	x_list_add_back(&d->sec_list, &sec->link);
 	retval = 0;
 out:
@@ -279,12 +232,10 @@ out:
 
 int x_ini_push_opt(x_ini *d, const char *key, const char *val, const char *comment)
 {
-	int retval = -1;
 	struct x_ini_option_st *opt = NULL;
 	struct x_ini_section_st *sec = NULL;
 	if (x_list_is_empty(&d->sec_list)) {
-		if (!(sec = alloc_section(DEFAULT_SEC_NAME, NULL)))
-			goto out;
+		sec = alloc_section(&d->mset, DEFAULT_SEC_NAME, NULL);
 		x_list_add_back(&d->sec_list, &sec->link);
 	}
 
@@ -296,14 +247,10 @@ int x_ini_push_opt(x_ini *d, const char *key, const char *val, const char *comme
 		}
 	}
 
-	if (!(opt = alloc_option(key, val, comment)))
-		goto out;
-
+	opt = alloc_option(&d->mset, key, val, comment);
 	x_list_add_back(&sec->opt_list, &opt->link);
 	d->size++;
-	retval = 0;
-out:
-	return retval;
+	return 0;
 }
 
 void x_ini_unset(x_ini *d, const char *sec_name, const char *key)
@@ -339,7 +286,6 @@ static void print_comment(FILE *out, const char *comment)
 
 void x_ini_dump(const x_ini *d, FILE *out)
 {
-	// x_link *cur_sec, *cur_opt;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
 		if (&sec->link != d->sec_list.head.next || x_stricmp(sec->name, DEFAULT_SEC_NAME) != 0) {
@@ -500,13 +446,9 @@ x_ini *x_ini_load(FILE *fp, const char *ext_keych, x_ini_parse_error_f *error_cb
 	char *line_buf = NULL;
 	size_t buf_offset = 0, buf_len = BASE_LEN, lineno = 1;
 	char line[BASE_LEN];
-
-	if (!(line_buf = malloc(sizeof(char) * buf_len * 2)))
-		goto fail;
-
 	if (!(d = x_ini_create(ext_keych)))
 		goto fail;
-
+	line_buf = x_malloc(&d->mset, sizeof(char) * buf_len * 2);
 	while (fgets(line, sizeof line, fp)) {
 		int line_len = strlen(line);
 		if (line_len == 0)
@@ -532,7 +474,7 @@ x_ini *x_ini_load(FILE *fp, const char *ext_keych, x_ini_parse_error_f *error_cb
 				buf_offset = 0;
 			}
 			else {
-				char *new_buf = realloc(line_buf, buf_len * sizeof(char));
+				char *new_buf = x_realloc(line_buf, buf_len * sizeof(char));
 				if (!new_buf)
 					goto fail;
 				line_buf = new_buf;
@@ -559,7 +501,7 @@ fail:
 	x_ini_free(d);
 	d = NULL;
 out:
-	free(line_buf);
+	x_free(line_buf);
 	return d;
 }
 
@@ -613,27 +555,19 @@ int x_ini_path_set(x_ini *d, const char *path, const char *fmt, ...)
 	va_list ap;
 	int sec_len = section_name_len(path);
 	x_assert(sec_len >= 0, "no colon(:) found in field path");
-
-	sec_name = malloc(sec_len + 1);
-	if (!sec_name)
-		goto out;
+	sec_name = x_malloc(&d->mset, sec_len + 1);
 	memcpy(sec_name, path, sec_len);
 	sec_name[sec_len] = '\0';
-
 	va_start(ap, fmt);
 	size_t len = vsnprintf(buf, sizeof buf, fmt, ap);
 	if (len != strlen(buf)) {
-		val = malloc(len + 1);
-		if (!val)
-			goto out;
+		val = x_malloc(&d->mset, len + 1);
 		vsnprintf(val, sizeof buf, fmt, ap);
 	}
-
 	ret = x_ini_set(d, sec_name, path + sec_len + 1, val ? val : buf, NULL);
-out:
 	va_end(ap);
-	free(val);
-	free(sec_name);
+	x_free(val);
+	x_free(sec_name);
 	return ret;
 }
 
@@ -714,13 +648,12 @@ void x_ini_pure(x_ini *d)
 		return;
 	x_list_foreach(cur_sec, &d->sec_list) {
 		struct x_ini_section_st *sec = x_container_of(cur_sec, struct x_ini_section_st, link);
-		free(sec->comment);
+		x_free(sec->comment);
 		sec->comment = NULL;
-
 		for (x_link *cur_opt = x_list_first(&sec->opt_list); cur_opt != &sec->opt_list.head; ) {
 			struct x_ini_option_st *opt = x_container_of(cur_opt, struct x_ini_option_st, link);
 			cur_opt = cur_opt->next;
-			free(opt->comment);
+			x_free(opt->comment);
 			opt->comment = NULL;
 			if (opt->key) {
 				continue;

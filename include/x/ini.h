@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@
 #include "types.h"
 #include "macros.h"
 #include "list.h"
+#include "memory.h"
 #include "flowctl.h"
 #include <stdio.h>
 
@@ -56,6 +57,7 @@ struct x_ini_option_st
 
 struct x_ini_st
 {
+	x_mset mset;
 	char allowed_ch[16];
 	size_t size;
 	x_list sec_list;
