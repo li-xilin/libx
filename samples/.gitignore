@@ -3,3 +3,4 @@ compile_commands.json
 Makefile.in
 .swp
 [0-9][0-9]_*
+![0-9][0-9]_*.c

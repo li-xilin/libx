@@ -51,6 +51,7 @@ xinclude_HEADERS = \
 	x/index.h \
 	x/pathset.h \
 	x/fwalker.h \
+	x/except.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
