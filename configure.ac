@@ -16,7 +16,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 LT_INIT
 
 AC_DEFUN([AC_CHECK_HEADERS_ERROR], [
-	AC_CHECK_HEADERS([$1], [], [AC_MSG_ERROR([required header not found. ])], [$2])
+	AC_CHECK_HEADERS(m4_normalize([$1]), [], [AC_MSG_ERROR([required header not found. ])], [$2])
 ])
 
 AC_DEFUN([AC_CHECK_POSIX_HEADERS], [
@@ -106,10 +106,10 @@ AC_DEFUN([AC_CHECK_LINUX_HEADERS], [
 
 AC_CHECK_STDC_HEADERS
 
-AC_CHECK_HEADERS([
+AC_CHECK_HEADERS(m4_normalize([
 	endian.h
 	sys/endian.h
-])
+]))
 
 case "$host" in
 *-*-linux* | *-*-uclinux*)
