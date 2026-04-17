@@ -188,6 +188,8 @@ if test "x$disable_network" = "xno"; then
 			winsock2.h
 			ws2tcpip.h
 		])
+		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [true])
+		AM_CONDITIONAL([HAVE_POLL_H], [false])
 	else
 		AC_CHECK_HEADERS([sys/epoll.h kqueue.h poll.h])
 		if test "x$ac_cv_header_sys_epoll_h" = "xno" -a "x$ac_cv_header_poll_h" = "xno"; then
