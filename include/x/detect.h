@@ -23,6 +23,8 @@
 #ifndef X_ARCH_H
 #define X_ARCH_H
 
+#include "config.h"
+
 /* Detect architecture */
 
 #if defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(_M_X64) || defined(_M_AMD64)
@@ -381,8 +383,12 @@
 #    define X_LITTLE_ENDIAN 1234
 #    define X_PDP_ENDIAN 3412
 #else
-#define xxbaz 1
-#  include <endian.h>
+#  if defined(HAVE_ENDIAN_H)
+#    include <endian.h>
+#  endif
+#  if defined(HAVE_SYS_ENDIAN_H)
+#    include <sys/endian.h>
+#  endif
 #  if defined(__BYTE_ORDER__)
 #    define X_BYTE_ORDER __BYTE_ORDER__
 #  elif defined(__BYTE_ORDER)

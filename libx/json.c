@@ -332,8 +332,12 @@ static void update_offset(printbuffer * const buffer)
 /* securely comparison of floating-point variables */
 static bool compare_double(double a, double b)
 {
+#ifdef ENABLE_FLOAT_SAFECOMPARE
     double maxVal = fabs(a) > fabs(b) ? fabs(a) : fabs(b);
     return (fabs(a - b) <= maxVal * DBL_EPSILON);
+#else
+	return (a > b ? a - b : b - a) < 1e-9;
+#endif
 }
 
 static bool print_number(const x_json *const item, printbuffer * const output_buffer)

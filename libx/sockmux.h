@@ -20,14 +20,15 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_SOCKMUX_H
-#define X_SOCKMUX_H
+#ifndef LIBX_SOCKMUX_H
+#define LIBX_SOCKMUX_H
 
-#include "types.h"
-#include "socket.h"
-#include "mutex.h"
+#include "config.h"
+#include "x/types.h"
+#include "x/socket.h"
+#include "x/detect.h"
 
-struct x_sockmux_st;
+typedef struct x_sockmux x_sockmux_st;
 
 struct x_sockmux_ops_st {
 	x_sockmux *(*m_create)(void);
@@ -39,6 +40,6 @@ struct x_sockmux_ops_st {
 	x_sock (*m_next)(x_sockmux *mux, short *res_flags);
 };
 
-extern const struct x_sockmux_ops_st x_sockmux_epoll;
+extern const struct x_sockmux_ops_st g_sockmux_ops;
 
 #endif

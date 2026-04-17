@@ -30,16 +30,15 @@
 #include "x/macros.h"
 
 #ifdef X_OS_WIN
-#include <windows.h>
-#include <fileapi.h>
+#  include <windows.h>
+#  include <fileapi.h>
 #else
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <utime.h>
-#include <sys/types.h>
-#include <sys/sysinfo.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <sys/stat.h>
+#  include <stdio.h>
+#  include <utime.h>
+#  include <sys/types.h>
 #endif
 
 int x_sys_mkdir(const x_uchar *path, int mode)
@@ -250,7 +249,7 @@ int x_sys_nprocs(void)
 	GetSystemInfo(&sys);
 	return sys.dwNumberOfProcessors;
 #else
-	return get_nprocs();
+	return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 }
 

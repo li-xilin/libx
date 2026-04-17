@@ -48,6 +48,8 @@ int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, .
 
 #ifdef X_CC_GNU
 #define __X_ASSERT_UNUSED __attribute__((unused))
+#else
+#define __X_ASSERT_UNUSED
 #endif
 
 #ifndef NDEBUG

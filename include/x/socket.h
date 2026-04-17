@@ -36,11 +36,11 @@ typedef SOCKET x_sock;
 #define MSG_NOSIGNAL 0
 #endif
 #else
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<arpa/inet.h>
-#include<endian.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <endian.h>
 typedef int x_sock;
 #define X_BADSOCK -1
 #endif

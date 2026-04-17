@@ -26,6 +26,7 @@
 #include "macros.h"
 #include <string.h>
 
+#ifndef x_swap
 #define x_swap(a, b, type) \
 do { \
 	type *x = (a); \
@@ -34,6 +35,7 @@ do { \
 	*(x) = *(y); \
 	*(y) = tmp; \
 } while(0)
+#endif
 
 inline static uint32_t x_hash32(const void *key, size_t size)
 {

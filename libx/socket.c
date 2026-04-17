@@ -29,7 +29,7 @@
 
 #ifdef X_OS_WIN32
 #include <ws2tcpip.h>
-#include <winsock.h>
+#include <winsock2.h>
 #include <windows.h>
 
 #ifdef HAVE_AFUNIX_H

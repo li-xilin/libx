@@ -21,7 +21,6 @@
  */
 
 #include "x/proc.h"
-// #include "x/sys.h"
 #include "x/detect.h"
 #include "x/errno.h"
 #include <stdio.h>
@@ -32,7 +31,7 @@
 
 #include <x/string.h>
 #include <io.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <tchar.h>
 #include <windows.h>
 #include <stdio.h>

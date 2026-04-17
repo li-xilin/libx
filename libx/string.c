@@ -469,6 +469,7 @@ int x_strnrcmp(const char *s1, const char *s2, size_t len)
 			return s1[len1 - 1] - s2[len2 - 1];
 		default:
 			abort();
+			return 0;
 	}
 }
 

@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-#include "x/sockmux.h"
+#include "sockmux.h"
 #include "x/reactor.h"
 #include "x/string.h"
 #include "x/event.h"
@@ -153,7 +153,7 @@ int x_reactor_init(x_reactor *r)
 	x_sock pair[2] = { -1, -1 };
 	memset(r, 0, sizeof(x_reactor));
 
-	r->mux_ops = &x_sockmux_epoll;
+	r->mux_ops = &g_sockmux_ops;
 	r->mux = r->mux_ops->m_create();
 	if (!r->mux)
 		goto fail;

@@ -68,5 +68,16 @@
 #  define X_ATTR_VPRINTF(one_based_format_index)
 #endif
 
+#ifndef x_swap
+#define x_swap(a, b, type) \
+do { \
+	type *x = (a); \
+	type *y = (b); \
+	type tmp = *x; \
+	*(x) = *(y); \
+	*(y) = tmp; \
+} while(0)
+#endif
+
 #endif
 

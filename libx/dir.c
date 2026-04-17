@@ -25,7 +25,6 @@
 #include "x/detect.h"
 
 #ifdef X_OS_WIN
-// #include "x/sys.h"
 #include "x/stat.h"
 #include <sys/types.h>
 #include <stdint.h>

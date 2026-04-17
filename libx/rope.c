@@ -453,7 +453,7 @@ static void print_tree(x_rope_node *n, char *prefix, size_t len, bool is_left, b
 	}
 	x_rope_node *left = x_container_of(n->node.left, x_rope_node, node);
 	x_rope_node *right = x_container_of(n->node.right, x_rope_node, node);
-    print_tree(right, prefix, len + prefix_inc_len, true, n->node.left, fp);
+    print_tree(right, prefix, len + prefix_inc_len, true, !!n->node.left, fp);
     print_tree(left, prefix, len + prefix_inc_len, false, false, fp);
 	prefix[len] = '\0';
 }
