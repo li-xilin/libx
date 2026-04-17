@@ -15,6 +15,9 @@ Basic Headers:
     x/test.h         Unit testing
     x/twister.h      MT19937 randomizer
     x/log.h          Logging
+    x/compile.h      Compiler features
+    x/hash.h         Hash algorithm
+    x/except.h       Exception handling
 
 File and Path:
     x/path.h         File path operations
@@ -32,7 +35,7 @@ String Operations:
     x/printf.h       String formatting and printing
     x/string.h       String manipulation functions
     x/cliarg.h       CLI argument parsing
-	x/regex.h        Regular expression
+    x/regex.h        Regular expression
 
 Data Representation:
     x/json.h         JSON string parsing

@@ -15,6 +15,9 @@
     x/test.h         单元测试
     x/twister.h      MT19937随机数发生器
     x/log.h          日志
+    x/compile.h      编译器特性
+    x/hash.h         散列算法
+    x/except.h       异常处理
 
 文件和目录：
     x/path.h         文件路径操作
@@ -47,7 +50,7 @@
     x/hmap.h         散列表
     x/list.h         链表
     x/splay.h        伸展树
-    x/index.h        索引
+    x/index.h        索引器
     x/pipe.h         FIFO队列
     x/rope.h         绳索
     x/strbuf.h       动态连续字符串
