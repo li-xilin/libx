@@ -75,7 +75,6 @@ Network Operations:
     x/event.h        Event operations
     x/reactor.h      Reactor pattern
     x/socket.h       Socket operations
-    x/sockmux.h      Socket multiplexing
 
 Cryptography：
     x/aes.h          AES algorithm

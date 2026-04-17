@@ -75,7 +75,6 @@
     x/event.h        事件操作
     x/reactor.h      响应器模式
     x/socket.h       套接字操作
-    x/sockmux.h      套接字多路复用
 
 密码学：
     x/aes.h         AES对称加密算法
