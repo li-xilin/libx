@@ -1447,19 +1447,33 @@ int x_vctprintf(int (*out)(x_uchar c, void* extra_arg), void* extra_arg, const x
 	return vsnprintf_impl(&gadget, format, arg);
 }
 
+int x_vbprintf(x_strbuf *sb, const x_uchar* format, va_list arg)
+{
+	output_gadget_t gadget = strbuf_gadget(sb);
+	return vsnprintf_impl(&gadget, format, arg);
+}
+
 int x_vstprintf(int (*out_fn)(x_uchar *c, size_t len, void* extra_arg), void* extra_arg, const x_uchar* format, va_list arg)
 {
 	assert(out_fn != NULL);
 	x_strbuf sb;
 	x_strbuf_init(&sb);
-	output_gadget_t gadget = strbuf_gadget(&sb);
-	int ret = vsnprintf_impl(&gadget, format, arg);
+	int ret = x_vbprintf(&sb, format, arg);
 	if (ret == -1) {
 		x_strbuf_free(&sb);
 		return -1;
 	}
 	ret = out_fn(sb.data, x_strbuf_len(&sb), extra_arg);
 	x_strbuf_free(&sb);
+	return ret;
+}
+
+int x_bprintf(x_strbuf *sb, const x_uchar* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	const int ret = x_vbprintf(sb, format, args);
+	va_end(args);
 	return ret;
 }
 

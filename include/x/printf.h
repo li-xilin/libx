@@ -43,6 +43,7 @@
 
 #include "macros.h"
 #include "uchar.h"
+#include "types.h"
 #ifdef __cplusplus
 #  include <cstdarg>
 #  include <cstddef>
@@ -56,6 +57,8 @@ int x_printf(const x_uchar* format, ...);
 int x_vprintf(const x_uchar* format, va_list arg);
 int x_sprintf(x_uchar* s, const x_uchar* format, ...);
 int x_vsprintf(x_uchar* s, const x_uchar* format, va_list arg);
+int x_bprintf(x_strbuf *sb, const x_uchar* format, ...);
+int x_vbprintf(x_strbuf *sb, const x_uchar* format, va_list arg);
 int x_snprintf(x_uchar* s, size_t count, const x_uchar* format, ...);
 int x_vsnprintf(x_uchar* s, size_t count, const x_uchar* format, va_list arg);
 int x_ctprintf(int (*out)(x_uchar c, void* ctx), void* ctx, const x_uchar* format, ...);
