@@ -346,5 +346,10 @@ typedef struct x_fwalker_st x_fwalker;
 typedef struct x_stat_st x_stat;
 #endif
 
+#ifndef X_TRACE_DEFINED
+#define X_TRACE_DEFINED
+typedef struct x_trace_st x_trace;
+#endif
+
 #endif
 

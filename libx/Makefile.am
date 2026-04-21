@@ -6,15 +6,20 @@ libx_la_SOURCES = assert.c base64.c bitmap.c dump.c dumpfmt.c heap.c ini.c log.c
 		memory.c pipe.c splay.c string.c tcolor.c rope.c btnode.c tpool.c errno.c \
 		tss.c thread.c once.c mutex.c rwlock.c cond.c unicode.c test.c uchar.c file.c \
 		strbuf.c tsignal.c dir.c stat.c proc.c cliarg.c sys.c path.c printf.c hmap.c \
-		time.c lib.c future.c twister.c index.c pathset.c fwalker.c hash.c
+		time.c lib.c future.c twister.c index.c pathset.c fwalker.c hash.c debug.c
+
+if WINDOWS
+libx_la_LDFLAGS += -lshlwapi -ldbghelp
+else
+libx_la_LDFLAGS += -ldl
+endif
 
 if ENABLE_NETWORK
 libx_la_SOURCES +=  event.c reactor.c socket.c
 if WINDOWS
-libx_la_LDFLAGS += -lshlwapi -lws2_32
+libx_la_LDFLAGS += -lws2_32
 libx_la_SOURCES += wepoll.c mux_epoll.c
 else
-libx_la_LDFLAGS += -ldl
 if HAVE_SYS_EPOLL_H
 libx_la_SOURCES += mux_epoll.c 
 else
@@ -45,7 +50,7 @@ if ENABLE_CHARMAP
 libx_la_SOURCES +=  charmap.c charmap_big5.c  charmap_euckr.c  charmap_gbk.c  charmap_sjis.c
 endif
 
-EXTRA_DIST = libx.map strargv.inc wepoll.h
+EXTRA_DIST = strargv.inc wepoll.h
 MAINTAINERCLEANFILES = Makefile.in
 maintainer-clean-local:
 	$(RM) -r .deps .cache

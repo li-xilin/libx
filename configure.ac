@@ -45,6 +45,7 @@ AC_DEFUN([AC_CHECK_WIN32_HEADERS], [
 	AC_CHECK_HEADERS_ERROR([
 		windef.h
 		winbase.h
+		winver.h
 	], [
 		#include <windef.h>
 	])
@@ -67,9 +68,12 @@ AC_DEFUN([AC_CHECK_WIN32_HEADERS], [
 		process.h
 		fcntl.h
 		sysinfoapi.h
+		tlhelp32.h
+		dbghelp.h
 	], [
 		#include <windef.h>
 		#include <winbase.h>
+		#include <winver.h>
 	])
 ])
 
