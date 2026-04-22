@@ -33,12 +33,15 @@
 
 #define SB_INCREMENT 4096
 
+static x_uchar line_last;
+
 void x_strbuf_init(x_strbuf *sb)
 {
 	sb->remaining = 0;
 	sb->last = 0;
 	sb->chars = 0;
 	sb->data = NULL;
+	sb->line = NULL;
 }
 
 void x_strbuf_free(x_strbuf *sb)
@@ -48,19 +51,25 @@ void x_strbuf_free(x_strbuf *sb)
 
 static void strbuf_realloc(x_strbuf *sb, int newlen)
 {
-	sb->data = (x_uchar *)x_realloc(sb->data, newlen * sizeof(x_uchar));
-	sb->remaining = newlen - sb->last;
+	size_t realloc_size = x_align(newlen * sizeof(x_uchar),  SB_INCREMENT);
+	x_uchar *new_buf = x_realloc(sb->data, realloc_size);
+	if (sb->line)
+		sb->line = new_buf + (sb->line - sb->data);
+	sb->data = new_buf;
+	sb->remaining = (realloc_size / sizeof(x_uchar)) - sb->last;
 }
 
 void x_strbuf_append(x_strbuf *sb, const x_uchar *str)
 {
-	x_strbuf_append_len(sb, str, x_ustrlen(str));
+	x_strbuf_append_len(sb, str, -1);
 }
 
 void x_strbuf_append_len(x_strbuf *sb, const x_uchar *str, int len)
 {
-	if (sb->remaining < len + 1)
-		strbuf_realloc(sb, sb->last + len + 1 + SB_INCREMENT);
+	assert(!sb->line);
+	len = len == -1 ? x_ustrlen(str): x_min(x_ustrlen(str), len);
+	if (sb->remaining < len)
+		strbuf_realloc(sb, sb->last + len);
 	memcpy(sb->data + sb->last, str, len * sizeof(x_uchar));
 	sb->data[sb->last + len] = 0;
 	sb->last += len;
@@ -85,11 +94,11 @@ x_uchar *x_strbuf_data(x_strbuf *sb)
 static void strbuf_insert_space(x_strbuf *sb, int pos, int len)
 {
 	assert(pos <= sb->last);
+	assert(!sb->line);
 
 	/* Make sure there is enough space */
-	if (sb->remaining < len) {
+	if (sb->remaining < len)
 		strbuf_realloc(sb, sb->last + len + SB_INCREMENT);
-	}
 	/* Now move it up */
 	memmove(sb->data + pos + len, sb->data + pos, (sb->last - pos) * sizeof(x_uchar));
 	sb->last += len;
@@ -106,6 +115,7 @@ static void strbuf_delete_space(x_strbuf *sb, int pos, int len)
 {
 	assert(pos < sb->last);
 	assert(pos + len <= sb->last);
+	assert(!sb->line);
 	sb->chars -= x_ustr_charcnt(sb->data + pos, len);
 	/* Now move it up */
 	memmove(sb->data + pos, sb->data + pos + len, (sb->last - pos - len) * sizeof(x_uchar));
@@ -146,12 +156,8 @@ void x_strbuf_delete(x_strbuf *sb, int index, int len)
 
 void x_strbuf_clear(x_strbuf *sb)
 {
-	if (sb->data) {
-		/* Null terminate */
-		sb->data[0] = 0;
-		sb->last = 0;
-		sb->chars = 0;
-	}
+	x_free(sb->data);
+	x_strbuf_init(sb);
 }
 
 int x_strbuf_len(x_strbuf *sb)
@@ -169,4 +175,43 @@ x_uchar *x_strbuf_str(const x_strbuf *sb)
 	if (!sb->data)
 		return x_u("");
 	return sb->data;
+}
+
+x_uchar *x_strbuf_gets(x_strbuf *sb)
+{
+	x_uchar *ret = NULL;
+	if (!sb->data)
+		goto out;
+	if (sb->line == &line_last) {
+		sb->line = NULL;
+		return NULL;
+	}
+	if (!sb->line)
+		sb->line = sb->data;
+	else 
+		sb->line[-1] = '\n';
+
+	assert(sb->line >= sb->data && sb->line <= sb->data + sb->last);
+
+	for (x_uchar *p = sb->line; *p; p++) {
+		if (*p != x_u('\n'))
+			continue;
+		*p = '\0';
+		ret = sb->line;
+		sb->line = p + 1;
+		goto out;
+	}
+	sb->line = &line_last;
+	ret = sb->line;
+out:
+	return ret;
+}
+
+void x_strbuf_endgets(x_strbuf *sb)
+{
+	if (sb->line) {
+		if (sb->line != &line_last)
+			sb->line[-1] = x_u('\n');
+		sb->line = NULL;
+	}
 }

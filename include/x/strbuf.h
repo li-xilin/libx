@@ -15,6 +15,7 @@ struct x_strbuf_st
 	int remaining;
 	int last;
 	int chars;
+	x_uchar *line;
 	x_uchar *data;
 };
 
@@ -33,5 +34,7 @@ void x_strbuf_delete(x_strbuf *sb, int index, int len);
 void x_strbuf_clear(x_strbuf *sb);
 x_uchar *x_strbuf_str(const x_strbuf *sb);
 x_uchar *x_strbuf_data(x_strbuf *sb);
+x_uchar *x_strbuf_gets(x_strbuf *sb);
+void x_strbuf_endgets(x_strbuf *sb);
 
 #endif
