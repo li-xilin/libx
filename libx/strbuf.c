@@ -68,6 +68,8 @@ void x_strbuf_append_len(x_strbuf *sb, const x_uchar *str, int len)
 {
 	assert(!sb->line);
 	len = len == -1 ? x_ustrlen(str): x_min(x_ustrlen(str), len);
+	if (len == 0)
+		return;
 	if (sb->remaining < len)
 		strbuf_realloc(sb, sb->last + len);
 	memcpy(sb->data + sb->last, str, len * sizeof(x_uchar));
