@@ -71,23 +71,23 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 	symbol_buf.symbol.MaxNameLen = x_arrlen(symbol_buf.name) + 1;
 	for (int i = 0; i < trace->depth; i++) {
 		WCHAR wzModuleName[MAX_PATH] = {0};
-		DWORD64 dwAddr = (DWORD64)trace->frame[i];
+		DWORD64 dwAddr = (DWORD64)(uintptr_t)trace->frame[i];
 		DWORD64 displacement = 0;
 		DWORD64 dwModuleBase = SymGetModuleBase64(process, dwAddr);
 		DWORD dwAddrOffset = (unsigned)((DWORD)dwAddr - (DWORD)dwModuleBase);
-		if (dwModuleBase && GetModuleFileNameW((HMODULE)dwModuleBase, wzModuleName, MAX_PATH))
+		if (dwModuleBase && GetModuleFileNameW((HMODULE)(uintptr_t)dwModuleBase, wzModuleName, MAX_PATH))
 			x_bprintf(sb, L"%S: ", wzModuleName);
 		else
 			x_bprintf(sb, L"??: ");
 		if (!SymFromAddr(process, dwAddr, &displacement, &symbol_buf.symbol))
-			x_bprintf(sb, L"at +0x%x [0x%p]\n", dwAddrOffset, (void*)dwAddr);
+			x_bprintf(sb, L"at +0x%x [%p]\n", dwAddrOffset, (void*)(uintptr_t)dwAddr);
 		else {
 			IMAGEHLP_LINE64 line = {sizeof(IMAGEHLP_LINE64)};
 			DWORD dwLineNumber = 0;
 			if(SymGetLineFromAddr64(process, dwAddr, &dwLineNumber, &line))
 				x_bprintf(sb, L"%s at %s:%lu\n", symbol_buf.symbol.Name, line.FileName, line.LineNumber);
 			else
-				x_bprintf(sb, L"%s at +0x%x [0x%p]\n", symbol_buf.symbol.Name, dwAddrOffset, (void*)dwAddr);
+				x_bprintf(sb, L"%s at +0x%x [%p]\n", symbol_buf.symbol.Name, dwAddrOffset, (void*)(uintptr_t)dwAddr);
 		}
 	}
 }
