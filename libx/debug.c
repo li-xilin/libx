@@ -44,102 +44,52 @@ static int SymInitialize_called = 0;
 
 void x_trace_back(x_trace *trace)
 {
-    HANDLE process = GetCurrentProcess();
-    HANDLE thread = GetCurrentThread();
-    CONTEXT context;
-    STACKFRAME64 frame; /* in/out stackframe */
-    DWORD imageType;
-    int i = 0;
-
-    if (!SymInitialize_called) {
-        SymInitialize(process, NULL, TRUE);
-        SymInitialize_called = 1;
-    }
-    RtlCaptureContext(&context);
-    memset(&frame, 0, sizeof(frame));
-#ifdef _M_IX86
-    imageType = IMAGE_FILE_MACHINE_I386;
-    frame.AddrPC.Offset = context.Eip;
-    frame.AddrPC.Mode = AddrModeFlat;
-    frame.AddrFrame.Offset = context.Ebp;
-    frame.AddrFrame.Mode = AddrModeFlat;
-    frame.AddrStack.Offset = context.Esp;
-    frame.AddrStack.Mode = AddrModeFlat;
-#elif _M_X64
-    imageType = IMAGE_FILE_MACHINE_AMD64;
-    frame.AddrPC.Offset = context.Rip;
-    frame.AddrPC.Mode = AddrModeFlat;
-    frame.AddrFrame.Offset = context.Rsp;
-    frame.AddrFrame.Mode = AddrModeFlat;
-    frame.AddrStack.Offset = context.Rsp;
-    frame.AddrStack.Mode = AddrModeFlat;
-#elif _M_IA64
-    imageType = IMAGE_FILE_MACHINE_IA64;
-    frame.AddrPC.Offset = context.StIIP;
-    frame.AddrPC.Mode = AddrModeFlat;
-    frame.AddrFrame.Offset = context.IntSp;
-    frame.AddrFrame.Mode = AddrModeFlat;
-    frame.AddrBStore.Offset = context.RsBSP;
-    frame.AddrBStore.Mode = AddrModeFlat;
-    frame.AddrStack.Offset = context.IntSp;
-    frame.AddrStack.Mode = AddrModeFlat;
-#else
-    #error "Platform not supported!"
-#endif
-
-	for (i = 0; i < X_TRACE_MAX; i++) {
-        if (!StackWalk64(imageType, process, thread, &frame, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
-            trace->frame[i].pc_offset = frame.AddrPC.Offset;
-            trace->frame[i].ret_offset = STACKTRACE_ERROR_FLAG | GetLastError(); /* mark error */
-			i += 1;
-            break;
-        }
-		trace->frame[i].pc_offset = frame.AddrPC.Offset;
-		trace->frame[i].ret_offset = frame.AddrReturn.Offset;
-    }
-	trace->depth = i;
-	x_fprintf(stderr, x_u("depth = %zd"), trace->depth);
-	exit(1);
+	HANDLE process = GetCurrentProcess();
+	if (!SymInitialize_called) {
+		SymInitialize(process, NULL, TRUE);
+		SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME | SYMOPT_DEBUG);
+		SymInitialize_called = 1;
+	}
+	trace->depth = RtlCaptureStackBackTrace(0, X_TRACE_MAX, trace->frame, NULL);
 }
 
 int x_trace_depth(x_trace *trace)
 {
-    return trace->depth;
+	return trace->depth;
 }
 
 void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 {
-    HANDLE process = GetCurrentProcess();
+	HANDLE process = GetCurrentProcess();
 #pragma pack(push, 1)
 	struct {
-		IMAGEHLP_SYMBOL64 symbol;
+		SYMBOL_INFO symbol;
 		WCHAR name[1023];
 	} symbol_buf;
 #pragma pack(pop)
-    symbol_buf.symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
-    symbol_buf.symbol.MaxNameLength = x_arrlen(symbol_buf.name) + 1;
-    for (int i = 0; i < trace->depth; i++) {
-        IMAGEHLP_LINE64 lineData;
-        DWORD lineOffset = 0;
-        DWORD64 symOffset = 0;
-        if (trace->frame[i].ret_offset & STACKTRACE_ERROR_FLAG) {
-            DWORD error = trace->frame[i].ret_offset & 0xFFFFFFFF;
-            x_bprintf(sb, L"StackWalk64 error: %d @ %\n", error, trace->frame[i].pc_offset);
-            break;
-        }
-        if (trace->frame[i].pc_offset == trace->frame[i].ret_offset) {
-            x_bprintf(sb, L"Stack overflow @ %p\n", trace->frame[i].pc_offset);
-            break;
-        }
-        SymGetLineFromAddr64(process, trace->frame[i].pc_offset, &lineOffset, &lineData);
-        x_bprintf(sb, L"%s(%d): ", lineData.FileName, lineData.LineNumber);
-        if (SymGetSymFromAddr64(process, trace->frame[i].pc_offset, &symOffset, &symbol_buf.symbol)) {
-            x_bprintf(sb, L"%s\n", symbol_buf.symbol.Name);
-        }
-        else {
-            x_bprintf(sb, L" Unkown symbol @ %p\n", trace->frame[i].pc_offset);
-        }
-    }
+	symbol_buf.symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
+	symbol_buf.symbol.MaxNameLen = x_arrlen(symbol_buf.name) + 1;
+	for (int i = 0; i < trace->depth; i++) {
+		WCHAR wzModuleName[MAX_PATH] = {0};
+		DWORD64 dwAddr = (DWORD64)trace->frame[i];
+		DWORD64 displacement = 0;
+		DWORD64 dwModuleBase = SymGetModuleBase64(process, dwAddr);
+		DWORD dwAddrOffset = (unsigned)((DWORD)dwAddr - (DWORD)dwModuleBase);
+		if (dwModuleBase && GetModuleFileNameW((HMODULE)dwModuleBase, wzModuleName, MAX_PATH))
+			x_bprintf(sb, L"%S: ", wzModuleName);
+		else
+			x_bprintf(sb, L"??: ");
+		if (!SymFromAddr(process, dwAddr, &displacement, &symbol_buf.symbol))
+			x_bprintf(sb, L"at +0x%x [0x%p]\n", dwAddrOffset, (void*)dwAddr);
+		else {
+			IMAGEHLP_LINE64 line = {sizeof(IMAGEHLP_LINE64)};
+			DWORD dwLineNumber = 0;
+			if(SymGetLineFromAddr64(process, dwAddr, &dwLineNumber, &line))
+				x_bprintf(sb, L"%s at %s:%lu\n", symbol_buf.symbol.Name, line.FileName, line.LineNumber);
+			else
+				x_bprintf(sb, L"%s at +0x%x [0x%p]\n", symbol_buf.symbol.Name, dwAddrOffset, (void*)dwAddr);
+		}
+	}
 }
 
 #elif defined(X_OS_DARWIN)
@@ -150,22 +100,22 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 
 void x_trace_back(x_trace *trace)
 {
-    ret->depth = backtrace((void **)ret->frame, X_TRACE_MAX);
+	ret->depth = backtrace((void **)ret->frame, X_TRACE_MAX);
 }
 
 int x_trace_depth(x_trace *trace)
 {
-    return trace->depth;
+	return trace->depth;
 }
 
 void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 {
-    char** messages = backtrace_symbols(&trace->frame, trace->depth);
+	char** messages = backtrace_symbols(&trace->frame, trace->depth);
 	if (!messages)
 		return;
-    for (int i = 0; i < trace->depth; ++i)
-        x_bprintf(sb, "%s\n", messages[i]);
-    free(messages);
+	for (int i = 0; i < trace->depth; ++i)
+		x_bprintf(sb, "%s\n", messages[i]);
+	free(messages);
 }
 
 #elif defined(X_OS_LINUX)
@@ -177,12 +127,12 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 
 void x_trace_back(x_trace *trace)
 {
-    trace->depth = backtrace((void **)trace->frame, X_TRACE_MAX);
+	trace->depth = backtrace((void **)trace->frame, X_TRACE_MAX);
 }
 
 int x_trace_depth(x_trace *trace)
 {
-    return trace->depth;
+	return trace->depth;
 }
 
 static void dump_frame(const char *frame_info, size_t name_len, uintptr_t address, x_strbuf *sb)
@@ -209,19 +159,19 @@ origin_frame:
 
 void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 {
-    char** addr_tab = backtrace_symbols(trace->frame, trace->depth);
-    for (int i = 0; i < trace->depth; i++) {
-        /* calculate load offset */
-        Dl_info info;
-        dladdr(trace->frame[i], &info);
-        if (info.dli_fbase == (void*)0x400000)
-            info.dli_fbase = NULL; /* address from executable, so don't offset */
+	char** addr_tab = backtrace_symbols(trace->frame, trace->depth);
+	for (int i = 0; i < trace->depth; i++) {
+		/* calculate load offset */
+		Dl_info info;
+		dladdr(trace->frame[i], &info);
+		if (info.dli_fbase == (void*)0x400000)
+			info.dli_fbase = NULL; /* address from executable, so don't offset */
 
 		int name_length;
 		for (name_length = 0; addr_tab[i][name_length] && addr_tab[i][name_length] != '('; name_length++);
 		dump_frame(addr_tab[i], name_length, (uintptr_t)trace->frame[i] - (uintptr_t)info.dli_fbase, sb);
-    }
-    free(addr_tab);
+	}
+	free(addr_tab);
 }
 
 #else

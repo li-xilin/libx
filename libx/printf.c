@@ -862,7 +862,7 @@ int print_exponential_number(output_gadget_t* output, floating_point_t number, s
 	floating_point_t abs_number =  negative ? -number : number;
 
 	int floored_exp10;
-	bool abs_exp10_covered_by_powers_table;
+	bool abs_exp10_covered_by_powers_table = false;
 	struct scaling_factor normalization = { 0 };
 
 

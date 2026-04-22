@@ -29,14 +29,7 @@
 
 struct x_trace_st
 {
-#if defined(X_OS_WIN)
-	struct x_trace_frame_st {
-		uint64_t pc_offset, ret_offset;
-	}
-#else
-	void *
-#endif
-		frame[X_TRACE_MAX];
+	void *frame[X_TRACE_MAX];
 	size_t depth;
 };
 
