@@ -70,6 +70,7 @@ AC_DEFUN([AC_CHECK_WIN32_HEADERS], [
 		sysinfoapi.h
 		tlhelp32.h
 		dbghelp.h
+		sys/param.h
 	], [
 		#include <windef.h>
 		#include <winbase.h>
@@ -105,15 +106,11 @@ AC_DEFUN([AC_CHECK_STDC_HEADERS], [
 AC_DEFUN([AC_CHECK_LINUX_HEADERS], [
 	AC_CHECK_HEADERS_ERROR([
 		sys/syscall.h
+		endian.h
 	])
 ])
 
 AC_CHECK_STDC_HEADERS
-
-AC_CHECK_HEADERS(m4_normalize([
-	endian.h
-	sys/endian.h
-]))
 
 case "$host" in
 *-*-linux* | *-*-uclinux*)
