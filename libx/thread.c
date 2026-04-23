@@ -146,7 +146,7 @@ static DWORD WINAPI __x_thread_proc(void *arg)
 	return dwRetCode;
 }
 #else
-void thread_exit_unexpected(void *arg) {
+static void thread_exit_unexpected(void *arg) {
 	x_thread *thread = arg;
 	longjmp(thread->jmp_exit, -1);
 }

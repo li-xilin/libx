@@ -855,7 +855,7 @@ static floating_point_t pow10_of_int(int floored_exp10)
 	return dwba.F;
 }
 
-int print_exponential_number(output_gadget_t* output, floating_point_t number, size_t precision, size_t width, printf_flags_t flags, x_uchar* buf, size_t len)
+static int print_exponential_number(output_gadget_t* output, floating_point_t number, size_t precision, size_t width, printf_flags_t flags, x_uchar* buf, size_t len)
 {
 	const bool negative = get_sign_bit(number);
 	// This number will decrease gradually (by factors of 10) as we "extract" the exponent out of it

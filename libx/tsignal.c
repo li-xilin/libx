@@ -81,7 +81,7 @@ struct sigaction sg_sigint_sa;
 struct sigaction sg_sigterm_sa;
 struct sigaction sg_sigquit_sa;
 
-void *thread_proc(void *arg)
+static void *thread_proc(void *arg)
 {
 	int action = *(int *)arg;
 	free(arg);
