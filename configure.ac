@@ -182,6 +182,27 @@ case "$host" in
 	;;
 esac
 
+AC_MSG_CHECKING([whether the linker supports version scripts])
+save_LIBS="$LIBS"
+cat > conftest.map <<EOF
+VERS_1.0 {
+    global:
+        some_function;
+    local:
+        *;
+};
+EOF
+LIBS="$save_LIBS -Wl,--version-script=conftest.map"
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([], [])], # 一个空的测试程序
+    [ac_cv_have_ld_version_script=yes],
+    [ac_cv_have_ld_version_script=no]
+)
+LIBS="$save_LIBS"
+rm -f conftest.map
+AC_MSG_RESULT([$ac_cv_have_ld_version_script])
+AM_CONDITIONAL([HAVE_LD_VERSION_SCRIPT], [test "x$ac_cv_have_ld_version_script" = "xyes"])
+
 AC_ARG_ENABLE([network], [AS_HELP_STRING([--disable-network], [Disable network functions])],
 			  [disable_network=yes],
 			  [disable_network=no])

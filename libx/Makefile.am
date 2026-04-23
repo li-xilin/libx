@@ -8,6 +8,10 @@ libx_la_SOURCES = assert.c base64.c bitmap.c dump.c dumpfmt.c heap.c ini.c log.c
 		strbuf.c tsignal.c dir.c stat.c proc.c cliarg.c sys.c path.c printf.c hmap.c \
 		time.c lib.c future.c twister.c index.c pathset.c fwalker.c hash.c debug.c
 
+if HAVE_LD_VERSION_SCRIPT
+libx_la_LDFLAGS += -Wl,--version-script=$(srcdir)/libx.map
+endif
+
 if WINDOWS
 libx_la_LDFLAGS += -lshlwapi -ldbghelp
 else
@@ -50,7 +54,7 @@ if ENABLE_CHARMAP
 libx_la_SOURCES +=  charmap.c charmap_big5.c  charmap_euckr.c  charmap_gbk.c  charmap_sjis.c
 endif
 
-EXTRA_DIST = strargv.inc wepoll.h
+EXTRA_DIST = strargv.inc wepoll.h libx.map
 MAINTAINERCLEANFILES = Makefile.in
 maintainer-clean-local:
 	$(RM) -r .deps .cache
