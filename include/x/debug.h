@@ -23,8 +23,11 @@
 #ifndef X_DEBUG_H
 #define X_DEBUG_H
 
-#include "x/types.h"
 #include "x/detect.h"
+#include "x/types.h"
+#include "x/macros.h"
+#include "x/file.h"
+#include "x/strbuf.h"
 #define X_TRACE_MAX 512
 
 struct x_trace_st
@@ -36,5 +39,26 @@ struct x_trace_st
 void x_trace_back(x_trace *trace);
 int x_trace_depth(x_trace *trace);
 void x_trace_dump(const x_trace *trace, x_strbuf *sb);
+#define x_trace_fputs(trace, fp) do { \
+	x_strbuf _sb; \
+	x_strbuf_init(&_sb); \
+	x_trace_dump(trace, &_sb); \
+	x_fputs(x_strbuf_str(&_sb), fp); \
+	x_strbuf_free(&_sb); \
+} while (0)
+
+
+void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb);
+#define x_memory_dump(p, size, sb) __x_dump_memory(#p, p, size, sb);
+
+#define x_memory_fputs(p, size, fp) do { \
+	x_strbuf _sb; \
+	x_strbuf_init(&_sb); \
+	x_memory_dump(p, size, &_sb); \
+	x_fputs(x_strbuf_str(&_sb), fp); \
+	x_strbuf_free(&_sb); \
+} while (0)
+
+#define x_reach(fp) x_fprintf(fp, x_u("reach %s at %s:%d (version %s %s)\n"), __func__, __FILE__, __LINE__, __DATE__, __TIME__)
 
 #endif

@@ -27,6 +27,8 @@
 #include "x/memory.h"
 #include "x/strbuf.h"
 #include "x/printf.h"
+#include "x/string.h"
+#include "x/file.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -191,4 +193,42 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 }
 
 #endif
+
+inline static void char2hex(char dst[3], uint8_t src)
+{
+    uint8_t major = (src >> 4) , minor = src & 0x0F;
+    dst[0] = (major < 0xA) ? '0' + major : 'A' + (major - 0xA);
+    dst[1] = (minor < 0xA) ? '0' + minor : 'A' + (minor - 0xA);
+    dst[2] = ' ';
+}
+
+static char *hexlify(const void *p, size_t size, char *out)
+{
+    int i;
+    for (i = 0; i < size; i++)
+        char2hex(out + i * 3, ((uint8_t *)p)[i]);
+    for (i = 0; i < size; i++) {
+        if (((char *)p)[i] > 0x20 && ((char *)p)[i] <= 0x7F)
+            out[size * 3 + i] = ((char *)p)[i];
+        else
+            out[size * 3 + i] = '.';
+    }
+    out[size * 4] = '\0';
+    return out;
+}
+
+void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
+{
+#define DUMP_GROUP_LEN 16
+	x_bprintf(sb, "memory of %s at %p for(%zu bytes):\n", name, p, size);
+	for (int i = 0; size; i += DUMP_GROUP_LEN) {
+		char buf[DUMP_GROUP_LEN * 4 + 1];
+		size_t ngrp = size > DUMP_GROUP_LEN ? DUMP_GROUP_LEN : size;
+		hexlify(p, ngrp, buf);
+		x_bprintf(sb, "%04x %s\n", i, buf);
+		size -= ngrp;
+		p += ngrp;
+	}
+	x_bprintf(sb, "\n");
+}
 

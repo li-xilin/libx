@@ -10,6 +10,7 @@ global:
 	__ut_printf;
 	__ut_term;
 	__x_assert_fail;
+	__x_dump_memory;
 	__x_log_print;
 	__x_log_vprint;
 	ut_case_add_text;
