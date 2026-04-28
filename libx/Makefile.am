@@ -15,7 +15,7 @@ endif
 if WINDOWS
 libx_la_LDFLAGS += -lshlwapi -ldbghelp
 else
-libx_la_LDFLAGS += -ldl
+libx_la_LDFLAGS += -ldl -lpthread
 endif
 
 if ENABLE_NETWORK
