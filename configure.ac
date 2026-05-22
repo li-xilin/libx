@@ -41,7 +41,6 @@ AC_DEFUN([AC_CHECK_POSIX_HEADERS], [
 ])
 
 AC_DEFUN([AC_CHECK_WIN32_HEADERS], [
-	AC_CHECK_HEADERS([afunix.h])
 	AC_CHECK_HEADERS_ERROR([
 		windef.h
 		winbase.h
@@ -76,6 +75,7 @@ AC_DEFUN([AC_CHECK_WIN32_HEADERS], [
 		#include <winbase.h>
 		#include <winver.h>
 	])
+	AC_CHECK_HEADERS([afunix.h], [], [], [#include <winsock2.h>])
 ])
 
 AC_DEFUN([AC_CHECK_STDC_HEADERS], [
