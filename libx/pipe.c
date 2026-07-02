@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 #include "x/pipe.h"
 #include <errno.h>
 
-size_t x_pipe_write(x_pipe *pipe, void *p, size_t size)
+size_t x_pipe_write(x_pipe *pipe, const void *p, size_t size)
 {
 	assert(p != NULL);
 	size_t buf_size = x_min(x_pipe_buffer_size(pipe), size);
@@ -144,6 +144,19 @@ size_t x_pipe_pour(x_pipe *src, x_pipe *dst, size_t size)
 		write_size = x_pipe_write(dst, x_pipe_zread(src), read_size);
 		x_pipe_zread_commit(src, write_size);
 		moved_size += write_size;
+	} while (read_size && write_size);
+	return moved_size;
+}
+
+size_t x_pipe_copy(x_pipe *src, size_t start, x_pipe *dst, size_t size)
+{
+	size_t moved_size = 0;
+	size_t read_size, write_size;
+	do {
+		write_size = x_min(x_pipe_zwrite_size(dst), size - moved_size);
+		read_size = x_pipe_peek(src, x_pipe_zwrite(dst), start + moved_size, write_size);
+		x_pipe_zwrite_commit(dst, read_size);
+		moved_size += read_size;
 	} while (read_size && write_size);
 	return moved_size;
 }

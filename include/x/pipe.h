@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -111,8 +111,9 @@ inline static void x_pipe_clear(x_pipe *b)
 	b->rear = b->front = 0;
 }
 
-size_t x_pipe_write(x_pipe *b, void *p, size_t size);
+size_t x_pipe_write(x_pipe *b, const void *p, size_t size);
 size_t x_pipe_pour(x_pipe *src, x_pipe *dst, size_t size);
+size_t x_pipe_copy(x_pipe *src, size_t start, x_pipe *dst, size_t size);
 size_t x_pipe_peek(x_pipe *b, void *buf, size_t start, size_t size);
 size_t x_pipe_read(x_pipe *b, void *buf, size_t size);
 void x_pipe_resize(x_pipe *pipe, size_t size);
