@@ -78,8 +78,10 @@ static int reactor_pend_timer(x_reactor *r, const struct timeval *tv)
 			}
 			x_heap_push(&r->timer_heap, &top->node);
 		}
-		else
+		else {
 			top->base.ev_flags &= ~X_EV_REACTING;
+			top->base.reactor = NULL;
+		}
 		npendings += 1;
 	}
 	return npendings;
