@@ -329,6 +329,7 @@ global:
 	x_path_tmpdir;
 	x_path_trim;
 	x_pipe_change_buffer;
+	x_pipe_copy;
 	x_pipe_drain;
 	x_pipe_peek;
 	x_pipe_pour;
