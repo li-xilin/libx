@@ -132,10 +132,12 @@ inline static void x_list_del(x_link *link)
 	link->prev = link->next = 0;
 }
 
+
 inline static int x_list_is_empty(const x_list *list)
 {
 	return list->head.next == &list->head;
 }
+
 
 inline static x_link *x_list_first(const x_list *list)
 {
@@ -156,6 +158,9 @@ inline static x_link *x_list_second(const x_list *list)
 {
 	return x_list_has_multiple(list) ? list->head.next->next : NULL;
 }
+
+void x_list_merge_front(x_list *dest, x_list *src);
+void x_list_merge_back(x_list *dest, x_list *src);
 
 #define x_list_foreach(pos, list) \
 	for (x_link *pos = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)

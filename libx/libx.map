@@ -276,6 +276,8 @@ global:
 	x_lib_open;
 	x_lib_strerror;
 	x_lib_symbol;
+	x_list_merge_back;
+	x_list_merge_front;
 	x_log_handler_native;
 	x_log_handler_utf8;
 	x_log_mode;
