@@ -446,8 +446,7 @@ x_ini *x_ini_load(FILE *fp, const char *ext_keych, x_ini_parse_error_f *error_cb
 	char *line_buf = NULL;
 	size_t buf_offset = 0, buf_len = BASE_LEN, lineno = 1;
 	char line[BASE_LEN];
-	if (!(d = x_ini_create(ext_keych)))
-		goto fail;
+	d = x_ini_create(ext_keych);
 	line_buf = x_malloc(&d->mset, sizeof(char) * buf_len * 2);
 	while (fgets(line, sizeof line, fp)) {
 		int line_len = strlen(line);
@@ -475,8 +474,6 @@ x_ini *x_ini_load(FILE *fp, const char *ext_keych, x_ini_parse_error_f *error_cb
 			}
 			else {
 				char *new_buf = x_realloc(line_buf, buf_len * sizeof(char));
-				if (!new_buf)
-					goto fail;
 				line_buf = new_buf;
 			}
 		}
@@ -579,28 +576,23 @@ int x_ini_get_bool(const x_ini *d, const char *path_fmt, int dft_value, ...)
 	va_end(ap);
 	if (!value)
 		return dft_value;
-
 	if (x_stricmp(value, "true") == 0)
 		return 1;
 	if (x_stricmp(value, "false") == 0)
 		return 0;
-
 	if (x_stricmp(value, "yes") == 0)
 		return 1;
 	if (x_stricmp(value, "no") == 0)
 		return 0;
-
 	if (x_stricmp(value, "y") == 0)
 		return 1;
 	if (x_stricmp(value, "n") == 0)
 		return 0;
-
 	if (x_stricmp(value, "1") == 0)
 		return 1;
 	if (x_stricmp(value, "0") == 0)
 		return 0;
-
-	return -1;
+	return dft_value;
 }
 
 int x_ini_get_int(const x_ini *d, const char *path_fmt, int dft_value, ...)
