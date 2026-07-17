@@ -41,7 +41,7 @@ Data Representation:
     x/json.h         JSON string parsing
     x/jpath.h        JsonPath querying
     x/base64.h       Base64 encoding and decoding
-    x/ini.h          INI configuration files
+    x/ini.h          Ini file format operations
 
 Data Structures:
     x/btnode.h       Binary tree
@@ -54,6 +54,7 @@ Data Structures:
     x/pipe.h         FIFO queue
     x/rope.h         Rope
     x/strbuf.h       Dynamic contiguous string
+    x/hfsm.h         Hierarchical finite state machine
 
 Threading and Processes:
     x/cond.h         Condition variables

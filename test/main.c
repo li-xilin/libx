@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 	ADD_SUITE(index_test);
 	ADD_SUITE(pipe_test);
 	ADD_SUITE(hash_test);
+	ADD_SUITE(hfsm_test);
 
 	ut_runner_run(&r, process);
 }

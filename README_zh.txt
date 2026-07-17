@@ -54,6 +54,7 @@
     x/pipe.h         FIFO队列
     x/rope.h         绳索
     x/strbuf.h       动态连续字符串
+    x/hfsm.h         多层有限状态机器
 
 线程和进程：
     x/cond.h         条件变量

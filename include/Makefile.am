@@ -53,6 +53,7 @@ xinclude_HEADERS = \
 	x/fwalker.h \
 	x/except.h \
 	x/debug.h \
+	x/hfsm.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

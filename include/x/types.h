@@ -351,5 +351,26 @@ typedef struct x_stat_st x_stat;
 typedef struct x_trace_st x_trace;
 #endif
 
+#ifndef X_HFSM_EVENT_DEFINED
+#define X_HFSM_EVENT_DEFINED
+typedef struct x_hfsm_event_st x_hfsm_event;
+#endif
+
+#ifndef X_HFSM_STATE_DEFINED
+#define X_HFSM_STATE_DEFINED
+typedef struct x_hfsm_state_st x_hfsm_state;
+#endif
+
+#ifndef X_HFSM_DEFINED
+#define X_HFSM_DEFINED
+typedef struct x_hfsm_st x_hfsm;
+#endif
+
+#ifndef X_HFSM_TRANS_DEFINED
+#define X_HFSM_TRANS_DEFINED
+typedef struct x_hfsm_trans_st x_hfsm_trans;
+#endif
+
+
 #endif
 
