@@ -42,6 +42,8 @@ enum {
 	X_EVENT_OBJECT,
 };
 
+typedef void x_event_handler(x_event *e);
+
 struct x_event_st
 {
 	uint16_t type;
@@ -50,7 +52,7 @@ struct x_event_st
 	x_link event_link;
 	x_link pending_link;
 	x_reactor *reactor;
-	void *data;
+	x_event_handler *handler;
 };
 
 struct x_evsocket_st
@@ -76,9 +78,9 @@ struct x_evobject_st
 	size_t index;
 };
 
-void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, void *data);
-void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, void *data);
-void x_evobject_init(x_evobject *event, short flags, void *data);
+void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler);
+void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_handler *handler);
+void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler);
 
 #endif
 

@@ -352,6 +352,7 @@ global:
 	x_reactor_add;
 	x_reactor_break;
 	x_reactor_clear;
+	x_reactor_do_events;
 	x_reactor_free;
 	x_reactor_init;
 	x_reactor_modify;

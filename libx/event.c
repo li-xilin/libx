@@ -23,30 +23,30 @@
 #include "x/event.h"
 #include <stdio.h>
 
-void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, void *data)
+void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler)
 {
 	memset(event, 0, sizeof *event);
 	event->sock = sock;
 	event->base.ev_flags = flags;
 	event->base.type = X_EVENT_SOCKET;
-	event->base.data = data;
+	event->base.handler = handler;
 }
 
 
-void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, void *data)
+void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_handler *handler)
 {
 	memset(event, 0, sizeof *event);
 	event->interval = interval_ms;
 	event->base.ev_flags = flags;
 	event->base.type = X_EVENT_TIMER;
-	event->base.data = data;
+	event->base.handler = handler;
 }
 
-void x_evobject_init(x_evobject *event, short flags, void *data)
+void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler)
 {
 	memset(event, 0, sizeof *event);
 	event->base.ev_flags = flags;
 	event->base.type = X_EVENT_OBJECT;
-	event->base.data = data;
+	event->base.handler = handler;
 }
 

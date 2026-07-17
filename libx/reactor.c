@@ -306,7 +306,7 @@ void x_reactor_pend(x_reactor *r, x_event *e, short res_flags)
 	x_mutex_lock(&r->lock);
 	assert(r != NULL && e != NULL);
 	assert(e->ev_flags & X_EV_REACTING);
-	e->res_flags = res_flags;
+	e->res_flags |= res_flags;
 	if (e->pending_link.next)
 		x_list_del(&e->pending_link);
 	x_list_add_back(&r->pending_list, &e->pending_link);
@@ -415,12 +415,23 @@ void x_reactor_signal(x_reactor *r)
 
 x_event *x_reactor_pop_event(x_reactor *r)
 {
-	while (!x_list_is_empty(&r->pending_list)) {
+	x_event *res = NULL;
+	x_mutex_lock(&r->lock);
+	if (!x_list_is_empty(&r->pending_list)) {
 		x_event *e = x_container_of(x_list_first(&r->pending_list), x_event, pending_link);
 		x_list_del(&e->pending_link);
-		if (e->ev_flags & X_EV_REACTING)
-			return e;
+		res = e;
 	}
-	return NULL;
+	x_mutex_unlock(&r->lock);
+	return res;
+}
+
+void x_reactor_do_events(x_reactor *r)
+{
+	x_event *e;
+	while ((e = x_reactor_pop_event(r))) {
+		if (e->handler)
+			e->handler(e);
+	}
 }
 

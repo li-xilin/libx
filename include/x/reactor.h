@@ -61,5 +61,6 @@ int x_reactor_wait(x_reactor *r);
 void x_reactor_signal(x_reactor *r);
 void x_reactor_break(x_reactor *r);
 x_event *x_reactor_pop_event(x_reactor *r);
+void x_reactor_do_events(x_reactor *r);
 
 #endif
