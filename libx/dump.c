@@ -385,7 +385,9 @@ void x_dump_free(x_dump *dmp)
 static int write_file_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	FILE *fp = ctx;
-	return x_fprintf(fp, x_u("%.*s"), (int)len, buf);
+	if (x_fprintf(fp, x_u("%.*s"), (int)len, buf) >= len)
+		return 0;
+	return -1;
 }
 
 static int indent_check_cb(const x_uchar *buf, size_t len, void *ctx)
