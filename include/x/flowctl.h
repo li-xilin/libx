@@ -37,6 +37,9 @@
 #define x_repeat(_n) \
 	for (size_t _ = 0; _ != (_n); _++)
 
+#define x_block_if(cond) \
+	if (!(cond)) { } else
+
 #define x_forever for(;;)
 
 #define x_forvalues(_t, ...) \
