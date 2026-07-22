@@ -22,6 +22,7 @@
 
 #include "x/dump.h"
 #include "x/string.h"
+#include "x/strbuf.h"
 #include "x/assert.h"
 #include "x/uchar.h"
 #include "x/file.h"
@@ -390,6 +391,14 @@ static int write_file_cb(const x_uchar *buf, size_t len, void *ctx)
 	return -1;
 }
 
+static int write_strbuf_cb(const x_uchar *buf, size_t len, void *ctx)
+{
+	x_strbuf *sb = ctx;
+	x_strbuf_append_len(sb, buf, len);
+	return 0;
+}
+
+
 static int indent_check_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	struct search_args *args = ctx;
@@ -432,10 +441,14 @@ end_for:
 
 int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp)
 {
-	int fail = x_dump_serialize(dmp, format, write_file_cb, fp) ? true : false;
-	fputc('\n', fp);
+	int ret = x_dump_serialize(dmp, format, write_file_cb, fp);
 	fflush(fp);
-	return fail;
+	return ret;
+}
+
+int x_dump_to_strbuf(const x_dump *dmp, const x_dump_format *format, x_strbuf *sb)
+{
+	return x_dump_serialize(dmp, format, write_strbuf_cb, sb);
 }
 
 static int dump_out_dfs(const x_dump *dmp, int depth, struct search_args *args)

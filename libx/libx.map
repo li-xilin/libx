@@ -89,6 +89,7 @@ global:
 	x_dump_set_name;
 	x_dump_str;
 	x_dump_symbol;
+	x_dump_to_strbuf;
 	x_dump_uint;
 	x_edit_add_completion;
 	x_edit_clear_screen;

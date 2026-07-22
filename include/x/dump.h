@@ -63,6 +63,7 @@ int x_dump_set_name(x_dump *dmp, const x_uchar *sym);
 void x_dump_bind(x_dump *dmp, int index, x_dump* binding);
 void x_dump_free(x_dump *dmp);
 int x_dump_fput(const x_dump *dmp, const x_dump_format *format, FILE *fp);
+int x_dump_to_strbuf(const x_dump *dmp, const x_dump_format *format, x_strbuf *sb);
 int x_dump_serialize(const x_dump *dmp, const x_dump_format *format, x_dump_out_cb_f *cb, void *ctx);
 const x_dump_format *x_dump_default_format(void);
 const x_dump_format *x_dump_pretty_format(void);
