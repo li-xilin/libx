@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) 2026 Li Xilin <lixilin@gmx.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+#ifndef X_SKLIST_H
+#define X_SKLIST_H
+
+#include <x/list.h>
+#include <x/memory.h>
+#include <x/flowctl.h>
+
+#define X_SKLIST_LEVEL_MAX 32
+
+#define x_sklist_foreach(pos, sklist) \
+	x_block_if ((sklist)->level) \
+		x_list_foreach (__sklist_##pos, &(sklist)->list[0]) \
+			x_block_var (x_sklink *pos = x_container_of(__sklist_##pos, x_sklink, link[0]))
+
+#define x_skpath_matched(path) ((path)->identical_level ? x_container_of((path)->link[0]->prev, x_sklink, link[0]) : NULL)
+
+typedef struct x_sklist_st x_sklist;
+typedef struct x_sklink_st x_sklink;
+typedef struct x_skpath_st x_skpath;
+
+typedef int x_sklist_compare_fn(const void *p1, const void *p2);
+
+struct x_sklist_st {
+	x_mset mset;
+	uint8_t level;
+	uint32_t seed;
+	x_sklist_compare_fn *compare;
+	x_list list[X_SKLIST_LEVEL_MAX];
+};
+
+struct x_sklink_st {
+	void *data;
+	x_link link[0];
+};
+
+struct x_skpath_st {
+	size_t identical_level;
+	x_link *link[X_SKLIST_LEVEL_MAX];
+};
+
+void x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path);
+void x_sklist_path_insert(x_sklist *sklist, x_skpath *path, void *data);
+void x_sklist_path_remove(x_sklist *sklist, x_skpath *path);
+
+void x_sklist_init(x_sklist *sklist, x_sklist_compare_fn *compare);
+int x_sklist_random_level(x_sklist *sklist);
+void *x_sklist_find(x_sklist *sklist, const void *data);
+void *x_sklist_find_or_insert(x_sklist *sklist, void *data);
+void *x_sklist_replace_or_insert(x_sklist *sklist, void *data);
+void *x_sklist_remove(x_sklist *sklist, const void *data);
+x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*dump_value)(const void *data));
+bool x_sklist_sanitize(x_sklist *sklist);
+
+#endif
+

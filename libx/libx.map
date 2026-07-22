@@ -406,6 +406,15 @@ global:
 	x_sha256_finish;
 	x_sha256_init;
 	x_sha256_update;
+	x_sklist_dump;
+	x_sklist_find_or_insert;
+	x_sklist_init;
+	x_sklist_path_find
+	x_sklist_path_insert
+	x_sklist_path_remove
+	x_sklist_remove;
+	x_sklist_replace_or_insert;
+	x_sklist_sanitize;
 	x_snprintf;
 	x_sock_close;
 	x_sock_exit;

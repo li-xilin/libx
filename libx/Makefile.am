@@ -7,7 +7,7 @@ libx_la_SOURCES = assert.c base64.c bitmap.c dump.c dumpfmt.c heap.c ini.c log.c
 		tss.c thread.c once.c mutex.c rwlock.c cond.c unicode.c test.c uchar.c file.c \
 		strbuf.c tsignal.c dir.c stat.c proc.c cliarg.c sys.c path.c printf.c hmap.c \
 		time.c lib.c future.c twister.c index.c pathset.c fwalker.c hash.c debug.c \
-		hfsm.c list.c
+		hfsm.c list.c sklist.c
 
 if HAVE_LD_VERSION_SCRIPT
 libx_la_LDFLAGS += -Wl,--version-script=$(srcdir)/libx.map

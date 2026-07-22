@@ -54,6 +54,7 @@ xinclude_HEADERS = \
 	x/except.h \
 	x/debug.h \
 	x/hfsm.h \
+	x/sklist.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \
