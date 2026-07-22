@@ -124,9 +124,12 @@ FILE *x_freopen(const x_uchar *path, const x_uchar *mode, FILE *stream)
 
 static int file_puts(x_uchar *s, size_t len, void *arg)
 {
-	if (x_fputs(s, arg))
-		return len;
-	return 0;
+	int i = 0;
+	for (; i < len; i++) {
+		if (x_fputc(s[i], arg) == EOF)
+			break;
+	}
+	return i;
 }
 
 int x_vfprintf(FILE *stream, const x_uchar *format, va_list ap)
