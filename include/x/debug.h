@@ -61,4 +61,8 @@ void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 
 #define x_reach(fp) x_fprintf(fp, x_u("reach %s at %s:%d (version %s %s)\n"), __func__, __FILE__, __LINE__, __DATE__, __TIME__)
 
+void __x_sanitize_stub(const char *file, int line);
+
+#define x_sanitize_stub() __x_sanitize_stub(__FILE__, __LINE__)
+
 #endif

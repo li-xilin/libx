@@ -156,14 +156,14 @@ typedef struct x_btnode_st x_btnode;
 typedef struct x_bitmap_st x_bitmap;
 #endif
 
-#ifndef X_TPOOL_DEFINED
-#define X_TPOOL_DEFINED
-typedef struct x_tpool_st x_tpool;
+#ifndef X_THRPOOL_DEFINED
+#define X_THRPOOL_DEFINED
+typedef struct x_thrpool_st x_thrpool;
 #endif
 
-#ifndef X_TPOOL_WORK_DEFINED
-#define X_TPOOL_WORK_DEFINED
-typedef struct x_tpool_work_st x_tpool_work;
+#ifndef X_THRWORK_DEFINED
+#define X_THRWORK_DEFINED
+typedef struct x_thrwork_st x_thrwork;
 #endif
 
 #ifndef X_ONCE_DEFINED
@@ -244,6 +244,16 @@ typedef struct x_reactor_st x_reactor;
 #ifndef X_SOCKMUX_DEFINED
 #define X_SOCKMUX_DEFINED
 typedef struct x_sockmux_st x_sockmux;
+#endif
+
+#ifndef X_IOVEC_DEFINED
+#define X_IOVEC_DEFINED
+typedef struct x_iovec_st x_iovec;
+#endif
+
+#ifndef X_HOSTPORT_DEFINED
+#define X_HOSTPORT_DEFINED
+typedef struct x_hostport_st x_hostport;
 #endif
 
 #ifndef X_JSON_DEFINED
@@ -371,6 +381,45 @@ typedef struct x_hfsm_st x_hfsm;
 typedef struct x_hfsm_trans_st x_hfsm_trans;
 #endif
 
+#ifndef X_IPADDR_DEFINED
+#define X_IPADDR_DEFINED
+typedef struct x_ipaddr_st x_ipaddr;
+#endif
+
+#ifndef X_DIALER_DEFINED
+#define X_DIALER_DEFINED
+typedef struct x_dialer_st x_dialer;
+#endif
+
+#ifndef X_LISTENER_DEFINED
+#define X_LISTENER_DEFINED
+typedef struct x_listener_st x_listener;
+#endif
+
+#ifndef X_STREAM_DEFINED
+#define X_STREAM_DEFINED
+typedef struct x_stream_st x_stream;
+#endif
+
+#ifndef X_RESOLVER_DEFINED
+#define X_RESOLVER_DEFINED
+typedef struct x_resolver_st x_resolver;
+#endif
+
+#ifndef X_TIMER_DEFINED
+#define X_TIMER_DEFINED
+typedef struct x_timer_st x_timer;
+#endif
+
+#ifndef X_UIDPOOL_DEFINED
+#define X_UIDPOOL_DEFINED
+typedef struct x_uidpool_st x_uidpool;
+#endif
+
+#ifndef X_UIDLINK_DEFINED
+#define X_UIDLINK_DEFINED
+typedef struct x_uidlink_st x_uidlink;
+#endif
 
 #endif
 

@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #endif
@@ -84,8 +85,10 @@ int x_sock_send_reset(x_sock sockfd)
 }
 
 int x_sock_close(x_sock fd) {
-	if (fd == X_BADSOCK)
-		return 0;
+	if (fd == X_BADSOCK) {
+		errno = X_EBADF;
+		return -1;
+	}
 #ifdef X_OS_WIN32
 	return - !closesocket(fd);
 #else
@@ -502,3 +505,45 @@ fail:
 	(void)setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&old_keep_alive, sizeof old_keep_alive);
 	return -1;
 }
+
+int x_parse_ipaddr(const char *str, x_ipaddr *ipaddr)
+{
+	if (inet_pton(AF_INET, str, &ipaddr->un) == 1) {
+		ipaddr->family = AF_INET;
+		return 0;
+	}
+	if (inet_pton(AF_INET6, str, &ipaddr->un) == 1) {
+		ipaddr->family = AF_INET6;
+		return 0;
+	}
+	errno = X_EINVAL;
+	return -1;
+}
+
+int x_sock_check(x_sock sock)
+{
+	if (sock == X_BADSOCK) {
+		errno = X_EINVAL;
+		return -1;
+	}
+#ifdef X_OS_WIN
+	int optval;
+	int optlen = sizeof(optval);
+	if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen)) {
+		x_eval_errno();
+		return -1;
+	}
+#else
+	struct stat st;
+	if (fstat(sock, &st)) {
+		x_eval_errno();
+		return -1;
+	}
+	if (!S_ISSOCK(st.st_mode)) {
+		errno = -ESOCKTNOSUPPORT;
+		return -1;
+	}
+#endif
+	return 0;
+}
+

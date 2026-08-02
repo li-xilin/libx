@@ -23,6 +23,7 @@
 #include "x/hmap.h"
 #include "x/list.h"
 #include "x/memory.h"
+#include "x/debug.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -151,4 +152,30 @@ void x_hmap_free(x_hmap * ht)
 	x_free(ht->table);
 }
 
-
+bool x_hmap_sanitize(x_hmap *ht)
+{
+	int cnt = 0;
+	for (int i = 0; i < ht->slot_cnt; i++) {
+		x_link *prev = NULL;
+		x_list_foreach(cur, ht->table + i) {
+			cnt++;
+			if (ht->hash(cur) % ht->slot_cnt != i) {
+				x_sanitize_stub();
+				return false;
+			}
+			if (!prev) {
+				prev = cur;
+				continue;
+			}
+			if (cur->prev != prev) {
+				x_sanitize_stub();
+				return false;
+			}
+		}
+	}
+	if (cnt != ht->elem_cnt) {
+		x_sanitize_stub();
+		return false;
+	}
+	return true;
+}

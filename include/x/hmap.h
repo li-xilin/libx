@@ -48,5 +48,6 @@ x_link *x_hmap_insert_or_replace(x_hmap *ht, x_link *node);
 x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link);
 void x_hmap_remove(x_hmap *ht, x_link *link);
 void x_hmap_free(x_hmap *ht);
+bool x_hmap_sanitize(x_hmap *ht);
 
 #endif

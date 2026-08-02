@@ -45,27 +45,27 @@ inline static void x_pipe_init(x_pipe *b, void *buf, size_t size)
 	b->rear = b->front = 0;
 }
 
-inline static size_t x_pipe_data_size(x_pipe *b)
+inline static size_t x_pipe_data_size(const x_pipe *b)
 {
 	return (b->size + b->rear - b->front) % b->size;
 }
 
-inline static bool x_pipe_is_full(x_pipe *b)
+inline static bool x_pipe_is_full(const x_pipe *b)
 {
 	return (b->rear + 1) % b->size == b->front;
 }
 
-inline static bool x_pipe_is_empty(x_pipe *b)
+inline static bool x_pipe_is_empty(const x_pipe *b)
 {
 	return b->rear == b->front;
 }
 
-inline static size_t x_pipe_max_size(x_pipe *b)
+inline static size_t x_pipe_max_size(const x_pipe *b)
 {
 	return b->size - 1;
 }
 
-inline static size_t x_pipe_buffer_size(x_pipe *b)
+inline static size_t x_pipe_buffer_size(const x_pipe *b)
 {
 	return x_pipe_max_size(b) - x_pipe_data_size(b);
 }

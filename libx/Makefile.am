@@ -3,11 +3,11 @@ lib_LTLIBRARIES = libx.la
 AM_CFLAGS = $(regular_CFLAGS) -fPIC -I$(top_srcdir)/include -Wno-format-nonliteral -Wno-strict-aliasing -DX_SUPPORT_PRINTF_IXX=1
 libx_la_LDFLAGS = -version-info $(LT_VERSION_INFO) -no-undefined
 libx_la_SOURCES = assert.c base64.c bitmap.c dump.c dumpfmt.c heap.c ini.c log.c \
-		memory.c pipe.c splay.c string.c tcolor.c rope.c btnode.c tpool.c errno.c \
+		memory.c pipe.c splay.c string.c tcolor.c rope.c btnode.c thrpool.c errno.c \
 		tss.c thread.c once.c mutex.c rwlock.c cond.c unicode.c test.c uchar.c file.c \
 		strbuf.c tsignal.c dir.c stat.c proc.c cliarg.c sys.c path.c printf.c hmap.c \
 		time.c lib.c future.c twister.c index.c pathset.c fwalker.c hash.c debug.c \
-		hfsm.c list.c sklist.c
+		hfsm.c list.c sklist.c asynet.c uidpool.c
 
 if HAVE_LD_VERSION_SCRIPT
 libx_la_LDFLAGS += -Wl,--version-script=$(srcdir)/libx.map

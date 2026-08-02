@@ -20,38 +20,46 @@
  * THE SOFTWARE.
  */
 
-#ifndef X_TPOOL_H
-#define X_TPOOL_H
+#ifndef X_THRPOOL_H
+#define X_THRPOOL_H
 
 #include "x/types.h"
 #include "x/cond.h"
 #include "x/mutex.h"
 #include "x/thread.h"
+#include "x/memory.h"
 
-typedef void x_tpool_worker_f(void *arg);
+typedef void x_thrwork_handler(x_thrwork *work);
 
-struct x_tpool_st
+struct x_thrpool_st
 {
-	x_tpool_work *work_first, *work_last;
-	x_cond work_cond, working_cond;
-	size_t working_cnt, thread_cnt;
+	x_mset mset;
+	x_cond work_cond, complete_cond;
+	size_t thread_cnt, working_cnt;
 	x_mutex work_mutex;
 	x_thread **thread_list;
-	bool stop;
+	x_list work_list;
 };
 
-struct x_tpool_work_st
+struct x_thrwork_st
 {
-	x_tpool_worker_f *func;
-	void *arg;
-	struct x_tpool_work_st *next;
+	x_link link;
+	x_thrwork_handler *handler;
 };
 
-x_tpool_work *x_tpool_work_create(x_tpool_worker_f *func, void *arg);
-void x_tpool_work_free(x_tpool_work *work);
-int x_tpool_init(x_tpool *p, size_t num);
-void x_tpool_destroy(x_tpool *tpool);
-void x_tpool_add_work(x_tpool *tpool, x_tpool_work *work);
-void x_tpool_wait(x_tpool *tpool);
+int x_thrpool_init(x_thrpool *pool, size_t thr_cnt);
+void x_thrpool_free(x_thrpool *pool);
+void x_thrpool_add_work(x_thrpool *pool, x_thrwork *work);
+void x_thrpool_remove_work(x_thrpool *pool, x_thrwork *work);
+void x_thrpool_clear_work(x_thrpool *pool);
+void x_thrpool_sync(x_thrpool *pool);
+
+static inline void x_thrwork_init(x_thrwork *work, x_thrwork_handler *handler)
+{
+	work->handler = handler;
+	x_link_init(&work->link);
+}
 
 #endif
+
+

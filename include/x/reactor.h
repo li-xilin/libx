@@ -64,3 +64,4 @@ x_event *x_reactor_pop_event(x_reactor *r);
 void x_reactor_do_events(x_reactor *r);
 
 #endif
+

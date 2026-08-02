@@ -41,6 +41,7 @@ static void fuzzing(ut_runner *r)
 		ut_assert(r, x_sklist_sanitize(&skl));
 	}
 	ut_assert(r, skl.level == 0);
+	x_sklist_free(&skl);
 }
 
 static void foreach(ut_runner *r)
@@ -54,11 +55,12 @@ static void foreach(ut_runner *r)
 	int prev = -1;
 	x_sklist_foreach(cur, &skl) {
 		if (prev == -1) {
-			prev = *(int *)cur->data;
+			prev = *(int *)cur;
 			continue;
 		}
-		ut_assert(r, prev < *(int *)cur->data);
+		ut_assert(r, prev < *(int *)cur);
 	}
+	x_sklist_free(&skl);
 }
 
 void sklist_test_init(ut_suite *s)

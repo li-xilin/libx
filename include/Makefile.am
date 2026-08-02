@@ -25,7 +25,7 @@ xinclude_HEADERS = \
 	x/string.h \
 	x/tcolor.h \
 	x/thread.h \
-	x/tpool.h \
+	x/thrpool.h \
 	x/trick.h \
 	x/rope.h \
 	x/btnode.h \
@@ -55,6 +55,8 @@ xinclude_HEADERS = \
 	x/debug.h \
 	x/hfsm.h \
 	x/sklist.h \
+	x/asynet.h \
+	x/uidpool.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

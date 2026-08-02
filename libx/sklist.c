@@ -23,6 +23,7 @@
 #include "x/sklist.h"
 #include "x/twister.h"
 #include "x/dump.h"
+#include "x/debug.h"
 #include <stdlib.h>
 
 #define X_SKLIST_PROMOTE(ran) ((ran & 0xffff) <= 0x7fff)
@@ -48,13 +49,11 @@ int x_sklist_random_level(x_sklist *sklist)
 	return level;
 }
 
-void x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path)
+bool x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path)
 {
-	size_t identical_level = 0;
-	if (!sklist->level) {
-		path->identical_level = 0;
-		return;
-	}
+	bool matched = false;
+	if (!sklist->level)
+		return false;
 	x_link *end = &sklist->list[sklist->level - 1].head;
 	x_link *pos = end;
 	for (int i = sklist->level - 1; i >= 0; i--) {
@@ -67,19 +66,19 @@ void x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path)
 				break;
 			}
 			else if (cmp == 0) {
-				identical_level = i + 1;
-				for (int j = 0; j < identical_level; j++)
-					path->link[j] = sklink->link[j].next;
+				matched = true;
+				for (int j = 0; j < i + 1; j++)
+					path->link[j] = &sklink->link[j];
 				goto out;
 			}
 		}
 		pos = end->prev;
-		path->link[i] = end;
+		path->link[i] = pos;
 		pos--;
 		end--;
 	}
 out:
-	path->identical_level = identical_level;
+	return matched;
 }
 
 void x_sklist_path_insert(x_sklist *sklist, x_skpath *path, void *data)
@@ -93,38 +92,44 @@ void x_sklist_path_insert(x_sklist *sklist, x_skpath *path, void *data)
 	}
 	x_sklink *sklink = x_malloc(&sklist->mset, sizeof *sklink + link_level * sizeof(x_link));
 	sklink->data = data;
-	for (int i = 0; i < link_level; i++)
-		x_list_insert(path->link[i], &sklink->link[i]);
+	for (int i = 0; i < link_level; i++) {
+		x_list_insert(path->link[i]->next, &sklink->link[i]);
+	}
 }
 
 void x_sklist_path_remove(x_sklist *sklist, x_skpath *path)
 {
-	x_sklink *sklink = x_skpath_matched(path);
-	for (int i = 0; i < path->identical_level; i++) {
+	int i = 0;
+	if (!sklist->level)
+		return;
+	x_sklink *sklink = x_container_of(path->link[0], x_sklink, link[0]);
+	do {
 		x_list_del(&sklink->link[i]);
-		if (x_list_is_empty(&sklist->list[i]))
-			sklist->level--;
+		if (x_list_is_empty(&sklist->list[i])) {
+			for (int j = i; j < sklist->level; j++)
+				x_list_init(sklist->list + j);
+			sklist->level = i;
+			break;
+		}
+		i++;
 	}
+	while (i < sklist->level && path->link[i] == path->link[i - 1] + 1);
 	x_free(sklink);
 }
 
 void *x_sklist_find(x_sklist *sklist, const void *data)
 {
 	x_skpath path;
-	x_sklist_path_find(sklist, data, &path);
-	x_sklink *sklink = x_skpath_matched(&path);
-	if (sklink)
-		return sklink->data;
+	if (x_sklist_path_find(sklist, data, &path))
+		return x_container_of(path.link[0], x_sklink, link[0])->data;
 	return NULL;
 }
 
 void *x_sklist_find_or_insert(x_sklist *sklist, void *data)
 {
 	x_skpath path;
-	x_sklist_path_find(sklist, data, &path);
-	x_sklink *sklink = x_skpath_matched(&path);
-	if (sklink)
-		return sklink->data;
+	if (x_sklist_path_find(sklist, data, &path))
+		return x_container_of(path.link[0], x_sklink, link[0])->data;
 	x_sklist_path_insert(sklist, &path, data);
 	return NULL;
 }
@@ -132,9 +137,8 @@ void *x_sklist_find_or_insert(x_sklist *sklist, void *data)
 void *x_sklist_replace_or_insert(x_sklist *sklist, void *data)
 {
 	x_skpath path;
-	x_sklist_path_find(sklist, data, &path);
-	x_sklink *sklink = x_skpath_matched(&path);
-	if (sklink) {
+	if (x_sklist_path_find(sklist, data, &path)) {
+		x_sklink *sklink = x_container_of(path.link[0], x_sklink, link[0]);
 		void *orig_data = sklink->data;
 		sklink->data = data;
 		return orig_data;
@@ -146,13 +150,11 @@ void *x_sklist_replace_or_insert(x_sklist *sklist, void *data)
 void *x_sklist_remove(x_sklist *sklist, const void *data)
 {
 	x_skpath path;
-	x_sklist_path_find(sklist, data, &path);
-	x_sklink *sklink = x_skpath_matched(&path);
-	if (!sklink)
+	if (!x_sklist_path_find(sklist, data, &path))
 		return NULL;
-	void *node_data = sklink->data;
+	void *value = x_container_of(path.link[0], x_sklink, link[0])->data;
 	x_sklist_path_remove(sklist, &path);
-	return node_data;
+	return value;
 }
 
 x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*print_val)(const void *data))
@@ -173,21 +175,39 @@ x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*print_val)(const void *data))
 
 bool x_sklist_sanitize(x_sklist *sklist)
 {
-	if (sklist->level > X_SKLIST_LEVEL_MAX)
+	if (sklist->level > X_SKLIST_LEVEL_MAX) {
+		x_sanitize_stub();
 		return false;
+	}
 	for (int i = sklist->level + 1; i < X_SKLIST_LEVEL_MAX; i++)
-		if (!x_list_is_empty(&sklist->list[i]))
+		if (!x_list_is_empty(&sklist->list[i])) {
+			x_sanitize_stub();
 			return false;
+		}
 	for (int i = 0; i < sklist->level; i++) {
 		x_sklink *prev = NULL;
-		if (x_list_is_empty(&sklist->list[i]))
+		if (x_list_is_empty(&sklist->list[i])) {
+			x_sanitize_stub();
 			return false;
+		}
 		x_list_foreach(pos, &sklist->list[i]) {
 			x_sklink *sklink = x_container_of(pos, x_sklink, link[i]);
-			if (prev && sklist->compare(sklink->data, prev->data) <= 0)
+			if (prev && sklist->compare(sklink->data, prev->data) <= 0) {
+				x_sanitize_stub();
 				return false;
+			}
 			prev = sklink;
 		}
 	}
 	return true;
+}
+
+void x_sklist_free(x_sklist *sklist)
+{
+	if (!sklist->level)
+		return;
+	x_list_popeach(cur, &sklist->list[0]) {
+		x_sklink *sklink = x_container_of(cur, x_sklink, link);
+		x_free(sklink);
+	}
 }

@@ -23,6 +23,7 @@
 #ifndef X_SOCKET_H
 #define	X_SOCKET_H
 #include "log.h"
+#include "types.h"
 #include "detect.h"
 #include <stddef.h>
 #include <stdbool.h>
@@ -40,6 +41,7 @@ typedef SOCKET x_sock;
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <endian.h>
 typedef int x_sock;
 #define X_BADSOCK -1
@@ -55,6 +57,24 @@ typedef int x_sock;
 #define X_SOCK_ERR(name) name
 #endif
 
+struct x_ipaddr_st {
+	int family;
+	union {
+		struct in_addr in4;
+		struct in6_addr in6;
+	} un;
+};
+
+struct x_hostport_st {
+	char host[254];
+	uint16_t port;
+};
+
+struct x_iovec_st {
+	void *base;
+	size_t len;
+};
+
 struct timeval;
 
 int x_sock_init(void);
@@ -64,6 +84,7 @@ int x_sock_send_reset(x_sock sockfd);
 int x_sock_pair(int family, int type, int protocol, x_sock fd[2]);
 int x_sock_set_nonblocking(x_sock fd, bool enable);
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec);
+int x_sock_check(x_sock sock);
 
 int x_sock_sendall(x_sock sock, const void *data, size_t len);
 int x_sock_recvall(x_sock sock, void *buf, size_t len);
@@ -104,6 +125,8 @@ inline static int x_sock_send_u32(x_sock sock, uint32_t value)
                 return -1;
         return 0;
 }
+
+int x_parse_ipaddr(const char *str, x_ipaddr *ipaddr);
 
 #endif
 

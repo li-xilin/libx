@@ -28,17 +28,14 @@
 
 #define X_SKLIST_LEVEL_MAX 32
 
-#define x_sklist_foreach(pos, sklist) \
+#define x_sklist_foreach(elem, sklist) \
 	x_block_if ((sklist)->level) \
-		x_list_foreach (__sklist_##pos, &(sklist)->list[0]) \
-			x_block_var (x_sklink *pos = x_container_of(__sklist_##pos, x_sklink, link[0]))
-
-#define x_skpath_matched(path) ((path)->identical_level ? x_container_of((path)->link[0]->prev, x_sklink, link[0]) : NULL)
+		x_list_foreach (__sklist_##elem, &(sklist)->list[0]) \
+			x_block_var (void *elem = x_container_of(__sklist_##elem, x_sklink, link[0])->data)
 
 typedef struct x_sklist_st x_sklist;
 typedef struct x_sklink_st x_sklink;
 typedef struct x_skpath_st x_skpath;
-
 typedef int x_sklist_compare_fn(const void *p1, const void *p2);
 
 struct x_sklist_st {
@@ -55,14 +52,12 @@ struct x_sklink_st {
 };
 
 struct x_skpath_st {
-	size_t identical_level;
 	x_link *link[X_SKLIST_LEVEL_MAX];
 };
 
-void x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path);
+bool x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path);
 void x_sklist_path_insert(x_sklist *sklist, x_skpath *path, void *data);
 void x_sklist_path_remove(x_sklist *sklist, x_skpath *path);
-
 void x_sklist_init(x_sklist *sklist, x_sklist_compare_fn *compare);
 int x_sklist_random_level(x_sklist *sklist);
 void *x_sklist_find(x_sklist *sklist, const void *data);
@@ -71,6 +66,7 @@ void *x_sklist_replace_or_insert(x_sklist *sklist, void *data);
 void *x_sklist_remove(x_sklist *sklist, const void *data);
 x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*dump_value)(const void *data));
 bool x_sklist_sanitize(x_sklist *sklist);
+void x_sklist_free(x_sklist *sklist);
 
 #endif
 

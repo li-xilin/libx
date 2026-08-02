@@ -232,3 +232,7 @@ void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 	x_bprintf(sb, x_u("\n"));
 }
 
+void __x_sanitize_stub(const char *file, int line)
+{
+	// do nothing
+}
