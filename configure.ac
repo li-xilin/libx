@@ -220,6 +220,9 @@ if test "x$disable_network" = "xno"; then
 		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [test "x$ac_cv_header_sys_epoll_h" = "xyes"])
 		AM_CONDITIONAL([HAVE_POLL_H], [test "x$ac_cv_header_poll_h" = "xyes"])
 	fi
+else
+	AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [false])
+	AM_CONDITIONAL([HAVE_POLL_H], [false])
 fi
 
 AC_ARG_ENABLE([edit], [AS_HELP_STRING([--disable-edit], [Disable readline/edit functions])],
