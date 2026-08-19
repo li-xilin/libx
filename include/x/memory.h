@@ -42,6 +42,8 @@ struct x_mset_st
 	x_mutex lock;
 };
 
+#define X_MSET_INIT(mset) { .list = X_LIST_INIT(mset.list), .lock = X_MUTEX_INIT }
+
 void x_mset_init(x_mset *mset);
 void x_mset_clear(x_mset *mset);
 void x_mset_free(x_mset *mset);
