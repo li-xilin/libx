@@ -43,6 +43,49 @@ int x_time_now(struct timeval * tv)
 #endif
 }
 
+int x_time_monotonic(struct timeval *tv)
+{
+    if (!tv) {
+		errno = X_EINVAL;
+		return -1;
+	}
+#ifdef X_OS_WIN
+	static LONG init_once = 0;
+	static LARGE_INTEGER freq;
+	if (!init_once) {
+		LARGE_INTEGER tmp;
+		if (!QueryPerformanceFrequency(&tmp)) return -1;
+		InterlockedExchange((LONG*)&freq.QuadPart, tmp.QuadPart);
+		InterlockedExchange(&init_once, 1);
+	}
+	LARGE_INTEGER counter;
+	if (!QueryPerformanceCounter(&counter)) {
+		x_eval_errno();
+		return -1;
+	}
+	double total_us = (double)counter.QuadPart * 1e6 / (double)freq.QuadPart;
+	tv->tv_sec  = (long)(total_us / 1e6);
+	tv->tv_usec = (long)(total_us - (double)tv->tv_sec * 1e6);
+	if (tv->tv_usec < 0) {
+		tv->tv_usec += 1000000;
+		tv->tv_sec -= 1;
+	}
+	else if (tv->tv_usec >= 1000000) {
+		tv->tv_usec -= 1000000;
+		tv->tv_sec += 1;
+	}
+#else
+	struct timespec tp;
+	if (clock_gettime(CLOCK_MONOTONIC, &tp)) {
+		x_eval_errno();
+		return -1;
+	}
+	tv->tv_sec = tp.tv_sec;
+	tv->tv_usec = tp.tv_nsec / 1000;
+#endif
+    return 0;
+}
+
 uint64_t x_time_tick(void)
 {
 #ifdef X_OS_WIN
