@@ -49,12 +49,16 @@
     x/heap.h         堆（优先队列）
     x/hmap.h         散列表
     x/list.h         链表
+    x/sklist.h       跳表
     x/splay.h        伸展树
     x/index.h        索引器
     x/pipe.h         FIFO队列
     x/rope.h         绳索
     x/strbuf.h       动态连续字符串
     x/hfsm.h         多层有限状态机器
+    x/uidpool.h      动态分配和回收唯一标识
+    x/ringbuf.h      固定容量环形缓冲区
+    x/deqbuf.h       动态双端队列缓冲区
 
 线程和进程：
     x/cond.h         条件变量
@@ -76,6 +80,7 @@
     x/event.h        事件操作
     x/reactor.h      响应器模式
     x/socket.h       套接字操作
+    x/asynet.h       异步网络操作
 
 密码学：
     x/aes.h         AES对称加密算法

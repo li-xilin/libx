@@ -70,11 +70,6 @@ struct x_hostport_st {
 	uint16_t port;
 };
 
-struct x_iovec_st {
-	void *base;
-	size_t len;
-};
-
 struct timeval;
 
 int x_sock_init(void);

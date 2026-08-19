@@ -49,12 +49,16 @@ Data Structures:
     x/heap.h         Heap (priority queue)
     x/hmap.h         Hash map
     x/list.h         Linked list
+    x/sklist.h       Skip list
     x/splay.h        Splay tree
     x/index.h        Indexer
     x/pipe.h         FIFO queue
     x/rope.h         Rope
     x/strbuf.h       Dynamic contiguous string
     x/hfsm.h         Hierarchical finite state machine
+    x/uidpool.h      Allocate and release UID dynamically
+    x/ringbuf.h      Fixed size ring buffer
+    x/deqbuf.h       Dynamic double-ended queue buffer
 
 Threading and Processes:
     x/cond.h         Condition variables
@@ -76,6 +80,7 @@ Network Operations:
     x/event.h        Event operations
     x/reactor.h      Reactor pattern
     x/socket.h       Socket operations
+    x/asynet.h       Asynchronous networking operations
 
 Cryptography：
     x/aes.h          AES algorithm

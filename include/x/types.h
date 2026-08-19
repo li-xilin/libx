@@ -51,6 +51,11 @@ typedef int64_t x_ssize ;
 #error "Unknown the size of size_t"
 #endif
 
+struct x_iovec_st {
+	void *base;
+	size_t len;
+};
+
 #ifndef X_ROPE_NODE_DEFINED
 #define X_ROPE_NODE_DEFINED
 typedef struct x_rope_node_st x_rope_node;
@@ -419,6 +424,11 @@ typedef struct x_uidpool_st x_uidpool;
 #ifndef X_UIDLINK_DEFINED
 #define X_UIDLINK_DEFINED
 typedef struct x_uidlink_st x_uidlink;
+#endif
+
+#ifndef X_DEQBUF_DEFINED
+#define X_DEQBUF_DEFINED
+typedef struct x_deqbuf_st x_deqbuf;
 #endif
 
 #endif

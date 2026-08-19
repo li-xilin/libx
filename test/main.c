@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
 	ADD_SUITE(hfsm_test);
 	ADD_SUITE(sklist_test);
 	ADD_SUITE(uidpool_test);
+	ADD_SUITE(ringbuf_test);
+	ADD_SUITE(deqbuf_test);
 
 	ut_runner_run(&r, process);
 }
