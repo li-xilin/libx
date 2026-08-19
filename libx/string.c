@@ -489,4 +489,18 @@ const char *x_strnichr(const char *str, int chr, int n)
 	return 0;
 }
 
+size_t x_memrcopy(void *dest, size_t dest_len, const void *src, size_t src_len)
+{
+	size_t len = x_min(dest_len, src_len);
+	if (src && dest)
+		memcpy((char *)dest + (dest_len - len), (char *)src + (src_len - len), len);
+	return len;
+}
 
+size_t x_memcopy(void *dest, size_t dest_len, const void *src, size_t src_len)
+{
+	size_t len = x_min(dest_len, src_len);
+	if (src && dest)
+		memcpy(dest, src, len);
+	return len;
+}

@@ -121,6 +121,8 @@ char *x_strnstr(const char *s, const char *find, size_t slen);
 int x_strnrcmp(const char *s1, const char *s2, size_t len);
 const char *x_strnchr(const char *str, int chr, int n);
 const char *x_strnichr(const char *str, int chr, int n);
+size_t x_memcopy(void *dest, size_t dest_len, const void *src, size_t src_len);
+size_t x_memrcopy(void *dest, size_t dest_len, const void *src, size_t src_len);
 
 #endif
 
