@@ -26,6 +26,7 @@
 #define X_TSIGNAL_INT 1
 #define X_TSIGNAL_QUIT 2
 #define X_TSIGNAL_CLOSE 3
+#define X_TSIGNAL_NOMEM 4
 
 typedef void (x_tsignal_fn)(int action);
 

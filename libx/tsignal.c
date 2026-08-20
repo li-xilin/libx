@@ -20,11 +20,13 @@
  * SOFTWARE.
  */
 
+#include "x/types.h"
+#include "x/thread.h"
 #include "x/tsignal.h"
 #include "x/detect.h"
 #include "x/errno.h"
 
-static x_tsignal_fn *sg_user_handler = NULL;
+static x_tsignal_fn *s_signal_handler = NULL;
 
 #ifdef X_OS_WIN
 #include <windows.h>
@@ -32,15 +34,15 @@ static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
 {
 	switch( fdwCtrlType) {
 		case CTRL_C_EVENT:
-			sg_user_handler(X_TSIGNAL_INT);
+			s_signal_handler(X_TSIGNAL_INT);
 			return TRUE;
 		case CTRL_BREAK_EVENT:
-			sg_user_handler(X_TSIGNAL_QUIT);
+			s_signal_handler(X_TSIGNAL_QUIT);
 			return TRUE;
 		case CTRL_CLOSE_EVENT:
 		case CTRL_LOGOFF_EVENT:
 		case CTRL_SHUTDOWN_EVENT:
-			sg_user_handler(X_TSIGNAL_CLOSE);
+			s_signal_handler(X_TSIGNAL_CLOSE);
 			return TRUE;
 		default:
 			return FALSE;
@@ -53,22 +55,22 @@ int x_tsignal_set(x_tsignal_fn *proc)
 		errno = X_EINVAL;
 		return -1;
 	}
-	if (sg_user_handler == NULL) {
+	if (s_signal_handler == NULL) {
 		if(!SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler,TRUE)) {
 			x_eval_errno();
 			return -1;
 		}
 	}
-	sg_user_handler = proc;
+	s_signal_handler = proc;
 	return 0;
 }
 
 void x_tsignal_reset(void)
 {
-	if (!sg_user_handler)
+	if (!s_signal_handler)
 		return;
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler,FALSE);
-	sg_user_handler = NULL;
+	s_signal_handler = NULL;
 }
 
 #else
@@ -85,7 +87,7 @@ static void *thread_proc(void *arg)
 {
 	int action = *(int *)arg;
 	free(arg);
-	sg_user_handler(action);
+	s_signal_handler(action);
 	return NULL;
 }
 
@@ -121,7 +123,7 @@ int x_tsignal_set(x_tsignal_fn *proc)
 		errno = X_EINVAL;
 		return -1;
 	}
-	if (sg_user_handler == NULL) {
+	if (s_signal_handler == NULL) {
 		struct sigaction sa = {
 			.sa_handler = signal_handler,
 			.sa_flags = 0
@@ -139,7 +141,7 @@ int x_tsignal_set(x_tsignal_fn *proc)
 		if (sigaction(SIGTERM, &sa, &sg_sigterm_sa))
 			goto fail;
 	}
-	sg_user_handler = proc;
+	s_signal_handler = proc;
 	return 0;
 fail:
 	x_eval_errno();
@@ -148,13 +150,35 @@ fail:
 
 void x_tsignal_reset(void)
 {
-	if (!sg_user_handler)
+	if (!s_signal_handler)
 		return;
 	(void)sigaction(SIGINT, &sg_sigint_sa, NULL);
 	(void)sigaction(SIGQUIT, &sg_sigquit_sa, NULL);
 	(void)sigaction(SIGTERM, &sg_sigterm_sa, NULL);
-	sg_user_handler = NULL;
+	s_signal_handler = NULL;
 }
 
 #endif
+
+int nomem_thread_proc(void)
+{
+	x_tsignal_fn *handler = x_thread_data();
+	handler(X_TSIGNAL_NOMEM);
+	abort();
+	return 0;
+}
+
+void x_tsignal_send_nomem(void)
+{
+	x_tsignal_fn *handler = s_signal_handler;
+	if (!handler) {
+		abort();
+		return;
+	}
+	x_thread *t = x_thread_create(nomem_thread_proc, NULL, handler);
+	if (t)
+		x_thread_free(t);
+	while (true)
+		x_thread_sleep(1000);
+}
 

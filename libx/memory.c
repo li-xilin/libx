@@ -28,8 +28,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#define RETRY_INTERVAL 20
+#define RETRY_INTERVAL 100
+#define RETRY_TIMES 10
 #define DOUBLE_FREE_MAGIC (-(intptr_t)0xCCCC)
+
+extern void x_tsignal_send_nomem(void);
 
 static x_once s_mset_once = X_ONCE_INIT;
 static x_mset s_mset = {
@@ -37,16 +40,37 @@ static x_mset s_mset = {
 	.lock = X_MUTEX_INIT
 };
 
+static inline void *malloc_no_fault(size_t size)
+{
+	void *ptr = malloc(size);
+	for (int i = 0; !ptr && i < RETRY_TIMES; i++) {
+		x_thread_sleep(RETRY_INTERVAL);
+		ptr = malloc(size);
+	}
+	if (!ptr)
+		x_tsignal_send_nomem();
+	return ptr;
+}
+
+static inline void *realloc_no_fault(void *old_ptr, size_t size)
+{
+	void *ptr = realloc(old_ptr, size);
+	for (int i = 0; !ptr && i < RETRY_TIMES; i++) {
+		x_thread_sleep(RETRY_INTERVAL);
+		void **tmp = &old_ptr;
+		ptr = realloc(*tmp, size);
+	}
+	if (!ptr)
+		x_tsignal_send_nomem();
+	return ptr;
+}
+
 static void init_default_mset(void)
 {
 #ifdef X_OS_WIN
 	// Prevent infinite loop
 	size_t size = sizeof(x_mblock) + sizeof *s_mset.lock.section;
-	x_mblock *b = malloc(size);
-	while (!b) {
-		x_thread_sleep(RETRY_INTERVAL);
-		b = malloc(size);
-	}
+	x_mblock *b = malloc_no_fault(size);
 	s_mset.lock.section = (void *)b->data;
 	InitializeCriticalSection(s_mset.lock.section);
 	x_list_add_back(&s_mset.list, &b->link);
@@ -89,11 +113,7 @@ void x_mset_free(x_mset *mset)
 
 void *x_malloc(x_mset *mset, size_t size)
 {
-	x_mblock *b = malloc(sizeof *b + size);
-	while (!b) {
-		x_thread_sleep(RETRY_INTERVAL);
-		b = malloc(sizeof *b + size);
-	}
+	x_mblock *b = malloc_no_fault(sizeof *b + size);
 	if (!mset) {
 		x_once_init(&s_mset_once, init_default_mset);
 		mset = &s_mset;
@@ -128,14 +148,7 @@ void *x_realloc(void *ptr, size_t size)
 	x_mutex_lock(&b->mset->lock);
 	x_list_del(&b->link);
 	x_mutex_unlock(&b->mset->lock);
-	x_mblock *new_blk = realloc(b, sizeof *b + size);
-	if (new_blk)
-		b = NULL;
-	while (!new_blk) {
-		x_thread_sleep(RETRY_INTERVAL);
-		x_mblock **bp = &b;
-		new_blk = realloc(*bp, sizeof *b + size);
-	}
+	x_mblock *new_blk = realloc_no_fault(b, sizeof *b + size);
 	if (new_blk->mset) {
 		x_mutex_lock(&new_blk->mset->lock);
 		x_list_add_back(&new_blk->mset->list, &new_blk->link);
