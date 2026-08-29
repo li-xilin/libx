@@ -184,7 +184,7 @@ static void on_connect_event(x_event *ev)
 	x_sock fd;
 	struct pending *p = x_container_of(ev, struct pending, event.base);
 	socklen_t len = sizeof(error);
-	if (getsockopt(p->event.sock, SOL_SOCKET, SO_ERROR, &error, &len)) {
+	if (getsockopt(p->event.sock, SOL_SOCKET, SO_ERROR, (char *)&error, &len)) {
 		error = errno;
 		p->on_connect(error, X_BADSOCK, p->user);
 	}
@@ -285,7 +285,7 @@ static x_sock sock_listen(x_ipaddr *ipaddr, short port)
 	if (listen_fd == X_BADSOCK)
 		return X_BADSOCK;
 	int optval = 1;
-	setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+	setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
 
 	if (ipaddr->family == AF_INET) {
 		struct sockaddr_in sa = {

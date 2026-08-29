@@ -529,7 +529,7 @@ int x_sock_check(x_sock sock)
 #ifdef X_OS_WIN
 	int optval;
 	int optlen = sizeof(optval);
-	if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen)) {
+	if (getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen)) {
 		x_eval_errno();
 		return -1;
 	}

@@ -161,10 +161,10 @@ x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*print_val)(const void *data))
 {
 	int cnt = 0;
 	if (!sklist->level)
-		return x_dump_empty_block("sklist", 0);
+		return x_dump_empty_block(x_u("sklist"), 0);
 	x_list_foreach(cur, &sklist->list[0])
 		cnt++;
-	x_dump *blk = x_dump_empty_block("sklist", cnt);
+	x_dump *blk = x_dump_empty_block(x_u("sklist"), cnt);
 	int i = 0;
 	x_list_foreach(cur, &sklist->list[0]) {
 		x_sklink *sklink = x_container_of(cur, x_sklink, link[0]);

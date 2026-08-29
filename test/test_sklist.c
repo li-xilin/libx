@@ -34,7 +34,7 @@ static void fuzzing(ut_runner *r)
 
 	x_strbuf sb = X_STRBUF_INIT;
 	x_dump_to_strbuf(x_sklist_dump(&skl, dump), x_dump_default_format(), &sb);
-	ut_assert_str_equal(r, DUMP, x_strbuf_str(&sb));
+	ut_assert(r, x_ustrcmp(x_u(DUMP), x_strbuf_str(&sb)) == 0);
 
 	for (int i = 0; i < x_arrlen(arr); i++) {
 		x_sklist_remove(&skl, &arr[i]);
