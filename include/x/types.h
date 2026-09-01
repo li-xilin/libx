@@ -116,6 +116,16 @@ typedef struct x_link_st x_link;
 typedef struct x_list_st x_list;
 #endif
 
+#ifndef X_SLINK_DEFINED
+#define X_SLINK_DEFINED
+typedef struct x_slink_st x_slink;
+#endif
+
+#ifndef X_SLIST_DEFINED
+#define X_SLIST_DEFINED
+typedef struct x_slist_st x_slist;
+#endif
+
 #ifndef X_INI_DEFINED
 #define X_INI_DEFINED
 typedef struct x_ini_st x_ini;

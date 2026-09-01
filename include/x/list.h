@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,21 @@
 #include "macros.h"
 #include <assert.h>
 
+#define X_LIST_INIT(name) { { &(name.head), &(name.head) } }
+#define X_SLIST_INIT { NULL }
+
+#define x_list_foreach(pos, list) \
+	for (x_link *pos = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
+
+#define x_list_popeach(pos, list) \
+	for (x_link *pos, __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
+
+#define x_slist_foreach(pos, list) \
+	for (x_slink *pos = (list)->head; pos; (pos) = (pos)->next)
+
+#define x_slist_popeach(pos, list) \
+	for (x_slink *pos = (list)->head; pos; (pos) = (pos)->next, (list)->head = (pos))
+
 struct x_link_st {
 	x_link *prev, *next;
 };
@@ -35,7 +50,13 @@ struct x_list_st {
 	x_link head;
 };
 
-#define X_LIST_INIT(name) { { &(name.head), &(name.head) } }
+struct x_slink_st {
+	x_slink *next;
+};
+
+struct x_slist_st {
+	x_slink *head;
+};
 
 inline static void x_list_init(x_list *list)
 {
@@ -162,10 +183,44 @@ inline static x_link *x_list_second(const x_list *list)
 void x_list_merge_front(x_list *dest, x_list *src);
 void x_list_merge_back(x_list *dest, x_list *src);
 
-#define x_list_foreach(pos, list) \
-	for (x_link *pos = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
+inline static void x_slist_init(x_slist *list)
+{
+	list->head = NULL;
+}
 
-#define x_list_popeach(pos, list) \
-	for (x_link *pos, __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
+inline static void x_slist_add_front(x_slist *list, x_slink *link)
+{
+	link->next = list->head;
+	list->head = link;
+}
+
+inline static void x_slist_del_front(x_slist *list)
+{
+	if (list->head)
+		list->head = list->head->next;
+}
+
+inline static x_slink *x_slist_first(x_slist *list, x_slink *link)
+{
+	return list->head;
+}
+
+inline static bool x_slist_is_empty(const x_slist *list)
+{
+	return !list->head;
+}
+
+inline static void x_slist_insert_after(x_slink *link, x_slink *new_link)
+{
+	new_link->next = link->next;
+	link->next = new_link;
+}
+
+inline static void x_slist_del_after(x_slink *link)
+{
+	if (link->next)
+		link->next = link->next->next;
+}
 
 #endif
+
