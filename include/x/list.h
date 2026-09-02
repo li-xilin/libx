@@ -37,10 +37,13 @@
 	for (x_link *pos, __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
 
 #define x_slist_foreach(pos, list) \
-	for (x_slink *pos = (list)->head; pos; (pos) = (pos)->next)
+	for (x_slink *pos = (list)->head.next; pos; (pos) = (pos)->next)
+
+#define x_slist_foreach_prev(prev, list) \
+	for (x_slink *prev = &(list)->head, *__x_cur; prev->next && (__x_cur = (prev)->next, 1); (prev) = __x_cur)
 
 #define x_slist_popeach(pos, list) \
-	for (x_slink *pos = (list)->head; pos; (pos) = (pos)->next, (list)->head = (pos))
+	for (x_slink *pos; (pos = (list)->head.next) && ((list)->head.next = pos->next, 1); )
 
 struct x_link_st {
 	x_link *prev, *next;
@@ -55,7 +58,7 @@ struct x_slink_st {
 };
 
 struct x_slist_st {
-	x_slink *head;
+	x_slink head;
 };
 
 inline static void x_list_init(x_list *list)
@@ -185,41 +188,57 @@ void x_list_merge_back(x_list *dest, x_list *src);
 
 inline static void x_slist_init(x_slist *list)
 {
-	list->head = NULL;
+	list->head.next = NULL;
 }
 
 inline static void x_slist_add_front(x_slist *list, x_slink *link)
 {
-	link->next = list->head;
-	list->head = link;
+	link->next = list->head.next;
+	list->head.next = link;
 }
 
-inline static void x_slist_del_front(x_slist *list)
+inline static x_slink *x_slist_del_front(x_slist *list)
 {
-	if (list->head)
-		list->head = list->head->next;
+	if (!list->head.next)
+		return NULL;
+	x_slink *first = list->head.next;
+	list->head.next = list->head.next->next;
+	return first;
 }
 
 inline static x_slink *x_slist_first(x_slist *list, x_slink *link)
 {
-	return list->head;
+	return list->head.next;
 }
 
 inline static bool x_slist_is_empty(const x_slist *list)
 {
-	return !list->head;
+	return !list->head.next;
 }
 
-inline static void x_slist_insert_after(x_slink *link, x_slink *new_link)
+inline static void x_slink_insert_after(x_slink *link, x_slink *new_link)
 {
 	new_link->next = link->next;
 	link->next = new_link;
 }
 
-inline static void x_slist_del_after(x_slink *link)
+inline static x_slink *x_slink_del_after(x_slink *link)
 {
-	if (link->next)
-		link->next = link->next->next;
+	if (!link->next)
+		return NULL;
+	x_slink *del = link->next;
+	link->next = link->next->next;
+	return del;
+}
+
+inline static x_slink *x_slink_replace_after(x_slink *link, x_slink *new_link)
+{
+	if (!link->next)
+		return NULL;
+	x_slink *del = link->next;
+	new_link->next = link->next;
+	link->next = new_link;
+	return del;
 }
 
 #endif
