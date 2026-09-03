@@ -27,7 +27,63 @@
 
 #define x_int32_rotate(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
 
-uint64_t x_hash64_jenkins(uint64_t key)
+uint32_t x_hash32_twang(uint32_t key)
+{
+	key = ~key + (key << 15);  // key = (key << 15) - key - 1
+	key = key ^ (key >> 12);
+	key = key + (key << 2);
+	key = key ^ (key >> 4);
+	key = key * 2057;          // Multiply by a prime
+	key = key ^ (key >> 16);
+	return key;
+}
+
+uint32_t x_hash32_twang_inv(uint32_t key) {
+	uint32_t tmp;
+	// Invert key = key ^ (key >> 16)
+	tmp = key^(key>>16);
+	key = key^(tmp>>16);
+	// Invert key = key * 2057;
+	key = key * 3369993785u;
+    // Invert key = key ^ (key >> 4);
+	tmp = key^(key>>4);
+	tmp = key^(tmp>>4);
+	tmp = key^(tmp>>4);
+	tmp = key^(tmp>>4);
+	tmp = key^(tmp>>4);
+	tmp = key^(tmp>>4);
+	tmp = key^(tmp>>4);
+	key = key^(tmp>>4);
+	// Invert key = key + (key << 2);
+	tmp = key-(key<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	tmp = key-(tmp<<2);
+	key = key-(tmp<<2);
+	// Invert key = key ^ (key >> 12);
+	tmp = key^(key>>12);
+	tmp = key^(key>>12);
+	key = key^(tmp>>12);
+	// Invert key = (key << 15) - key - 1
+	tmp = ~key;
+	tmp = ~(key-(tmp<<15));
+	tmp = ~(key-(tmp<<15));
+	key = ~(key-(tmp<<15));
+    return key;
+}
+
+uint64_t x_hash64_twang(uint64_t key)
 {
 	key = (~key) + (key << 21); // key = (key << 21) - key - 1;
 	key = key ^ (key >> 24);
@@ -39,7 +95,7 @@ uint64_t x_hash64_jenkins(uint64_t key)
 	return key;
 }
 
-uint64_t x_hash64_jenkins_inv(uint64_t key)
+uint64_t x_hash64_twang_inv(uint64_t key)
 {
 	uint64_t tmp;
 	// Invert key = key + (key << 31)
@@ -69,7 +125,7 @@ uint64_t x_hash64_jenkins_inv(uint64_t key)
 }
 
 // https://developer.aliyun.com/article/952944
-uint32_t x_hash_murmur2(const void *key, size_t len, uint32_t seed)
+uint32_t x_hash32_murmur2(const void *key, size_t len, uint32_t seed)
 {
 	// 'm' and 'r' are mixing constants generated offline.
 	// They're not really 'magic', they just happen to work well.
@@ -509,7 +565,7 @@ static void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *
 	*pc=c; *pb=b;
 }
 
-uint32_t x_hash_lookup3(const void *data, size_t size, uint32_t seed)
+uint32_t x_hash32_lookup3(const void *data, size_t size, uint32_t seed)
 {
 	return hashlittle(data, size, seed);
 }
@@ -577,7 +633,7 @@ static uint32_t crc32_tab[] =
     0x2d02ef8dL
 };
 
-uint32_t x_hash_crc(const void *s, size_t len, uint32_t initval)
+uint32_t x_hash32_crc(const void *s, size_t len, uint32_t initval)
 {
     uint32_t crc32val = initval ^ 0xFFFFFFFF;
     for (size_t i = 0;  i < len;  i++)

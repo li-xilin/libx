@@ -9,19 +9,19 @@ const char *str = "Some rise by sin, and some by virtue fall.";
 
 static void murmur2(ut_runner *r)
 {
-	ut_assert_uint_equal(r, 2418629218U, x_hash_murmur2(str, strlen(str), 0));
+	ut_assert_uint_equal(r, 2418629218U, x_hash32_murmur2(str, strlen(str), 0));
 	ut_assert_uint_equal(r, 4761444356487400828U, x_hash64_murmur2(str, strlen(str), 0));
 }
 
 static void lookup3(ut_runner *r)
 {
-	ut_assert_uint_equal(r, 2948963046U, x_hash_lookup3(str, strlen(str), 0));
+	ut_assert_uint_equal(r, 2948963046U, x_hash32_lookup3(str, strlen(str), 0));
 	ut_assert_uint_equal(r, 12665699843894295128U, x_hash64_lookup3(str, strlen(str), 0));
 }
 
 static void crc(ut_runner *r)
 {
-	ut_assert_uint_equal(r, 3027047833U, x_hash_crc(str, strlen(str), 0));
+	ut_assert_uint_equal(r, 3027047833U, x_hash32_crc(str, strlen(str), 0));
 	ut_assert_uint_equal(r, 11331088808630045615U, x_hash64_crc(str, strlen(str), 0));
 }
 
