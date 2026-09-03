@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,15 +23,11 @@
 #ifndef X_TSS_H
 #define X_TSS_H
 
+#include "types.h"
 #include "detect.h"
 #include <errno.h>
 #include <assert.h>
 #include <stdint.h>
-
-#ifndef X_TSS_DEFINED
-#define X_TSS_DEFINED
-typedef struct x_tss_st x_tss;
-#endif
 
 struct x_tss_st
 {
@@ -39,15 +35,10 @@ struct x_tss_st
 };
 
 typedef void (x_tss_free_f)(void *ptr);
-
 int x_tss_init(x_tss *key, x_tss_free_f *free_cb);
-
 void x_tss_remove(x_tss *key);
-
 void *x_tss_get(x_tss *key);
-
 int x_tss_set(x_tss *key, void *value);
-
 
 #endif
 
