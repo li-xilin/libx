@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -162,7 +162,9 @@ void x_tsignal_reset(void)
 
 int nomem_thread_proc(void)
 {
-	x_tsignal_fn *handler = x_thread_data();
+	void *tmp = x_thread_data();
+	x_tsignal_fn *handler = NULL;
+	memcpy(&handler, &tmp, sizeof tmp);
 	handler(X_TSIGNAL_NOMEM);
 	abort();
 	return 0;
@@ -175,7 +177,9 @@ void x_tsignal_send_nomem(void)
 		abort();
 		return;
 	}
-	x_thread *t = x_thread_create(nomem_thread_proc, NULL, handler);
+	void *tmp;
+	memcpy(&tmp, &handler, sizeof tmp);
+	x_thread *t = x_thread_create(nomem_thread_proc, NULL, tmp);
 	if (t)
 		x_thread_free(t);
 	while (true)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,20 +36,20 @@
 #include <ctype.h>
 
 #ifndef NDEBUG
-#define check_symbol(_sym) \
+#define CHK_SYMBOL(_sym) \
 do { \
-	assert(_sym); \
-	x_assert(_sym[0] != '\0', \
+	x_assert(_sym); \
+	x_assert_printf(_sym[0] != '\0', \
 			"invalid zero-length symbol name"); \
-	x_assert(isalpha((int)_sym[0]) || _sym[0] == '_', \
+	x_assert_printf(isalpha((int)_sym[0]) || _sym[0] == '_', \
 			"symbol name %s begin with invalid charactor", _sym); \
 	for (int i = 1; _sym[i]; i++) { \
-		x_assert(_sym[i] == '_' || _sym[i] == '.' || isdigit((int)_sym[i]) || isalpha((int)_sym[i]), \
+		x_assert_printf(_sym[i] == '_' || _sym[i] == '.' || isdigit((int)_sym[i]) || isalpha((int)_sym[i]), \
 				"invalid charactor \'%c\' in symbol name \'%s\'", _sym[i], _sym); \
 	} \
 } while(0)
 #else
-#define check_symbol(_sym) (void)0
+#define CHK_SYMBOL(_sym) (void)0
 #endif
 
 enum dump_type {
@@ -208,7 +208,7 @@ x_dump *x_dump_mem(const void *ptr, size_t size)
 
 x_dump *x_dump_symbol(const x_uchar *sym)
 {
-	check_symbol(sym);
+	CHK_SYMBOL(sym);
 
 	size_t len = x_ustrlen(sym);
 	size_t siz = (len + 1) * sizeof(x_uchar);
@@ -226,8 +226,8 @@ x_dump *x_dump_symbol(const x_uchar *sym)
 
 x_dump *x_dump_pair(x_dump *d1, x_dump *d2)
 {
-	x_assert(!bind_bit(d1, 0), "The first dump already bound with other one");
-	x_assert(!bind_bit(d2, 0), "The second dump already bound with other one");
+	x_assert_printf(!bind_bit(d1, 0), "The first dump already bound with other one");
+	x_assert_printf(!bind_bit(d2, 0), "The second dump already bound with other one");
 
 	x_dump *dmp = malloc(sizeof(x_dump) + sizeof(struct value_pair_st));
 	if (!dmp) {
@@ -249,7 +249,7 @@ x_dump *x_dump_pair(x_dump *d1, x_dump *d2)
 
 x_dump *x_dump_empty_block(const x_uchar *sym, size_t len)
 {
-	check_symbol(sym);
+	CHK_SYMBOL(sym);
 
 	x_dump *dmp = calloc(1, sizeof(x_dump) + sizeof(struct value_block_st) + len * sizeof (x_dump *) );
 	if (!dmp)
@@ -272,8 +272,8 @@ x_dump *x_dump_empty_block(const x_uchar *sym, size_t len)
 
 int x_dump_set_name(x_dump *dmp, const x_uchar *sym)
 {
-	check_symbol(sym);
-	x_assert(dmp->type == DTYPE_BLOCK, "unsupported dump type");
+	CHK_SYMBOL(sym);
+	x_assert_printf(dmp->type == DTYPE_BLOCK, "unsupported dump type");
 	struct value_block_st *block = (void *) dmp->value;
 	free(block->name);
 	block->name = x_ustrdup(sym);
@@ -289,24 +289,24 @@ void x_dump_bind(x_dump *dmp, int index, x_dump* binding)
 	assert(dmp);
 	assert(index >= 0);
 	assert(binding);
-	x_assert(!bind_bit(dmp, 0), "binding operation is denied");
-	x_assert(dmp->type == DTYPE_BLOCK || dmp->type == DTYPE_NOMEM,
+	x_assert_printf(!bind_bit(dmp, 0), "binding operation is denied");
+	x_assert_printf(dmp->type == DTYPE_BLOCK || dmp->type == DTYPE_NOMEM,
 			"binding operation only support block and nomem"); 
-	x_assert(!bind_bit(binding, 0), "instance is already in binding");
+	x_assert_printf(!bind_bit(binding, 0), "instance is already in binding");
 	struct value_block_st *block;
 #ifndef NDEBUG
 	if (binding->type == DTYPE_BLOCK) {
 		block = (void *) binding->value;
 		for (int i = 0; i < block->len; i++) {
-			x_assert(block->dumps[i], "incomplete dump of block, NULL pointer field #%d", i);
+			x_assert_printf(block->dumps[i], "incomplete dump of block, NULL pointer field #%d", i);
 		}
 	}
 #endif
 	block = (void *) dmp->value;
 	switch (dmp->type) {
 		case DTYPE_BLOCK:
-			x_assert(index >= 0 && index < block->len, "dump: exceed block field index %d", index);
-			x_assert(!block->dumps[index], "field #%d already set", index);
+			x_assert_printf(index >= 0 && index < block->len, "dump: exceed block field index %d", index);
+			x_assert_printf(!block->dumps[index], "field #%d already set", index);
 			block->dumps[index] = binding;
 			set_bind_bit(binding, 1);
 			break;
@@ -376,7 +376,7 @@ static void dump_rec_free(x_dump *dmp)
 void x_dump_free(x_dump *dmp)
 {
 	assert(dmp);
-	x_assert(!bind_bit(dmp, 0),
+	x_assert_printf(!bind_bit(dmp, 0),
 			"failed to free dump, the instance has beed bound");
 
 	set_bind_bit(dmp, 1);
@@ -403,7 +403,7 @@ static int indent_check_cb(const x_uchar *buf, size_t len, void *ctx)
 {
 	struct search_args *args = ctx;
 	for (size_t i = 0; i < len; i++)
-		x_assert(buf[i] != '\n' && buf[i] != '\0', "");
+		x_assert_printf(buf[i] != '\n' && buf[i] != '\0', "");
 	return args->out_cb(buf, len, args->ctx);
 }
 

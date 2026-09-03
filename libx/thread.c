@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -234,7 +234,7 @@ fail:
 
 int x_thread_sleep(unsigned int millise)
 {
-	x_assert(millise < UINT_MAX / 1000, "millise is too big");
+	x_assert_printf(millise < UINT_MAX / 1000, "millise is too big");
 #ifdef X_OS_WIN
 	Sleep(millise);
 	return 0;
@@ -258,7 +258,7 @@ int x_thread_sleep(unsigned int millise)
 int x_thread_join(x_thread *t, int *ret_code)
 {
 	assert(t);
-	x_assert(!t->detached, "Thread already detached");
+	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	DWORD dwRetCode = -1;
 	if(WaitForSingleObject(t->hThread, INFINITE))
@@ -290,7 +290,7 @@ int x_thread_join(x_thread *t, int *ret_code)
 int x_thread_free(x_thread *t)
 {
 	assert(t);
-	x_assert(!t->detached, "Thread already detached");
+	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	int retval = CloseHandle(t->hThread);
 #else
@@ -318,7 +318,7 @@ void x_thread_yield(void)
 void x_thread_kill(x_thread *t)
 {
 	assert(t);
-	x_assert(!t->detached, "Thread already detached");
+	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	(void)TerminateThread(t->hThread, -1);
 #else
@@ -331,7 +331,7 @@ void x_thread_kill(x_thread *t)
 void x_thread_testcancel(int retcode)
 {
 	x_thread *thread = x_thread_self();
-	x_assert(thread, "Try to cancel the thread which not created by x_thread_create");
+	x_assert_printf(thread, "Try to cancel the thread which not created by x_thread_create");
 	if (thread->canceled)
 		longjmp(thread->jmp_exit, retcode);
 }
@@ -339,21 +339,21 @@ void x_thread_testcancel(int retcode)
 bool x_thread_canceled(void)
 {
 	x_thread *thread = x_thread_self();
-	x_assert(thread, "Try to cancel the thread which not created by x_thread_create");
+	x_assert_printf(thread, "Try to cancel the thread which not created by x_thread_create");
 	return thread->canceled;
 }
 
 void x_thread_cancel(x_thread *t)
 {
 	assert(t);
-	x_assert(!t->detached, "Thread already detached");
+	x_assert_printf(!t->detached, "Thread already detached");
 	t->canceled = 1;
 }
 
 void *x_thread_data(void)
 {
 	x_thread *thread = x_thread_self();
-	x_assert(thread, "Try to cancel the thread which not created by x_thread_create");
+	x_assert_printf(thread, "Try to cancel the thread which not created by x_thread_create");
 	return thread->data;
 }
 

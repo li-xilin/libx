@@ -155,7 +155,7 @@ size_t x_ringbuf_pour_backward(x_ringbuf *src, x_ringbuf *dst, size_t size)
 	do {
 		x_iovec iov = x_ringbuf_acquire_read_back(src);
 		read_size = x_min(size - moved_size, iov.len);
-		write_size = x_ringbuf_write_front(dst, iov.base + iov.len - read_size, read_size);
+		write_size = x_ringbuf_write_front(dst, (char *)iov.base + iov.len - read_size, read_size);
 		x_ringbuf_commit_read_back(src, write_size);
 		moved_size += write_size;
 	} while (write_size && moved_size != size);

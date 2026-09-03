@@ -104,7 +104,7 @@ struct transfer
 	int error;
 	x_stream_handler *on_transferred;
 	void *user;
-	x_iovec iovec[0];
+	x_iovec iovec[];
 };
 
 struct query

@@ -182,7 +182,7 @@ int x_ini_set(x_ini *d, const char *sec_name, const char *key, const char *val, 
 {
 	struct x_ini_option_st *opt = NULL;
 	struct x_ini_section_st *sec = NULL;
-	x_assert(key && val, "NULL pointer for sec_name, key or val");
+	x_assert_printf(key && val, "NULL pointer for sec_name, key or val");
 	if (sec_name && !x_ini_check_section_name(sec_name)) {
 		errno = EINVAL;
 		return -1;
@@ -526,7 +526,7 @@ char *x_ini_path_vget(const x_ini *d, const char *path_fmt, va_list ap)
 	path[sizeof path - 1] = '\0';
 	vsnprintf(path, sizeof path - 1, path_fmt, ap);
 	int sec_len = section_name_len(path);
-	x_assert(sec_len >= 0, "no colon(:) found in field path");
+	x_assert_printf(sec_len >= 0, "no colon(:) found in field path");
 	struct x_ini_section_st *sec = find_section_with_len(d, path, sec_len);
 	if (!sec)
 		return NULL;
@@ -551,7 +551,7 @@ int x_ini_path_set(x_ini *d, const char *path, const char *fmt, ...)
 	char buf[1024], *sec_name = NULL, *val = NULL;
 	va_list ap;
 	int sec_len = section_name_len(path);
-	x_assert(sec_len >= 0, "no colon(:) found in field path");
+	x_assert_printf(sec_len >= 0, "no colon(:) found in field path");
 	sec_name = x_malloc(&d->mset, sec_len + 1);
 	memcpy(sec_name, path, sec_len);
 	sec_name[sec_len] = '\0';

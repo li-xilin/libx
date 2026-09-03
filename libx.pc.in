@@ -4,11 +4,11 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: libx
-Description: Lightweight C Toolkit Based on Standard Library 
-URL: http:s//github.com/li-xilin/axe
+Description: Light-weight and Portable C Toolkit Library Based on Windows NT 6.1 or Posix
+URL: http:s//github.com/li-xilin/libx
 Version: @VERSION@
 Requires:
 Conflicts:
 Libs: -L${libdir} -lx
-Cflags: -I${includedir}
+Cflags: -I${includedir} @PC_DEBUG_CFLAGS@
 

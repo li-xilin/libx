@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -165,7 +165,7 @@ char *x_strrepl(const char *orig, const char *rep, const char *with)
 	assert(orig);
 	assert(rep);
 	assert(with);
-	x_assert(rep[0], "length of parameter rep is 0");
+	x_assert_printf(rep[0], "length of parameter rep is 0");
 
 	const char *ins;  /* the next insert point */
 	char *result;     /* the return string */
@@ -213,7 +213,7 @@ wchar_t *x_wcsrepl(const wchar_t *orig, const wchar_t *rep, const wchar_t *with)
 	assert(orig);
 	assert(rep);
 	assert(with);
-	x_assert(rep[0], "length of parameter rep is 0");
+	x_assert_printf(rep[0], "length of parameter rep is 0");
 
 	const wchar_t *ins;
 	wchar_t *result, *tmp;
@@ -264,8 +264,8 @@ void x_membyhex(const char *text, void *out)
 	char *buf = out;
 	int i = 0;
 	for (i = 0; text[i] != '\0'; i++)
-		x_assert(isdigit((int)text[i]) || (text[i] >= 'A' && text[i] <= 'Z'), "invalid charactor '%c'", text[i]);
-	x_assert(i % 2 == 0, "length of text is odd number");
+		x_assert_printf(isdigit((int)text[i]) || (text[i] >= 'A' && text[i] <= 'Z'), "invalid charactor '%c'", text[i]);
+	x_assert_printf(i % 2 == 0, "length of text is odd number");
 
 	for (i = 0; text[i] != '\0'; i += 2)
 		buf[i / 2] = (text[i] - (isdigit((int)text[i]) ? '0' : ('A' - 0xA))) * 0x10
@@ -275,7 +275,7 @@ void x_membyhex(const char *text, void *out)
 size_t x_strtoargv(char *s, char *argv[], size_t argc_mx)
 {
 	assert(s);
-	x_assert(argc_mx > 0, "argc_mx must be positive integer");
+	x_assert_printf(argc_mx > 0, "argc_mx must be positive integer");
 	char *next_ptr = s, *item;
 	size_t count = 0;
 	while (count < argc_mx - 1 && (item = x_strsplit(&next_ptr, ' '))) {
@@ -321,9 +321,9 @@ inline static char int_to_char(int n)
 char *x_strbaseconv(char *s, char *buf, size_t size, int old_base, int new_base)
 {
 	int j = size - 2;
-	x_assert(size >= 2, "invalid size");
-	x_assert(old_base >= 2 && old_base <= 36, "invalid old_base");
-	x_assert(new_base >= 2 && new_base <= 36, "invalid new_base");
+	x_assert_printf(size >= 2, "invalid size");
+	x_assert_printf(old_base >= 2 && old_base <= 36, "invalid old_base");
+	x_assert_printf(new_base >= 2 && new_base <= 36, "invalid new_base");
 
 	buf[size - 1] = '\0';
 	for (int i = 0; s[i]; i++) {

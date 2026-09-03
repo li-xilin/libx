@@ -48,7 +48,7 @@ struct x_sklist_st {
 
 struct x_sklink_st {
 	void *data;
-	x_link link[0];
+	x_link link[];
 };
 
 struct x_skpath_st {

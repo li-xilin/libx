@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, 2023-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2020-2021, 2023-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,40 +26,51 @@
 #include "trick.h"
 #include "narg.h"
 #include "detect.h"
+#include "compiler.h"
 
 #include <assert.h>
 
 typedef struct {
-        const char *file;
-        const char *func;
-        int line;
+	const char *file;
+	const char *func;
+	int line;
 } x_location;
 
+#ifdef __cplusplus
+#define X_WHERE ([]() -> const Location* { \
+	static const Location loc = {  __FILE__, __func__, __LINE__ }; \
+	return &loc; \
+}())
+extern "C" {
+#else
 #define X_WHERE ((const x_location[1]) { { __FILE__, __func__, __LINE__ } })
+#endif
 
 int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, ...);
 
-#ifndef NDEBUG
-# define x_assert(_exp, ...) ((_exp) ? (void)0 : \
-		(void)__x_assert_fail(X_WHERE, "assertion failed", __VA_ARGS__))
+#ifdef X_DEBUG
+	#define x_assert(_exp) ((_exp) ? (void)0 : \
+			(void)__x_assert_fail(X_WHERE, "assertion failed", "%s", x_stringy(_exp)))
 #else
-# define x_assert(_exp, ...) ((void)0)
+	#define x_assert(_exp) ((void)0)
 #endif
 
-#ifdef X_CC_GNU
-#define __X_ASSERT_UNUSED __attribute__((unused))
+#ifdef X_DEBUG
+	#define x_assert_printf(_exp, ...) ((_exp) ? (void)0 : \
+			(void)__x_assert_fail(X_WHERE, "assertion failed", __VA_ARGS__))
 #else
-#define __X_ASSERT_UNUSED
+	#define x_assert_printf(_exp, ...) ((void)0)
 #endif
 
-#ifndef NDEBUG
-# define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, \
-		__LINE__)[(_exp) ? 1 : -1] __X_ASSERT_UNUSED
+#ifdef X_DEBUG
+	#define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[(_exp) ? 1 : -1] X_UNUSED
 #else
-# define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[1] __X_ASSERT_UNUSED
+	#define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[1] X_UNUSED
 #endif
 
-#define x_assert_not_null(x) x_assert(*&(x), "unexpected NULL value for `%s`", #x);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

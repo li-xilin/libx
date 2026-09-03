@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,7 @@ static char s_unset_lut[] = {
 
 static int bitmap_find0(x_bitmap *bm, size_t start, size_t len)
 {
-	x_assert(start < bm->nbytes * 8 && (start + len) <= bm->nbytes * 8, "out of bounds");
+	x_assert_printf(start < bm->nbytes * 8 && (start + len) <= bm->nbytes * 8, "out of bounds");
 	if (len == 0)
 		return -1;
 	int start_seg = start / 8, start_off = start % 8;
@@ -110,7 +110,7 @@ static int bitmap_find0(x_bitmap *bm, size_t start, size_t len)
 
 static int bitmap_find1(x_bitmap *bm, size_t start, size_t len)
 {
-	x_assert(start < bm->nbytes * 8 && (start + len) <= bm->nbytes * 8, "out of bounds");
+	x_assert_printf(start < bm->nbytes * 8 && (start + len) <= bm->nbytes * 8, "out of bounds");
 	if (len == 0)
 		return -1;
 	int start_seg = start / 8, start_off = start % 8;

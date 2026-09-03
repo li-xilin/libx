@@ -250,8 +250,22 @@ AC_ARG_ENABLE([charmap], [AS_HELP_STRING([--disable-charmap], [Disable charactor
 			  [disable_charmap=no])
 AM_CONDITIONAL([ENABLE_CHARMAP], [test "x$disable_charmap" = "xno"])
 
+AH_TEMPLATE([X_NDEBUG],
+	[Define to 1 when building without debug support, so unsafe/debug-only code is compiled out.])
 
-regular_CFLAGS="-Wall -Werror -std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debug build (default: no)])],
+			  [enable_debug=$enableval],
+			  [enable_debug=no])
+
+regular_CFLAGS="-std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
+
+AS_IF([test "x$enable_debug" = "xyes"], [
+	PC_DEBUG_CFLAGS="-DX_DEBUG=1"
+	regular_CFLAGS="$regular_CFLAGS -Wpedantic -g3 -O0 -Wall -Werror $PC_DEBUG_CFLAGS"
+], [
+	regular_CFLAGS="$regular_CFLAGS -O2 -DNDEBUG -s"
+])
+AC_SUBST([PC_DEBUG_CFLAGS])
 
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],

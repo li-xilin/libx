@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,14 +47,14 @@ inline static size_t x_bitmap_nbits(x_bitmap *bm)
 
 inline static int x_bitmap_get(x_bitmap *bm, size_t idx)
 {
-	x_assert(idx < bm->nbytes * 8, "Index out of bounds");
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	return (bm->data[byte_idx] >> bit_idx) & 1;
 }
 
 inline static void x_bitmap_set(x_bitmap *bm, size_t idx, int bit)
 {
-	x_assert(idx < bm->nbytes * 8, "Index out of bounds");
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	uint8_t old_bit = (bm->data[byte_idx] >> bit_idx) & 1;
 	bm->data[byte_idx] ^= (old_bit ^ !!bit) << bit_idx;
@@ -67,21 +67,21 @@ inline static void x_bitmap_clear(x_bitmap *bm, int val)
 
 inline static void x_bitmap_and(x_bitmap *bm, size_t idx, int bit)
 {
-	x_assert(idx < bm->nbytes * 8, "Index out of bounds");
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	bm->data[byte_idx] &=  ~(!bit << bit_idx);
 }
 
 inline static void x_bitmap_or(x_bitmap *bm, size_t idx, int bit)
 {
-	x_assert(idx < bm->nbytes * 8, "Index out of bounds");
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	bm->data[byte_idx] |=  !!bit << bit_idx;
 }
 
 inline static void x_bitmap_toggle(x_bitmap *bm, size_t idx)
 {
-	x_assert(idx < bm->nbytes * 8, "Index out of bounds");
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	bm->data[byte_idx] ^=  (1 << bit_idx);
 }

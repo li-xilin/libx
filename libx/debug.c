@@ -220,14 +220,15 @@ static char *hexlify(const void *p, size_t size, char *out)
 void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 {
 #define DUMP_GROUP_LEN 16
-	x_bprintf(sb, x_u("memory of %s at %p for(%zu bytes):\n"), name, p, size);
+	const char *m = p;
+	x_bprintf(sb, x_u("memory of %s at %p for(%zu bytes):\n"), name, m, size);
 	for (int i = 0; size; i += DUMP_GROUP_LEN) {
 		char buf[DUMP_GROUP_LEN * 4 + 1];
 		size_t ngrp = size > DUMP_GROUP_LEN ? DUMP_GROUP_LEN : size;
-		hexlify(p, ngrp, buf);
+		hexlify(m, ngrp, buf);
 		x_bprintf(sb, x_u("%04x %s\n"), i, buf);
 		size -= ngrp;
-		p += ngrp;
+		m += ngrp;
 	}
 	x_bprintf(sb, x_u("\n"));
 }

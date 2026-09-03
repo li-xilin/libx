@@ -67,7 +67,7 @@ int x_tss_init(x_tss *key, x_tss_free_f *free_cb)
 	PTLS_NODE pNode = x_malloc(NULL, sizeof *pNode);
 
 	DWORD k = TlsAlloc();
-	x_assert (k < TLS_OUT_OF_INDEXES, "the number of Tls entries limit to %d", TLS_MAXIIUM_AVAILABLE);
+	x_assert_printf(k < TLS_OUT_OF_INDEXES, "the number of Tls entries limit to %d", TLS_MAXIIUM_AVAILABLE);
 	key->key = k;
 	pNode->key = k;
 	pNode->pfnFreeProc = free_cb;
