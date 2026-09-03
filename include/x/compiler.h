@@ -104,5 +104,11 @@
 	#define X_PURE
 #endif
 
+#if defined(X_CC_GNU) || defined(X_CC_CLANG)
+	#define X_UNUSED __attribute__((unused))
+#else
+	#define X_UNUSED
+#endif
+
 #endif
 
