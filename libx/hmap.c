@@ -25,126 +25,147 @@
 #include "x/memory.h"
 #include "x/debug.h"
 #include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <assert.h>
 
-static const int s_primes[] =
+static const size_t s_prime_table[] =
 {
-	53, 97, 193, 389, 769, 1543, 3079, 6151,
-	12289, 24593, 49157, 98317, 196613, 393241,
-	786433, 1572869, 3145739, 3145739, 12582917,
-	25165843, 50331653, 100663319, 201326611, 
-	402653189, 805306457, 1610612741
+	0, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 98317,
+	196613, 393241, 786433, 1572869, 3145739, 6291469, 12582917, 25165843,
+	50331653, 100663319, 201326611, 402653189, 805306457, 1610612741,
+#if X_WORDSIZE == 64
+	3221225473, 6442450939, 12884901893, 25769803751, 51539607551, 103079215111,
+	206158430209, 412316860441, 824633720831, 1649267441651, 3298534883309,
+	6597069766657, 13194139533299, 26388279066623, 52776558133303, 105553116266489,
+	211106232532969, 422212465066001, 844424930131963, 1688849860263953,
+	3377699720527861, 6755399441055731, 13510798882111483, 27021597764222939,
+	54043195528445957, 108086391056891903, 216172782113783843, 432345564227567621,
+	864691128455135207, 1729382256910270481, 3458764513820540933, 6917529027641081903,
+	9223372036854775783,
+#endif
 };
 
-static void x_hmap_expand(x_hmap *ht, int elem_cnt)
+static void hmap_expand(x_hmap *ht, int elem_cnt)
 {
 	int new_slot_cnt, new_idx, new_load_limit;
-	x_list *new_table;
-	new_load_limit = ht->load_limit;
-	new_slot_cnt = ht->slot_cnt;
-	new_idx = ht->prime_idx;
-	while(new_load_limit < elem_cnt && new_idx < x_arrlen(s_primes)) {
-		new_slot_cnt = s_primes[++new_idx];
+	x_slist *new_table;
+	new_idx = ht->prime_index;
+	do {
+		new_idx++;
+		new_slot_cnt = s_prime_table[new_idx];
 		new_load_limit = ht->load_factor * new_slot_cnt;
-	}
+	} while(new_load_limit < elem_cnt && new_idx < x_arrlen(s_prime_table));
+	if (new_idx == x_arrlen(s_prime_table))
+		abort();
 	new_table = x_malloc(NULL, new_slot_cnt * sizeof(x_list));
 	for(size_t i = 0; i < new_slot_cnt; ++i)
-		x_list_init(new_table + i);
+		x_slist_init(new_table + i);
 	for(size_t i = 0; i < ht->slot_cnt; ++i) {
-		x_list_popeach(cur, ht->table) {
-			size_t h = ht->hash(cur) % new_slot_cnt;
-			x_list_add_back(new_table + h, cur);
+		x_slist_popeach(cur, ht->table + i) {
+			x_hnode *node = x_container_of(cur, x_hnode, link);
+			size_t h = node->hash % new_slot_cnt;
+			x_slist_add_front(new_table + h, &node->link);
 		}
 	}
 	x_free(ht->table);
-	ht->prime_idx = new_idx;
+	ht->prime_index = new_idx;
 	ht->table = new_table;
 	ht->slot_cnt = new_slot_cnt;
-	ht->load_limit = new_load_limit;
 }
 
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_hash_fn *hash_fn, x_hmap_equal_fn *equal_fn)
+static inline size_t node_slot(const x_hmap *ht, const x_hnode *node)
 {
-	int idx = 0;
-
-	ht->prime_idx = 0;
-	ht->load_limit = load_factor * s_primes[idx];
-	ht->load_factor = load_factor;
-	ht->elem_cnt = 0;
-	ht->slot_cnt = s_primes[idx];
-	ht->hash = hash_fn;
-	ht->equal = equal_fn;
-
-	ht->table = x_malloc(NULL, ht->slot_cnt * sizeof(x_link));
-	for(size_t i = 0; i < ht->slot_cnt; ++i)
-		x_list_init(ht->table + i);
+	return node->hash % ht->slot_cnt;
 }
 
-static x_link *hmap_locate(x_hmap *ht, const x_link *link, size_t *slot)
+static x_slink *hmap_locate_prev(const x_hmap *ht, const x_hnode *node, size_t slot)
 {
-	*slot = ht->hash(link) % ht->slot_cnt;
-	x_list_foreach(cur, ht->table + *slot)
-		if (ht->equal(link, cur))
-			return cur;
+	x_slist_foreach_prev(prev, ht->table + slot) {
+		x_hnode *cur_node = x_container_of(prev->next, x_hnode, link);
+		if (ht->equal(node, cur_node))
+			return prev;
+	}
 	return NULL;
 }
 
-x_link *x_hmap_find(x_hmap *ht, const x_link *link)
+void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn)
 {
-	size_t slot;
-	return hmap_locate(ht, link, &slot);
+	ht->prime_index = 1;
+	ht->load_factor = load_factor;
+	ht->elem_cnt = 0;
+	ht->slot_cnt = s_prime_table[ht->prime_index];
+	ht->equal = equal_fn;
+	ht->table = x_malloc(NULL, ht->slot_cnt * sizeof(x_hnode));
+	for(size_t i = 0; i < ht->slot_cnt; ++i)
+		x_slist_init(ht->table + i);
 }
 
-x_link *x_hmap_find_or_insert(x_hmap *ht, x_link *link)
+x_hnode *x_hmap_find(const x_hmap *ht, const x_hnode *node)
 {
-	size_t slot;
-	x_link *result = hmap_locate(ht, link, &slot);
-	if (result)
-		return result;
-
-	if(ht->elem_cnt >= ht->load_limit)
-		x_hmap_expand(ht, ht->elem_cnt + 1);
-
-	x_list_add_back(ht->table + slot, link);
-	ht->elem_cnt++;
-	return 0;
-}
-
-x_link *x_hmap_replace_or_insert(x_hmap *ht, x_link *link)
-{
-	size_t slot;
-	x_link *result = hmap_locate(ht, link, &slot);
-	if (result) {
-		x_list_replace(result, link);
-		return result;
-	}
-	if(ht->elem_cnt >= ht->load_limit)
-		x_hmap_expand(ht, ht->elem_cnt + 1);
-
-	x_list_add_back(ht->table + slot, link);
-	ht->elem_cnt++;
-	return 0;
-}
-
-x_link *x_hmap_find_and_remove(x_hmap *ht, const x_link *link)
-{
-	size_t slot;
-	x_link *result = hmap_locate(ht, link, &slot);
-	if (!result)
+	if (!ht->slot_cnt)
 		return NULL;
-	x_list_del(result);
-	ht->elem_cnt--;
-	return result;
+	size_t slot = node_slot(ht, node);
+	x_slink *prev = hmap_locate_prev(ht, node, slot);
+	if (!prev)
+		return NULL;
+	return x_container_of(prev->next, x_hnode, link);
 }
 
-void x_hmap_remove(x_hmap *ht, x_link *link)
+x_hnode *x_hmap_find_or_insert(x_hmap *ht, x_hnode *node)
 {
-	assert(link->prev != NULL && link->prev != NULL);
-	x_list_del(link);
+	if (!ht->slot_cnt)
+		hmap_expand(ht, 1);
+	size_t slot = node_slot(ht, node);
+	x_slink *prev = hmap_locate_prev(ht, node, slot);
+	if (prev)
+		return x_container_of(prev->next, x_hnode, link);
+	if (ht->elem_cnt >= ht->load_factor * s_prime_table[ht->prime_index]) {
+		hmap_expand(ht, ht->elem_cnt + 1);
+		slot = node_slot(ht, node);
+	}
+	x_slist_add_front(ht->table + slot, &node->link);
+	ht->elem_cnt++;
+	return NULL;
+}
+
+x_hnode *x_hmap_replace_or_insert(x_hmap *ht, x_hnode *node)
+{
+	if (!ht->slot_cnt)
+		hmap_expand(ht, 1);
+	size_t slot = node_slot(ht, node);
+	x_slink *prev = hmap_locate_prev(ht, node, slot);
+	if (prev) {
+		x_slink *del = x_slink_replace_after(prev, &node->link);
+		return x_container_of(del, x_hnode, link);
+	}
+	if (ht->elem_cnt >= ht->load_factor * s_prime_table[ht->prime_index]) {
+		hmap_expand(ht, ht->elem_cnt + 1);
+		slot = node_slot(ht, node);
+	}
+	x_slist_add_front(ht->table + slot, &node->link);
+	ht->elem_cnt++;
+	return 0;
+}
+
+x_hnode *x_hmap_find_and_remove(x_hmap *ht, const x_hnode *node)
+{
+	size_t slot = node_slot(ht, node);
+	x_slink *prev = hmap_locate_prev(ht, node, slot);
+	if (!prev)
+		return NULL;
+	x_slink *del = x_slink_del_after(prev);
 	ht->elem_cnt--;
+	return x_container_of(del, x_hnode, link);
+}
+
+void x_hmap_remove(x_hmap *ht, const x_hnode *node)
+{
+	size_t slot = node_slot(ht, node);
+	x_slist_foreach_prev(prev, &ht->table[slot]) {
+		if (prev->next == &node->link) {
+			x_slink_del_after(prev);
+			ht->elem_cnt--;
+			return;
+		}
+	}
 }
 
 void x_hmap_free(x_hmap * ht)
@@ -152,22 +173,19 @@ void x_hmap_free(x_hmap * ht)
 	x_free(ht->table);
 }
 
+void x_hmap_clear(x_hmap *ht)
+{
+	x_free(ht->table);
+	x_hmap_init(ht, ht->load_factor, ht->equal);
+}
+
 bool x_hmap_sanitize(x_hmap *ht)
 {
 	int cnt = 0;
 	for (int i = 0; i < ht->slot_cnt; i++) {
-		x_link *prev = NULL;
-		x_list_foreach(cur, ht->table + i) {
+		x_slist_foreach(cur, ht->table + i) {
 			cnt++;
-			if (ht->hash(cur) % ht->slot_cnt != i) {
-				x_sanitize_stub();
-				return false;
-			}
-			if (!prev) {
-				prev = cur;
-				continue;
-			}
-			if (cur->prev != prev) {
+			if (node_slot(ht, x_container_of(cur, x_hnode, link)) != i) {
 				x_sanitize_stub();
 				return false;
 			}
@@ -179,3 +197,4 @@ bool x_hmap_sanitize(x_hmap *ht)
 	}
 	return true;
 }
+

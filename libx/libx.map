@@ -173,6 +173,7 @@ global:
 	x_heap_remove;
 	x_heap_top;
 	x_hfsm_handle_event;
+	x_hmap_clear;
 	x_hmap_find;
 	x_hmap_find_and_remove;
 	x_hmap_find_or_insert;

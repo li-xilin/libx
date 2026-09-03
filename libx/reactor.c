@@ -22,6 +22,7 @@
 
 #include "sockmux.h"
 #include "x/reactor.h"
+#include "x/hash.h"
 #include "x/string.h"
 #include "x/event.h"
 #include "x/socket.h"
@@ -93,10 +94,10 @@ static int reactor_pend_socket(x_reactor *r)
 	short flags;
 	int npendings = 0;
 	while ((fd = r->mux_ops->m_next(r->mux, &flags)) != X_BADSOCK) {
-		x_evsocket pattern = { .sock = fd };
-		x_link *link = x_hmap_find(&r->sock_ht, &pattern.hash_link);
+		x_evsocket pattern = { .sock = fd, .hash_node.hash =  x_hash32_twang(fd)};
+		x_hnode *link = x_hmap_find(&r->sock_ht, &pattern.hash_node);
 		assert(link);
-		x_evsocket *e = x_container_of(link, x_evsocket, hash_link);
+		x_evsocket *e = x_container_of(link, x_evsocket, hash_node);
 		e->base.res_flags = flags;
 		if (e == &r->io_event) {
 			ioevent_reset(r);
@@ -130,16 +131,10 @@ void x_reactor_break(x_reactor *r)
 	x_mutex_unlock(&r->lock);
 	ioevent_set(r);
 }
-
-static size_t evsocket_hash(const x_link *node)
+static bool evsocket_equal(const x_hnode *node1, const x_hnode *node2)
 {
-	x_evsocket *e = x_container_of(node, x_evsocket, hash_link);
-	return x_memhash(&e->sock, sizeof e->sock);
-}
-static bool evsocket_equal(const x_link *node1, const x_link *node2)
-{
-	x_evsocket *e1 = x_container_of(node1, x_evsocket, hash_link);
-	x_evsocket *e2 = x_container_of(node2, x_evsocket, hash_link);
+	x_evsocket *e1 = x_container_of(node1, x_evsocket, hash_node);
+	x_evsocket *e2 = x_container_of(node2, x_evsocket, hash_node);
 	return e1->sock == e2->sock;
 }
 
@@ -162,7 +157,7 @@ int x_reactor_init(x_reactor *r)
 	if (x_sock_pair(AF_UNIX, SOCK_STREAM, 0, pair) == -1)
 		goto fail;
 	x_mutex_init(&r->lock);
-	x_hmap_init(&r->sock_ht, 0.5, evsocket_hash, evsocket_equal);
+	x_hmap_init(&r->sock_ht, 0.5, evsocket_equal);
 	x_list_init(&r->pending_list);
 	x_list_init(&r->obj_list);
 	x_heap_init(&r->timer_heap, timer_ordered);
@@ -185,8 +180,8 @@ static void reactor_clean_events(x_reactor *r)
 {
 	x_evsocket *e;
 	for (int i = 0; i < r->sock_ht.slot_cnt; i++) {
-		x_list_popeach(cur, &r->sock_ht.table[i]) {
-			e = x_container_of(cur, x_evsocket, hash_link);
+		x_slist_popeach(cur, &r->sock_ht.table[i]) {
+			e = x_container_of(cur, x_evsocket, hash_node);
 			r->mux_ops->m_del(r->mux, e->sock);
 		}
 	}
@@ -232,12 +227,13 @@ static int reactor_add_event(x_reactor *r, x_event *e)
 			break;
 		case X_EVENT_SOCKET:
 			e->ev_flags = e->ev_flags & (X_EV_READ | X_EV_WRITE);
-			if (x_hmap_find_or_insert(&r->sock_ht, &esock->hash_link)) {
+			esock->hash_node.hash = x_hash32_twang(esock->sock);
+			if (x_hmap_find_or_insert(&r->sock_ht, &esock->hash_node)) {
 				errno = X_EEXIST;
 				goto out;
 			}
 			if (r->mux_ops->m_add(r->mux, esock->sock, e->ev_flags) == -1) {
-				x_hmap_remove(&r->sock_ht, &esock->hash_link);
+				x_hmap_remove(&r->sock_ht, &esock->hash_node);
 				goto out;
 			}
 			break;
@@ -328,7 +324,7 @@ void x_reactor_remove(x_event *e)
 			break;
 		case X_EVENT_SOCKET:
 			(void)r->mux_ops->m_del(r->mux, esock->sock);
-			x_hmap_remove(&r->sock_ht, &esock->hash_link);
+			x_hmap_remove(&r->sock_ht, &esock->hash_node);
 			break;
 		case X_EVENT_OBJECT:
 			x_list_del(&eobj->link);

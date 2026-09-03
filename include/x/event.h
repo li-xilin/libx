@@ -27,6 +27,7 @@
 #include "time.h"
 #include "list.h"
 #include "heap.h"
+#include "hmap.h"
 #include <stdint.h>
 
 #define X_EV_REACTING (1 << 0)
@@ -58,7 +59,7 @@ struct x_event_st
 struct x_evsocket_st
 {
 	x_event base;
-	x_link hash_link;
+	x_hnode hash_node;
 	x_sock sock;
 };
 

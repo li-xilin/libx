@@ -58,7 +58,7 @@ static void on_sock1_event(x_evsocket *ev)
 	x_sock cli = accept(evsock1.sock, NULL, NULL);
 	fprintf(stderr, "\nnew connection %d\n", (int)cli);
 	if (have_client) {
-		fprintf(stderr, "\nnconnection already exited, abort.\n");
+		fprintf(stderr, "\nconnection already exited, abort.\n");
 		x_sock_close(cli);
 	}
 	else {
