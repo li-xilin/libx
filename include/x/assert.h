@@ -23,52 +23,24 @@
 #ifndef X_ASSERT_H
 #define X_ASSERT_H
 
+#include "types.h"
+#include "debug.h"
 #include "trick.h"
-#include "narg.h"
-#include "detect.h"
 #include "compiler.h"
-
 #include <assert.h>
-
-typedef struct {
-	const char *file;
-	const char *func;
-	int line;
-} x_location;
-
-#ifdef __cplusplus
-#define X_WHERE ([](const char *fn, int line) -> const x_location* { \
-	static const x_location loc = {  __FILE__, fn, line }; \
-	return &loc; }(__func__, __LINE__))
-extern "C" {
-#else
-#define X_WHERE ((const x_location[1]) { { __FILE__, __func__, __LINE__ } })
-#endif
 
 int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, ...);
 
 #ifdef X_DEBUG
 	#define x_assert(_exp) ((_exp) ? (void)0 : \
 			(void)__x_assert_fail(X_WHERE, "assertion failed", "%s", x_stringy(_exp)))
-#else
-	#define x_assert(_exp) ((void)0)
-#endif
-
-#ifdef X_DEBUG
 	#define x_assert_printf(_exp, ...) ((_exp) ? (void)0 : \
 			(void)__x_assert_fail(X_WHERE, "assertion failed", __VA_ARGS__))
-#else
-	#define x_assert_printf(_exp, ...) ((void)0)
-#endif
-
-#ifdef X_DEBUG
 	#define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[(_exp) ? 1 : -1] X_UNUSED
 #else
+	#define x_assert(_exp) ((void)0)
+	#define x_assert_printf(_exp, ...) ((void)0)
 	#define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[1] X_UNUSED
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif

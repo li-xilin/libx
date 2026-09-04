@@ -56,6 +56,11 @@ struct x_iovec_st {
 	size_t len;
 };
 
+#ifndef X_LOCATION_DEFINED
+#define X_LOCATION_DEFINED
+typedef struct x_location_st x_location;
+#endif
+
 #ifndef X_ROPE_NODE_DEFINED
 #define X_ROPE_NODE_DEFINED
 typedef struct x_rope_node_st x_rope_node;

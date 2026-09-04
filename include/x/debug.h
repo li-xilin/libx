@@ -23,12 +23,25 @@
 #ifndef X_DEBUG_H
 #define X_DEBUG_H
 
-#include "x/detect.h"
 #include "x/types.h"
+#include "x/detect.h"
 #include "x/macros.h"
-#include "x/file.h"
-#include "x/strbuf.h"
+
 #define X_TRACE_MAX 512
+
+struct x_location_st {
+	const char *file;
+	const char *func;
+	int line;
+};
+
+#ifdef __cplusplus
+#define X_WHERE ([](const char *fn, int line) -> const x_location* { \
+	static const x_location loc = {  __FILE__, fn, line }; \
+	return &loc; }(__func__, __LINE__))
+#else
+#define X_WHERE ((const x_location[1]) { { __FILE__, __func__, __LINE__ } })
+#endif
 
 struct x_trace_st
 {
@@ -47,11 +60,9 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb);
 	x_strbuf_free(&_sb); \
 } while (0)
 
-
 void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb);
-#define x_memory_dump(p, size, sb) __x_dump_memory(#p, p, size, sb);
-
-#define x_memory_fputs(p, size, fp) do { \
+#define x_hexdump(p, size, sb) __x_dump_memory(#p, p, size, sb);
+#define x_hexdump_fp(p, size, fp) do { \
 	x_strbuf _sb; \
 	x_strbuf_init(&_sb); \
 	x_memory_dump(p, size, &_sb); \
@@ -61,8 +72,8 @@ void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 
 #define x_reach(fp) x_fprintf(fp, x_u("reach %s at %s:%d (version %s %s)\n"), __func__, __FILE__, __LINE__, __DATE__, __TIME__)
 
-void __x_sanitize_stub(const char *file, int line);
+void __x_sanitize_stub(const x_location *loc);
 
-#define x_sanitize_stub() __x_sanitize_stub(__FILE__, __LINE__)
+#define x_sanitize_stub() __x_sanitize_stub(X_WHERE)
 
 #endif
