@@ -9,6 +9,7 @@ xinclude_HEADERS = \
 	x/tss.h \
 	x/macros.h \
 	x/detect.h \
+	x/endian.h \
 	x/dump.h \
 	x/flowctl.h \
 	x/heap.h \

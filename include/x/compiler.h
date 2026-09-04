@@ -24,6 +24,18 @@
 
 #include "detect.h"
 
+#if defined(__STDC_VERSION__)
+#  define X_C_VERSION __STDC_VERSION__
+#else
+#  define X_C_VERSION 0
+#endif
+
+#if defined(__cplusplus)
+#  define X_CPP_VERSION __cplusplus
+#else
+#  define X_CPP_VERSION 0
+#endif
+
 #if defined(__cplusplus)
 	#if X_CPP_VERSION >= 201103L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L)
 		#define X_THREAD_LOCAL thread_local
