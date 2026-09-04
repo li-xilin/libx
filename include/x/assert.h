@@ -37,10 +37,9 @@ typedef struct {
 } x_location;
 
 #ifdef __cplusplus
-#define X_WHERE ([]() -> const Location* { \
-	static const Location loc = {  __FILE__, __func__, __LINE__ }; \
-	return &loc; \
-}())
+#define X_WHERE ([](const char *fn, int line) -> const x_location* { \
+	static const x_location loc = {  __FILE__, fn, line }; \
+	return &loc; }(__func__, __LINE__))
 extern "C" {
 #else
 #define X_WHERE ((const x_location[1]) { { __FILE__, __func__, __LINE__ } })
