@@ -22,6 +22,7 @@
 
 #include "x/hash.h"
 #include "x/detect.h"
+#include "x/endian.h"
 #include <stdint.h>
 #include <stddef.h>
 
