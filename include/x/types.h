@@ -451,5 +451,10 @@ typedef struct x_uidlink_st x_uidlink;
 typedef struct x_deqbuf_st x_deqbuf;
 #endif
 
+#ifndef X_UUID_DEFINED
+#define X_UUID_DEFINED
+typedef struct x_uuid_st x_uuid;
+#endif
+
 #endif
 

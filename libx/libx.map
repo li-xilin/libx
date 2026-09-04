@@ -602,6 +602,10 @@ global:
 	x_utf8_to_utf16;
 	x_utss_utf16;
 	x_utss_utf8;
+	x_uuid_gen_v1;
+	x_uuid_gen_v4;
+	x_uuid_parse;
+	x_uuid_text;
 	x_vbprintf;
 	x_vctprintf;
 	x_vfprintf;
