@@ -31,6 +31,7 @@ struct x_uuid_st {
 
 int x_uuid_gen_v1(x_uuid *uuid);
 int x_uuid_gen_v4(x_uuid *uuid);
+int x_uuid_gen_v7(x_uuid *uuid);
 void x_uuid_text(const x_uuid *uuid, char *out);
 int x_uuid_parse(const char *text, x_uuid *out);
 

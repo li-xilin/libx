@@ -604,6 +604,7 @@ global:
 	x_utss_utf8;
 	x_uuid_gen_v1;
 	x_uuid_gen_v4;
+	x_uuid_gen_v7;
 	x_uuid_parse;
 	x_uuid_text;
 	x_vbprintf;

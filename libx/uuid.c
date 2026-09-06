@@ -24,8 +24,10 @@
 #include "x/errno.h"
 #include "x/time.h"
 #include "x/once.h"
+#include "x/endian.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #define UUID_EPOCH_OFFSET 0x01B21DD213814000ULL /* 1582-10-15 -> 1970-01-01 100ns count */
 
@@ -58,29 +60,34 @@ static int uuidv1_timestamp(uint64_t *out)
 
 int x_uuid_gen_v1(x_uuid *uuid)
 {
-    uint64_t ts;
-    if (uuid == NULL) {
+	struct uuid_v1 {
+		uint32_t time_low;
+		uint16_t time_mid;
+		uint16_t time_hi_and_version;
+		uint8_t clock_seq_hi_and_reserved;
+		uint8_t clock_seq_low;
+		uint8_t	node[6];
+	} *tmp = (struct uuid_v1 *)uuid;
+	uint64_t ts;
+	if (uuid == NULL) {
 		errno = X_EINVAL;
-        return -1;
+		return -1;
 	}
 	x_once_init(&s_init_once, uuid_v1_init);
-    if (uuidv1_timestamp(&ts) != 0)
+	if (uuidv1_timestamp(&ts))
 		return -1;
-    if (ts <= s_last_ts)
-        s_clock_seq = (s_clock_seq + 1) & 0x3FFF;
-    s_last_ts = ts;
-    uuid->u8[0] = (uint8_t)(ts & 0xFF);
-    uuid->u8[1] = (uint8_t)((ts >> 8)  & 0xFF);
-    uuid->u8[2] = (uint8_t)((ts >> 16) & 0xFF);
-    uuid->u8[3] = (uint8_t)((ts >> 24) & 0xFF);
-    uuid->u8[4] = (uint8_t)((ts >> 32) & 0xFF);
-    uuid->u8[5] = (uint8_t)((ts >> 40) & 0xFF);
-    uuid->u8[6] = (uint8_t)(((ts >> 48) & 0x0F) | 0x10);
-    uuid->u8[7] = (uint8_t)((ts >> 56) & 0xFF);
-    uuid->u8[8] = (uint8_t)(((s_clock_seq >> 8) & 0x3F) | 0x80);
-    uuid->u8[9] = (uint8_t)(s_clock_seq & 0xFF);
-    memcpy(uuid->u8 + 10, s_node, 6);
-    return 0;
+	if (ts <= s_last_ts)
+		s_clock_seq = (s_clock_seq + 1) & 0x3FFF;
+	s_last_ts = ts;
+	printf("ts = %lx\n", ts);
+	tmp->time_low = x_htobe32((uint32_t)(ts & 0xFFFFFFFF));
+	tmp->time_mid = x_htobe16((uint16_t)((ts >> 32) & 0xFFFF));
+	tmp->time_hi_and_version = x_htobe16((1 << 12) | ((uint16_t)((ts >> 48)) & 0x0FFF));
+	tmp->clock_seq_low = s_clock_seq & 0xFF;
+	tmp->clock_seq_hi_and_reserved = (s_clock_seq & 0x3F00) >> 8;
+	tmp->clock_seq_hi_and_reserved |= 0x80;
+	memcpy(tmp->node, s_node, 6);
+	return 0;
 }
 
 int x_uuid_gen_v4(x_uuid *uuid)
@@ -89,6 +96,34 @@ int x_uuid_gen_v4(x_uuid *uuid)
 		return -1;
 	uuid->u8[6] = (uuid->u8[6] & 0x0F) | 0x40;
 	uuid->u8[8] = (uuid->u8[8] & 0x3F) | 0x80;
+	return 0;
+}
+
+int x_uuid_gen_v7(x_uuid *uuid)
+{
+	if (uuid == NULL) {
+		errno = X_EINVAL;
+		return -1;
+	}
+	struct timeval tv;
+	if (x_time_now(&tv) != 0)
+		return -1;
+	char ran[10];
+	if (x_random(ran, sizeof ran))
+		return -1;
+	uint64_t ts = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	uuid->u8[0] = (uint8_t)(ts >> 40);
+	uuid->u8[1] = (uint8_t)(ts >> 32);
+	uuid->u8[2] = (uint8_t)(ts >> 24);
+	uuid->u8[3] = (uint8_t)(ts >> 16);
+	uuid->u8[4] = (uint8_t)(ts >> 8);
+	uuid->u8[5] = (uint8_t)ts;
+	memcpy(uuid->u8 + 6, ran, 2);
+	uuid->u8[6] &= 0x0F;
+	uuid->u8[6] |= 0x70;
+	memcpy(uuid->u8 + 8, ran + 2, 8);
+	uuid->u8[8] &= 0x3F;
+	uuid->u8[8] |= 0x80;
 	return 0;
 }
 
