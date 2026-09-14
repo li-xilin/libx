@@ -80,8 +80,10 @@
 		#define X_ALWAYS_INLINE inline
 	#endif
 	#if __has_builtin(__builtin_expect)
+		#define X_LIKELY(x) __builtin_expect(!!(x), 1)
 		#define X_UNLIKELY(x) __builtin_expect(!!(x), 0)
 	#else
+		#define X_LIKELY(x) (!!(x))
 		#define X_UNLIKELY(x) (!!(x))
 	#endif
 	#if __has_attribute(hot)
@@ -101,6 +103,7 @@
 		#define X_COND_PROB(x, p) __builtin_expect(!!(x), (p) >= 0.5)
 	#endif
 	#define X_ALWAYS_INLINE __attribute__((always_inline)) inline
+	#define X_LIKELY(x)  __builtin_expect(!!(x), 1)
 	#define X_UNLIKELY(x)  __builtin_expect(!!(x), 0)
 	#if (__GNUC__ * 100 + __GNUC_MINOR__) >= 403
 		#define X_HOT_CALL __attribute__((hot))
@@ -111,6 +114,7 @@
 #else
 	#define X_COND_PROB(x, p) (!!(x))
 	#define X_ALWAYS_INLINE inline
+	#define X_LIKELY(x)  (!!(x))
 	#define X_UNLIKELY(x)  (!!(x))
 	#define X_HOT_CALL
 	#define X_PURE
