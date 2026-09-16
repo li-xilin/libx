@@ -28,6 +28,45 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <stdint.h>
+#if defined(X_CC_MSVC)
+	#include <intrin.h>
+	static inline size_t __x_msvc_ctzll(uint64_t x)
+	{
+		unsigned long index = 0;
+		if (_BitScanForward64(&index, x))
+			return index;
+		return 64;
+	}
+	#define X_BITMAP64_FIRST_ONE(s) __x_msvc_ctzll(x);
+	#define X_BITMAP64_ONE_COUNT(s) __popcnt64(s)
+#elif defined(X_CC_GNU) || defined(X_CC_CLANG)
+	#define X_BITMAP64_FIRST_ONE(s) ((size_t)__builtin_ctzll((unsigned long long)(s)))
+	#define X_BITMAP64_ONE_COUNT(s) ((size_t)__builtin_popcountll((unsigned long long)(s)))
+#else
+	static inline size_t __x_fallback_popcountll(unsigned long long x)
+	{
+		size_t count = 0;
+		while (x) {
+			x &= (x - 1);
+			count++;
+		}
+		return count;
+	}
+	static inline size_t __x_fallback_ctzll(unsigned long long x)
+	{
+		if (x == 0) return 64;
+		size_t count = 0;
+		while ((x & 1ULL) == 0) {
+			x >>= 1;
+			count++;
+		}
+		return count;
+	}
+	#define X_BITMAP64_FIRST_ONE(s) __x_fallback_ctzll((unsigned long long)(s))
+	#define X_BITMAP64_ONE_COUNT(s) __x_fallback_popcountll((unsigned long long)(s))
+#endif
+
 struct x_bitmap_st
 {
 	size_t nbytes;
