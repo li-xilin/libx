@@ -126,5 +126,15 @@
 	#define X_UNUSED
 #endif
 
+#if defined(X_CC_GNU) || defined(X_CC_CLANG)
+    #define X_PREFETCH(addr) __builtin_prefetch((const void *)(addr), 0)
+#elif defined(X_CC_MSVC)
+    #include <intrin.h>
+    #include <xmmintrin.h>
+    #define X_PREFETCH(addr) (void)_mm_prefetch((const char *)(addr), _MM_HINT_T0)
+#else
+    #define X_PREFETCH(addr) (void)(addr)
+#endif
+
 #endif
 
