@@ -40,6 +40,7 @@ const x_uchar *x_sys_getenv(const x_uchar *name);
 int x_sys_setenv(const x_uchar *name, const x_uchar *value);
 int x_sys_utime(const x_uchar *path, time_t atime, time_t mtime);
 int x_sys_nprocs(void);
+size_t x_page_size(void);
 
 #endif
 

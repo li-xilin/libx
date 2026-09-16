@@ -335,6 +335,7 @@ global:
 	x_mutex_trylock;
 	x_mutex_unlock;
 	x_once_init;
+	x_page_size;
 	x_path_basename;
 	x_path_empty;
 	x_path_extname;

@@ -253,3 +253,19 @@ int x_sys_nprocs(void)
 #endif
 }
 
+size_t x_page_size(void)
+{
+#ifdef _WIN32
+	SYSTEM_INFO sys_info;
+	GetSystemInfo(&sys_info);
+	return (size_t)sys_info.dwPageSize;
+#elif defined(_SC_PAGESIZE)
+	long page_size = sysconf(_SC_PAGESIZE);
+	if (page_size > 0)
+		return (size_t)page_size;
+	else
+		return 4096;
+#else
+	return 4096;
+#endif
+}
