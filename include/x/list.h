@@ -183,6 +183,7 @@ inline static x_link *x_list_second(const x_list *list)
 	return x_list_has_multiple(list) ? list->head.next->next : NULL;
 }
 
+bool x_link_sanitize(const x_link *link);
 void x_list_merge_front(x_list *dest, x_list *src);
 void x_list_merge_back(x_list *dest, x_list *src);
 

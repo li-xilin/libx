@@ -1,4 +1,5 @@
 #include "x/list.h"
+#include "x/debug.h"
 
 void x_list_merge_front(x_list *dest, x_list *src)
 {
@@ -22,4 +23,21 @@ void x_list_merge_back(x_list *dest, x_list *src)
 		dest->head.prev->next = src->head.next;
 		dest->head.prev = src->head.prev;
 	}
+}
+
+bool x_link_sanitize(const x_link *link)
+{
+	if (!link->prev || !link->next) {
+		x_sanitize_stub();
+		return false;
+	}
+	if (link->prev->next != link) {
+		x_sanitize_stub();
+		return false;
+	}
+	if (link->next->prev != link) {
+		x_sanitize_stub();
+		return false;
+	}
+	return true;
 }
