@@ -235,6 +235,6 @@ void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 
 void __x_sanitize_stub(const x_location *loc)
 {
-	// do nothing
+	x_fprintf(stderr, x_u("sanitization exception at %s (%s:%d)\n"), loc->func, loc->file, loc->line);
 }
 
