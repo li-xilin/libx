@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 
+#include "x/detect.h"
 #include "x/list.h"
 #include "x/memory.h"
 #include "x/thread.h"
@@ -27,6 +28,7 @@
 #include "x/once.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define RETRY_INTERVAL 100
 #define RETRY_TIMES 10
@@ -204,3 +206,32 @@ void *x_mcopy(x_mset *mset, const void *ptr, size_t size)
 	memcpy(new_ptr, ptr, size);
 	return new_ptr;
 }
+
+#if defined(X_OS_WIN)
+#include <malloc.h>
+#endif
+
+void *x_aligned_alloc(size_t align, size_t size)
+{
+	x_assert_printf(align > sizeof(void *) && x_singlebit(align),
+			"The alignment argument was not a power of two, or was not a multiple of sizeof(void *)");
+#if defined(X_OS_WIN)
+    return _aligned_malloc(size, align);
+#else
+    void *ptr = NULL;
+    if (posix_memalign(&ptr, align, size) != 0) {
+        return NULL;
+    }
+    return ptr;
+#endif
+}
+
+void x_aligned_free(void *ptr)
+{
+#if defined(X_OS_WIN)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
+

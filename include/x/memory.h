@@ -56,5 +56,8 @@ void x_free(void *ptr);
 void x_mdetach(void *ptr);
 void x_mattach(x_mset *mset, void *ptr);
 
+void *x_aligned_alloc(size_t align, size_t size);
+void x_aligned_free(void *ptr);
+
 #endif
 
