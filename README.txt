@@ -1,7 +1,7 @@
 A lightweight cross-platform C extension library implemented in C99 based on POSIX and WIN32
 
 Basic Headers:
-    x/macros.h       Macro functions
+    x/macros.h       Basic macro functions
     x/types.h        Type definitions
     x/errno.h        Error handling
     x/assert.h       Static and dynamic assertions
@@ -23,7 +23,7 @@ File and Path:
     x/path.h         File path operations
     x/pathset.h      File path filter
     x/file.h         File reading and writing
-    x/sys.h          File system operations
+    x/sys.h          Operating system operations(eg. fs and environment variable)
     x/stat.h         File metadata retrieval
     x/dir.h          Directory reading
     x/fwalker.h      Recursive folder traversal
@@ -33,9 +33,10 @@ String Operations:
     x/charmap.h      String coding convertion
     x/uchar.h        Cross-platform string handling
     x/printf.h       String formatting and printing
-    x/string.h       String manipulation functions
+    x/string.h       String and memory manipulation functions
     x/cliarg.h       CLI argument parsing
     x/regex.h        Regular expression
+    x/uuid.h         UUID generation and parsing
 
 Data Representation:
     x/json.h         JSON string parsing
@@ -43,22 +44,23 @@ Data Representation:
     x/base64.h       Base64 encoding and decoding
     x/ini.h          Ini file format operations
 
-Data Structures:
+Data Container:
     x/btnode.h       Binary tree
     x/bitmap.h       Bitmap
     x/heap.h         Heap (priority queue)
     x/hmap.h         Hash map
-    x/list.h         Linked list
+    x/list.h         Singly/double Linked list
     x/sklist.h       Skip list
     x/splay.h        Splay tree
     x/index.h        Indexer
     x/pipe.h         FIFO queue
-    x/rope.h         Rope
+    x/rope.h         Rope, to edit long string
     x/strbuf.h       Dynamic contiguous string
     x/hfsm.h         Hierarchical finite state machine
     x/uidpool.h      Allocate and release UID dynamically
     x/ringbuf.h      Fixed size ring buffer
     x/deqbuf.h       Dynamic double-ended queue buffer
+	x/objpool.h      Fixed size memory allocator
 
 Threading and Processes:
     x/cond.h         Condition variables
@@ -66,7 +68,7 @@ Threading and Processes:
     x/once.h         Atomic initialization
     x/thread.h       Thread operations
     x/tss.h          Thread-local storage
-    x/tpool.h        Thread pool
+    x/thrpool.h      Thread pool
     x/future.h       Future/Promise model
     x/proc.h         Process execution
     x/lib.h          Dynamic library loading
@@ -77,12 +79,13 @@ Terminal Operations:
     x/edit.h         Terminal line editor
 
 Network Operations:
-    x/event.h        Event operations
-    x/reactor.h      Reactor pattern
+    x/event.h        Events in reactor
+    x/reactor.h      Reactor pattern for event-driven system
     x/socket.h       Socket operations
     x/asynet.h       Asynchronous networking operations
 
 Cryptography：
     x/aes.h          AES algorithm
     x/sha256.h       SHA256 digest algorithm
+    x/md5.h          MD5 digest algorithm
     x/random.h       Generate security random sequence
