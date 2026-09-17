@@ -83,7 +83,7 @@ xinclude_HEADERS +=  x/regex.h
 endif
 
 if ENABLE_CRYPTO
-xinclude_HEADERS +=  x/aes.h x/sha256.h x/random.h
+xinclude_HEADERS +=  x/aes.h x/sha256.h x/random.h x/md5.h
 endif
 
 if ENABLE_CHARMAP

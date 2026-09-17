@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 #ifdef TEST_CRYPTO
 	ADD_SUITE(aes_test);
 	ADD_SUITE(sha256_test);
+	ADD_SUITE(md5_test);
 #endif
 #ifdef TEST_REGEX
 	ADD_SUITE(regex_test);

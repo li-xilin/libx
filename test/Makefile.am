@@ -11,7 +11,7 @@ test_CFLAGS += -DTEST_REGEX
 endif
 
 if ENABLE_CRYPTO
-test_SOURCES += test_aes.c test_sha256.c
+test_SOURCES += test_aes.c test_sha256.c test_md5.c
 test_CFLAGS += -DTEST_CRYPTO
 endif
 
