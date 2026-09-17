@@ -336,6 +336,12 @@ global:
 	x_mutex_lock;
 	x_mutex_trylock;
 	x_mutex_unlock;
+	x_objpool_alloc;
+	x_objpool_dealloc;
+	x_objpool_free;
+	x_objpool_init;
+	x_objpool_sanitize;
+	x_objpool_show;
 	x_once_init;
 	x_page_size;
 	x_path_basename;

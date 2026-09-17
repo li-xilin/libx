@@ -60,6 +60,7 @@ xinclude_HEADERS = \
 	x/ringbuf.h \
 	x/deqbuf.h \
 	x/uuid.h \
+	x/objpool.h \
 	x/errno.h
 
 nodist_xinclude_HEADERS = \

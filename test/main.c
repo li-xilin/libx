@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 	ADD_SUITE(ringbuf_test);
 	ADD_SUITE(deqbuf_test);
 	ADD_SUITE(hmap_test);
+	ADD_SUITE(objpool_test);
 
 	ut_runner_run(&r, process);
 }

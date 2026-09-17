@@ -456,5 +456,15 @@ typedef struct x_deqbuf_st x_deqbuf;
 typedef struct x_uuid_st x_uuid;
 #endif
 
+#ifndef X_OBJPOOL_DEFINED
+#define X_OBJPOOL_DEFINED
+typedef struct x_objpool_st x_objpool;
+#endif
+
+#ifndef X_SLAB_DEFINED
+#define X_SLAB_DEFINED
+typedef struct x_slab_st x_slab;
+#endif
+
 #endif
 

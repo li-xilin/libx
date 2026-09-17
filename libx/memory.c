@@ -213,7 +213,7 @@ void *x_mcopy(x_mset *mset, const void *ptr, size_t size)
 
 void *x_aligned_alloc(size_t align, size_t size)
 {
-	x_assert_printf(align > sizeof(void *) && x_singlebit(align),
+	x_assert_printf(align > sizeof(void *) && x_powerof2(align),
 			"The alignment argument was not a power of two, or was not a multiple of sizeof(void *)");
 #if defined(X_OS_WIN)
     return _aligned_malloc(size, align);
