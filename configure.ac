@@ -261,9 +261,9 @@ regular_CFLAGS="-std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
 
 AS_IF([test "x$enable_debug" = "xyes"], [
 	PC_DEBUG_CFLAGS="-DX_DEBUG=1"
-	regular_CFLAGS="$regular_CFLAGS -Wpedantic -g3 -O0 -Wall -Werror $PC_DEBUG_CFLAGS"
+	CFLAGS="$CFLAGS -Wpedantic -g3 -O0 -Wall -Werror $PC_DEBUG_CFLAGS"
 ], [
-	regular_CFLAGS="$regular_CFLAGS -O2 -DNDEBUG -s"
+	CFLAGS="$CFLAGS -O2 -DNDEBUG -s"
 ])
 AC_SUBST([PC_DEBUG_CFLAGS])
 
