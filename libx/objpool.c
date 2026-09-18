@@ -89,8 +89,9 @@ static inline size_t round_up_pow2(size_t x)
 	x |= x >> 4;
 	x |= x >> 8;
 	x |= x >> 16;
-	if (sizeof(size_t) > 4)
-		x |= x >> 32;
+#if SIZE_MAX > UINT32_MAX
+	x |= x >> 32;
+#endif
 	return x + 1;
 }
 
