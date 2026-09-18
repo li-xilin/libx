@@ -89,39 +89,51 @@ int x_sock_close(x_sock fd) {
 		errno = X_EBADF;
 		return -1;
 	}
-#ifdef X_OS_WIN32
-	return - !closesocket(fd);
+#ifdef X_OS_WIN
+	if (!closesocket(fd)) {
+		x_eval_errno();
+		return -1;
+	}
 #else
-	return close(fd);
+	if (close(fd)) {
+		x_eval_errno();
+		return -1;
+	}
 #endif
+	return 0;
 }
 
+int x_sock_set_reuseaddr(x_sock fd)
+{
+	int optval = 1;
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval)) < 0) {
+		x_eval_errno();
+		return -1;
+	}
+	return 0;
+}
 
 int x_sock_set_nonblocking(x_sock fd, bool enable)
 {
 #ifdef X_OS_WIN32
-	ULONG nonBlock = enable;
-	if (ioctlsocket(fd, FIONBIO, &nonBlock)) {
-		x_perror("failed on ioctlsocket");
-		return (-1);
+	ULONG nonblock = enable;
+	if (ioctlsocket(fd, FIONBIO, &nonblock)) {
+		x_eval_errno();
+		return -1;
 	}
-	return (0);
 #else
 	int opts;
-
-	if ((opts = fcntl(fd, F_GETFL)) < 0) {
-		x_perror("failed on fcntl before: %s", strerror(errno));
-		return (-1);
+	if ((opts = fcntl(fd, F_GETFL)) == -1) {
+		x_eval_errno();
+		return -1;
 	}
-
 	opts = enable ? (opts | O_NONBLOCK) : (opts & ~O_NONBLOCK);
-	if (fcntl(fd, F_SETFL, opts) < 0) {
-		x_perror("failed on fcntl after: %s", strerror(errno));
-		return (-1);
+	if (fcntl(fd, F_SETFL, opts) == -1) {
+		x_eval_errno();
+		return -1;
 	}
-
-	return (0);
 #endif
+	return 0;
 }
 
 #ifdef X_OS_WIN32
@@ -144,7 +156,7 @@ static int socketpair_ersatz(int family, int type, int protocol, x_sock fd[2])
 	family_test = family_test && (family != AF_UNIX);
 #endif
 	if (protocol || family_test) {
-		x_perror("family is not supported");
+		errno = EINVAL;
 		return -1;
 	}
 	
@@ -356,7 +368,8 @@ static int socketpair_win32(int family, int type, int protocol, x_sock fd[2])
 			 * than SOCK_STREAM still now. */
 			family = AF_INET;
 		}
-	} else {
+	}
+	else {
 		family = AF_INET;
 	}
 	if (family == AF_UNIX)
@@ -370,10 +383,17 @@ static int socketpair_win32(int family, int type, int protocol, x_sock fd[2])
 int x_sock_pair(int family, int type, int protocol, x_sock fd[2])
 {
 #ifdef X_OS_WIN32
-	return socketpair_win32(family, type, protocol, fd);
+	if (socketpair_win32(family, type, protocol, fd)) {
+		x_eval_errno();
+		return -1;
+	}
 #else
-	return socketpair(family, type, protocol, fd);
+	if (socketpair(family, type, protocol, fd)) {
+		x_eval_errno();
+		return -1;
+	}
 #endif
+	return 0;
 }
 
 int x_sock_sendall(x_sock sock, const void *data, size_t len)
@@ -390,10 +410,10 @@ int x_sock_sendall(x_sock sock, const void *data, size_t len)
 			if (errno == X_EINTR)
 				continue;
 #endif
+			x_eval_errno();
 			return -1;
 		}
 		sent += ret;
-
 	}
 	return 0;
 }
@@ -411,10 +431,11 @@ int x_sock_recvall(x_sock sock, void *buf, size_t len)
 				continue;
 			}
 #endif
+			x_eval_errno();
 			return -1;
 		}
 		if (ret == 0) {
-			errno = X_ENODATA;
+			errno = X_EPIPE;
 			return -1;
 		}
 		received += ret;
@@ -475,11 +496,18 @@ int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
 {
 	int old_keep_alive;
 	socklen_t size = sizeof old_keep_alive;
-	if (getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&old_keep_alive, &size))
+	if (getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&old_keep_alive, &size)) {
+		x_eval_errno();
 		return -1;
-	if (!old_keep_alive && setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)x_p(int, 1), sizeof(int)))
+	}
+	if (old_keep_alive) {
+		errno = X_EALREADY;
 		return -1;
-
+	}
+	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)x_p(int, 1), sizeof(int))) {
+		x_eval_errno();
+		return -1;
+	}
 #ifdef X_OS_WIN32
 	struct tcp_keepalive keepalive = {
 		.onoff = 1,
@@ -495,14 +523,19 @@ int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
 	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &interval_sec, sizeof interval_sec))
 		goto fail;
 
-	//Campatible with NT6.0 or later.
-	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (char *)x_p(int, 10), sizeof(int)))
+	// Campatible with NT6.0 or later.
+	int keepcnt = 10;
+	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (char *)&keepcnt, sizeof(int)))
 		goto fail;
 #endif
 
 	return 0;
+	int saved_err;
 fail:
+	saved_err = errno;
 	(void)setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&old_keep_alive, sizeof old_keep_alive);
+	errno = saved_err;
+	x_eval_errno();
 	return -1;
 }
 
@@ -520,7 +553,7 @@ int x_parse_ipaddr(const char *str, x_ipaddr *ipaddr)
 	return -1;
 }
 
-int x_sock_check(x_sock sock)
+int x_sock_is_valid(x_sock sock)
 {
 	if (sock == X_BADSOCK) {
 		errno = X_EINVAL;

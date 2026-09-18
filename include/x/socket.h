@@ -42,7 +42,6 @@ typedef SOCKET x_sock;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <endian.h>
 typedef int x_sock;
 #define X_BADSOCK -1
 #endif
@@ -79,7 +78,7 @@ int x_sock_send_reset(x_sock sockfd);
 int x_sock_pair(int family, int type, int protocol, x_sock fd[2]);
 int x_sock_set_nonblocking(x_sock fd, bool enable);
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec);
-int x_sock_check(x_sock sock);
+int x_sock_is_valid(x_sock sock);
 
 int x_sock_sendall(x_sock sock, const void *data, size_t len);
 int x_sock_recvall(x_sock sock, void *buf, size_t len);
