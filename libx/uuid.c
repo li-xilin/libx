@@ -39,10 +39,8 @@ static x_once s_init_once = X_ONCE_INIT;
 static void uuid_v1_init(void)
 {
     uint16_t seq_tmp;
-
     x_random(s_node, sizeof(s_node));
     x_random(&seq_tmp, sizeof(seq_tmp));
-
     s_node[0] |= 0x01;
     s_clock_seq = seq_tmp & 0x3FFF;
 }
@@ -79,7 +77,6 @@ int x_uuid_gen_v1(x_uuid *uuid)
 	if (ts <= s_last_ts)
 		s_clock_seq = (s_clock_seq + 1) & 0x3FFF;
 	s_last_ts = ts;
-	printf("ts = %lx\n", ts);
 	tmp->time_low = x_htobe32((uint32_t)(ts & 0xFFFFFFFF));
 	tmp->time_mid = x_htobe16((uint16_t)((ts >> 32) & 0xFFFF));
 	tmp->time_hi_and_version = x_htobe16((1 << 12) | ((uint16_t)((ts >> 48)) & 0x0FFF));
@@ -142,7 +139,6 @@ void x_uuid_text(const x_uuid *uuid, char *out)
 {
 	static const char hex[] = "0123456789abcdef";
 	int j = 0;
-
 	for (int i = 0; i < 16; i++) {
 		if (i == 4 || i == 6 || i == 8 || i == 10) {
 			out[j++] = '-';
