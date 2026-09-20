@@ -113,6 +113,16 @@ int x_sock_set_reuseaddr(x_sock fd)
 	return 0;
 }
 
+int x_sock_set_nodelay(x_sock fd, bool enable)
+{
+	int optval = enable;
+	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval)) < 0) {
+		x_eval_errno();
+		return -1;
+	}
+	return 0;
+}
+
 int x_sock_set_nonblocking(x_sock fd, bool enable)
 {
 #ifdef X_OS_WIN32

@@ -96,21 +96,15 @@ static int errno_is_common(int err)
 		case X_ENETUNREACH:
 		case X_ENOBUFS:
 		case X_ENODATA:
-		case X_ENOLINK:
 		case X_ENOMSG:
 		case X_ENOPROTOOPT:
-		case X_ENOSR:
-		case X_ENOSTR:
 		case X_ENOTCONN:
-		case X_ENOTRECOVERABLE:
 		case X_ENOTSOCK:
 		case X_ENOTSUP:
 		case X_EOVERFLOW:
-		case X_EOWNERDEAD:
 		case X_EPROTO:
 		case X_EPROTONOSUPPORT:
 		case X_EPROTOTYPE:
-		case X_ETIME:
 		case X_ETIMEDOUT:
 		case X_ETXTBSY:
 			return 1;

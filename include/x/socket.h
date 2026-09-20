@@ -76,6 +76,7 @@ void x_sock_exit(void);
 int x_sock_close(x_sock fd);
 int x_sock_send_reset(x_sock sockfd);
 int x_sock_pair(int family, int type, int protocol, x_sock fd[2]);
+int x_sock_set_nodelay(x_sock fd, bool enable);
 int x_sock_set_nonblocking(x_sock fd, bool enable);
 int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec);
 int x_sock_is_valid(x_sock sock);

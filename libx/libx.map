@@ -213,6 +213,9 @@ global:
 	x_ini_set;
 	x_ini_strerror;
 	x_ini_unset;
+	x_ipcsock_connect;
+	x_ipcsock_listen;
+	x_ipcsock_set_fastpath;
 	x_isatty;
 	x_jpath_append;
 	x_jpath_create;
@@ -485,6 +488,7 @@ global:
 	x_sock_sendall;
 	x_sock_send_reset;
 	x_sock_set_keepalive;
+	x_sock_set_nodelay;
 	x_sock_set_nonblocking;
 	x_sock_wait_readable;
 	x_sock_wait_writable;
