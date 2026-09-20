@@ -131,16 +131,73 @@ static int eval_errno(int winerror)
 	// Winsock error codes (10000-11999) are errno values.
 	if (winerror >= 10000 && winerror < 12000) {
 		switch (winerror) {
-			case WSAEINTR:
-			case WSAEBADF:
 			case WSAEACCES:
+				return X_EACCES;
+			case WSAEBADF:
+				return X_EBADF;
 			case WSAEFAULT:
+				return X_EFAULT;
+			case WSAEINTR:
+				return X_EINTR;
 			case WSAEINVAL:
+				return X_EINVAL;
 			case WSAEMFILE:
-				// Winsock definitions of errno values. See WinSock2.h
-				return winerror - 10000;
+				return X_EMFILE;
+			case WSAENAMETOOLONG:
+				return X_ENAMETOOLONG;
+			case WSAENOTEMPTY:
+				return X_ENOTEMPTY;
+				return X_EXDEV;
+			case WSAEADDRINUSE:
+				return X_EADDRINUSE;
+			case WSAEADDRNOTAVAIL:
+				return X_EADDRNOTAVAIL;
+			case WSAEAFNOSUPPORT:
+				return X_EAFNOSUPPORT;
+			case WSAEALREADY:
+				return X_EALREADY;
+			case WSAECONNABORTED:
+				return X_ECONNABORTED;
+			case WSAECONNREFUSED:
+				return X_ECONNREFUSED;
+			case WSAECONNRESET:
+				return X_ECONNRESET;
+			case WSAEDESTADDRREQ:
+				return X_EDESTADDRREQ;
+			case WSAEHOSTUNREACH:
+				return X_EHOSTUNREACH;
+			case WSAEINPROGRESS:
+				return X_EINPROGRESS;
+			case WSAEISCONN:
+				return X_EISCONN;
+			case WSAELOOP:
+				return X_ELOOP;
+			case WSAEMSGSIZE:
+				return X_EMSGSIZE;
+			case WSAENETDOWN:
+				return X_ENETDOWN;
+			case WSAENETRESET:
+				return X_ENETRESET;
+			case WSAENETUNREACH:
+				return X_ENETUNREACH;
+			case WSAENOBUFS:
+				return X_ENOBUFS;
+			case WSAENOPROTOOPT:
+				return X_ENOPROTOOPT;
+			case WSAENOTCONN:
+				return X_ENOTCONN;
+			case WSAENOTSOCK:
+				return X_ENOTSOCK;
+			case WSAEOPNOTSUPP:
+				return X_EOPNOTSUPP;
+			case WSAEPROTOTYPE:
+					return X_EPROTOTYPE;
+			case WSAETIMEDOUT:
+					return X_ETIMEDOUT;
+			case WSAEWOULDBLOCK:
+					return X_EWOULDBLOCK;
 			default:
-				return winerror;
+				return -winerror;
 		}
 	}
 
@@ -302,7 +359,7 @@ static x_tss s_errbuf;
 static void free_errbuf(void *p)
 {
 	char *buf = x_tss_get(&s_errbuf);
-	free(buf);
+	x_free(buf);
 }
 
 static void init_strerror(void)
@@ -312,15 +369,13 @@ static void init_strerror(void)
 
 DWORD GetWin32LastErrorTextW(DWORD dwError, LPWSTR wbuf, DWORD cchBuf)
 {
-    DWORD cch = FormatMessageW( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), wbuf, cchBuf, NULL);
-    if (cch == 0) {
+	DWORD cch = FormatMessageW( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS
+			| FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwError, MAKELANGID(LANG_NEUTRAL,
+				SUBLANG_DEFAULT), wbuf, cchBuf, NULL);
+    if (cch == 0)
         return StringCchPrintfW(wbuf, cchBuf, L"Error 0x%08X", dwError);
-    }
-
     while (cch > 0 && (wbuf[cch-1] == L'\r' || wbuf[cch-1] == L'\n'))
         wbuf[--cch] = L'\0';
-
     return cch;
 }
 #endif
