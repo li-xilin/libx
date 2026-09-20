@@ -124,6 +124,7 @@ case "$host" in
 	lt_cv_sys_path_separator=':'
 	lt_cv_to_host_file_cmd=func_convert_file_noop
 	lt_cv_to_tool_file_cmd=func_convert_file_noop
+	CFLAGS="$CFLAGS -static-libgcc"
 	LT_INIT([win32-dll pic-only])
 	AC_CHECK_WIN32_HEADERS
 	;;
