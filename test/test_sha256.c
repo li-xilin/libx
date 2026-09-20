@@ -28,22 +28,22 @@ static uint8_t digit[] = {
 
 static void sha256_buffer(ut_runner *r)
 {
-	uint8_t sha256[X_SHA256_HASH_SIZE];
-	x_sha256_buffer(data, sizeof data, sha256);
-	ut_assert_mem_equal(r, digit, sizeof digit, sha256, sizeof sha256);
+	x_sha256 sha256;
+	x_sha256_buffer(data, sizeof data, &sha256);
+	ut_assert_mem_equal(r, digit, sizeof digit, &sha256, sizeof sha256);
 }
 
 static void sha256_sectionally(ut_runner *r)
 {
 	x_sha256_ctx ctx;
-	uint8_t sha256[X_SHA256_HASH_SIZE];
+	x_sha256 sha256;
 	size_t block_size = 6;
 
 	x_sha256_init(&ctx);
 	for (int i = 0; i < sizeof data; i+= block_size)
 		x_sha256_update(&ctx, data + i, x_min(block_size, sizeof data - i));
-	x_sha256_finish(&ctx, sha256);
-	ut_assert_mem_equal(r, digit, sizeof digit, sha256, sizeof sha256);
+	x_sha256_finish(&ctx, &sha256);
+	ut_assert_mem_equal(r, digit, sizeof digit, &sha256, sizeof sha256);
 }
 
 void sha256_test_init(ut_suite *s)
