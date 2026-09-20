@@ -18,7 +18,7 @@
     x/compile.h      编译器特性
     x/hash.h         多种散列算法
     x/except.h       异常处理
-    x/atomic.h       原子操作
+    x/endian.h       字节序探测
 
 文件和目录：
     x/path.h         文件路径操作
@@ -85,6 +85,7 @@
     x/reactor.h      响应器模式
     x/socket.h       套接字操作
     x/asynet.h       异步网络操作
+    x/ipcsock.h      基于套接字的进程间通信
 
 密码学：
     x/aes.h         AES对称加密算法

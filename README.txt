@@ -18,6 +18,7 @@ Basic Headers:
     x/compile.h      Compiler features
     x/hash.h         Hash algorithm
     x/except.h       Exception handling
+    x/endian.h       Byte order detection
 
 File and Path:
     x/path.h         File path operations
@@ -83,6 +84,7 @@ Network Operations:
     x/reactor.h      Reactor pattern for event-driven system
     x/socket.h       Socket operations
     x/asynet.h       Asynchronous networking operations
+    x/ipcsock.h      IPC based on socket
 
 Cryptography：
     x/aes.h          AES algorithm
