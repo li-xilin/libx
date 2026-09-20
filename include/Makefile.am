@@ -67,7 +67,7 @@ nodist_xinclude_HEADERS = \
 	x/version.h
 
 if ENABLE_NETWORK
-xinclude_HEADERS +=  x/event.h x/reactor.h x/socket.h x/asynet.h
+xinclude_HEADERS +=  x/event.h x/reactor.h x/socket.h x/asynet.h x/ipcsock.h
 endif
 
 if ENABLE_JSON

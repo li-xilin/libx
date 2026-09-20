@@ -21,7 +21,7 @@ libx_la_LDFLAGS += -ldl -lpthread
 endif
 
 if ENABLE_NETWORK
-libx_la_SOURCES +=  event.c reactor.c socket.c asynet.c
+libx_la_SOURCES +=  event.c reactor.c socket.c asynet.c ipcsock.c
 if WINDOWS
 libx_la_LDFLAGS += -lws2_32
 libx_la_SOURCES += wepoll.c mux_epoll.c
