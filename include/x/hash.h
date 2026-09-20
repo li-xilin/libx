@@ -31,7 +31,7 @@ uint32_t x_hash32_twang_inv(uint32_t key);
 uint64_t x_hash64_twang(uint64_t key);
 uint64_t x_hash64_twang_inv(uint64_t key);
 uint32_t x_hash32_murmur2(const void *key, size_t len, uint32_t seed);
-uint64_t x_hash64_murmur2(const void *key, size_t len, uint32_t seed);
+uint64_t x_hash64_murmur2(const void *key, size_t len, uint64_t seed);
 uint32_t x_hash32_lookup3(const void *data, size_t size, uint32_t seed);
 uint64_t x_hash64_lookup3(const void *data, size_t size, uint64_t seed);
 uint32_t x_hash32_crc(const void *data, size_t size, uint32_t initval);
