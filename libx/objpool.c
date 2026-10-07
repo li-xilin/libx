@@ -175,9 +175,7 @@ void *x_objpool_alloc(x_objpool *pool)
 		return slab->data;
 	}
 	else {
-		x_slab *head_slab = x_aligned_alloc(pool->slab_size, pool->block_size);
-		if (X_UNLIKELY(!head_slab))
-			return NULL;
+		x_slab *head_slab = x_aligned_alloc_retry(pool->slab_size, pool->block_size);
 		head_slab->refcnt_or_head = 1;
 		head_slab->slots = pool->empty_slotmask;
 		head_slab->slots ^= SLOTS_FIRST;
