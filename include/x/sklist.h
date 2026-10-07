@@ -22,9 +22,12 @@
 #ifndef X_SKLIST_H
 #define X_SKLIST_H
 
-#include <x/list.h>
-#include <x/memory.h>
-#include <x/flowctl.h>
+#include "linkage.h"
+#include "list.h"
+#include "memory.h"
+#include "flowctl.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_SKLIST_LEVEL_MAX 32
 
@@ -67,6 +70,8 @@ void *x_sklist_remove(x_sklist *sklist, const void *data);
 x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*dump_value)(const void *data));
 bool x_sklist_sanitize(x_sklist *sklist);
 void x_sklist_free(x_sklist *sklist);
+
+X_EXTERN_C_END
 
 #endif
 

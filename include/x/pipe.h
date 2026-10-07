@@ -19,13 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_PIPE_H
 #define X_PIPE_H
 
+#include "linkage.h"
 #include "types.h"
+#include "assert.h"
 #include <string.h>
-#include <assert.h>
+
+X_EXTERN_C_BEGIN
+
+#define X_PIPE_INIT(buf, size) { .size = (size), .front = 0, .rear = 0, .buf = (uint8_t *)(buf) }
 
 struct x_pipe_st
 {
@@ -33,13 +37,11 @@ struct x_pipe_st
 	uint8_t *buf;
 };
 
-#define X_PIPE_INIT(buf, size) { .size = (size), .front = 0, .rear = 0, .buf = (uint8_t *)(buf) }
-
 typedef void x_pipe_drain_f(void *data, size_t size, void *arg);
 
 inline static void x_pipe_init(x_pipe *b, void *buf, size_t size)
 {
-	assert(size > 1);
+	x_assert(size > 1);
 	b->size = size;
 	b->buf = (uint8_t *)buf;
 	b->rear = b->front = 0;
@@ -84,7 +86,7 @@ inline static size_t x_pipe_zread_size(const x_pipe *b)
 
 inline static void x_pipe_zread_commit(x_pipe *b, size_t size)
 {
-	assert(size <= x_pipe_zread_size(b));
+	x_assert(size <= x_pipe_zread_size(b));
 	b->front = (b->front + size) % b->size;
 }
 
@@ -102,7 +104,7 @@ inline static size_t x_pipe_zwrite_size(const x_pipe *b)
 
 inline static void x_pipe_zwrite_commit(x_pipe *b, size_t size)
 {
-	assert(size <= x_pipe_zwrite_size(b));
+	x_assert(size <= x_pipe_zwrite_size(b));
 	b->rear = (b->rear + size) % b->size;
 }
 
@@ -131,5 +133,7 @@ inline static void x_pipe_refront(x_pipe *b)
 	b->rear = x_pipe_data_size(b);
 	b->front = 0;
 }
+
+X_EXTERN_C_END
 
 #endif

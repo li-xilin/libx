@@ -19,15 +19,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_TSS_H
 #define X_TSS_H
 
 #include "types.h"
 #include "detect.h"
+#include "linkage.h"
 #include <errno.h>
 #include <assert.h>
 #include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 struct x_tss_st
 {
@@ -39,6 +41,8 @@ int x_tss_init(x_tss *key, x_tss_free_f *free_cb);
 void x_tss_remove(x_tss *key);
 void *x_tss_get(x_tss *key);
 int x_tss_set(x_tss *key, void *value);
+
+X_EXTERN_C_END
 
 #endif
 

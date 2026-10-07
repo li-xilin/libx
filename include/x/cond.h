@@ -23,8 +23,11 @@
 #ifndef X_COND_H
 #define X_COND_H
 
+#include "linkage.h"
 #include "types.h"
 #include "detect.h"
+
+X_EXTERN_C_BEGIN
 
 #ifdef X_OS_WIN
 #include <synchapi.h>
@@ -52,6 +55,8 @@ void x_cond_wake(x_cond *cond);
 void x_cond_wake_all(x_cond *cond);
 
 void x_cond_destroy(x_cond *cond);
+
+X_EXTERN_C_END
 
 #endif
 

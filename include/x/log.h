@@ -23,9 +23,12 @@
 #ifndef X_LOG_H
 #define X_LOG_H
 
+#include "linkage.h"
 #include "assert.h"
 #include "uchar.h"
 #include <stdarg.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_LL_FATAL    0
 #define X_LL_ERROR    1
@@ -74,6 +77,8 @@ void x_log_set_handler(x_log_handler_fn *f, void *arg);
 #define x_pwarn(...) x_log(X_LL_WARN, __VA_ARGS__)
 #define x_perror(...) x_log(X_LL_ERROR, __VA_ARGS__)
 #define x_pfatal(...) x_log(X_LL_FATAL, __VA_ARGS__)
+
+X_EXTERN_C_END
 
 #endif
 

@@ -23,6 +23,7 @@
 #ifndef X_EVENT_H
 #define X_EVENT_H
 
+#include "linkage.h"
 #include "socket.h"
 #include "time.h"
 #include "list.h"
@@ -30,12 +31,37 @@
 #include "hmap.h"
 #include <stdint.h>
 
+X_EXTERN_C_BEGIN
+
 #define X_EV_REACTING (1 << 0)
 #define X_EV_ERROR    (1 << 1)
 #define X_EV_ONCE     (1 << 2)
 #define X_EV_READ     (1 << 3)
 #define X_EV_WRITE    (1 << 4)
 #define X_EV_ACCURATE (1 << 5)
+
+#define X_EVENT_INIT(_type, _flags, _handler) {  \
+	.type = _type, \
+	.ev_flags = _flags, \
+	.handler = _handler, \
+	.label = 0, \
+	.res_flags = 0, \
+	.reactor = NULL, \
+}
+
+#define X_EVSOCKET_INIT(X_EVENT_SOCKET, _flags, _handler, _fd) { \
+	.base = X_EVENT_INIT(_type, _flags, _handler), \
+	.sock = _fd, \
+}
+
+#define X_EVTIMER_INIT(_flags, _handler, _interval_ms) { \
+	.base = X_EVENT_INIT(X_EVENT_TIMER,_flags, _handler), \
+	.interval = _interval_ms, \
+}
+
+#define X_EVOBJECT_INIT(_flags, _handler) { \
+	.base = X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
+}
 
 enum {
 	X_EVENT_SOCKET,
@@ -82,6 +108,8 @@ struct x_evobject_st
 void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler);
 void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_handler *handler);
 void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler);
+
+X_EXTERN_C_END
 
 #endif
 

@@ -23,8 +23,11 @@
 #ifndef X_STRING_H
 #define X_STRING_H
 
+#include "linkage.h"
 #include "macros.h"
 #include <string.h>
+
+X_EXTERN_C_BEGIN
 
 #ifndef x_swap
 #define x_swap(a, b, type) \
@@ -123,6 +126,8 @@ const char *x_strnchr(const char *str, int chr, int n);
 const char *x_strnichr(const char *str, int chr, int n);
 size_t x_memcopy(void *dest, size_t dest_len, const void *src, size_t src_len);
 size_t x_memrcopy(void *dest, size_t dest_len, const void *src, size_t src_len);
+
+X_EXTERN_C_END
 
 #endif
 

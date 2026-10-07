@@ -23,8 +23,11 @@
 #ifndef X_CLIARG_H
 #define X_CLIARG_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include "types.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_cliarg_st {
     x_uchar **argv;
@@ -81,5 +84,7 @@ x_uchar *x_cliarg_arg(x_cliarg *cliarg);
 char **x_strargv(const char *cmdline, int* count);
 
 wchar_t **x_wcsargv(const wchar_t *cmdline, int* count);
+
+X_EXTERN_C_END
 
 #endif

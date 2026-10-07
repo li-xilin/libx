@@ -22,9 +22,12 @@
 #ifndef X_ROPE_H
 #define X_ROPE_H
 
+#include "linkage.h"
 #include "types.h"
 #include "btnode.h"
 #include "macros.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_ROPE_SPLIT_SIZE 4096
 
@@ -64,5 +67,6 @@ int x_rope_balance(x_rope *r);
 			(&(var)->node) != NULL; \
 			(var) = x_container_of(x_btnode_next(&(var)->node), x_rope_node, node))
 
+X_EXTERN_C_END
 
 #endif

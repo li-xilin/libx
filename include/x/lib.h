@@ -19,17 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_LIB_H
 #define X_LIB_H
 
+#include "linkage.h"
 #include "types.h"
 #include "uchar.h"
-#include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 x_lib *x_lib_open(const x_uchar* fname);
 void *x_lib_symbol(x_lib *lib, const char *symb);
 int x_lib_close(x_lib *lib);
 const x_uchar *x_lib_strerror(void);
+
+X_EXTERN_C_END
 
 #endif

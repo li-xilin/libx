@@ -23,11 +23,14 @@
 #ifndef X_TEST_H
 #define X_TEST_H
 
-#include "x/types.h"
-#include "x/rope.h"
-#include "x/list.h"
-#include "x/uchar.h"
+#include "types.h"
+#include "linkage.h"
+#include "rope.h"
+#include "list.h"
+#include "uchar.h"
 #include <setjmp.h>
+
+X_EXTERN_C_BEGIN
 
 #ifndef UT_RUNNER_DEFINED
 #define UT_RUNNER_DEFINED
@@ -172,6 +175,8 @@ void __ut_printf(ut_runner *r, const char *file, int line, const char *fmt, ...)
 #define ut_assert_int_equal(r, ex, ac) __ut_assert_int_equal((r), ex, ac, __FILE__, __LINE__)
 
 #define ut_assert_uint_equal(r, ex, ac) __ut_assert_uint_equal((r), ex, ac, __FILE__, __LINE__)
+
+X_EXTERN_C_END
 
 #endif
 

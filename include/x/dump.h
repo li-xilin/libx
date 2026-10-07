@@ -23,10 +23,13 @@
 #ifndef X_DUMP_H
 #define X_DUMP_H
 
+#include "linkage.h"
 #include "macros.h"
 #include "types.h"
 #include "uchar.h"
 #include <stdio.h>
+
+X_EXTERN_C_BEGIN
 
 typedef int x_dump_out_cb_f(const x_uchar *str, size_t len, void *ctx);
 
@@ -72,5 +75,7 @@ inline static void x_dump_named_bind(x_dump *dmp, int index, const x_uchar *name
 {
 	x_dump_bind(dmp, index, x_dump_pair(x_dump_symbol(name), binding));
 }
+
+X_EXTERN_C_END
 
 #endif

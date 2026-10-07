@@ -23,12 +23,13 @@
 #ifndef X_BITMAP_H
 #define X_BITMAP_H
 
+#include "linkage.h"
 #include "types.h"
 #include "assert.h"
-#include <stdint.h>
 #include <string.h>
 
-#include <stdint.h>
+X_EXTERN_C_BEGIN
+
 #if defined(X_CC_MSVC)
 	#include <intrin.h>
 	static inline size_t __x_msvc_ctzll(uint64_t x)
@@ -127,5 +128,7 @@ inline static void x_bitmap_toggle(x_bitmap *bm, size_t idx)
 
 int x_bitmap_find(x_bitmap *bm, int bit, size_t start, size_t len);
 size_t x_bitmap_count(x_bitmap *bm);
+
+X_EXTERN_C_END
 
 #endif

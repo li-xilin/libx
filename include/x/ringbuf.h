@@ -19,14 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_RINGBUF_H
 #define X_RINGBUF_H
 
+#include "linkage.h"
 #include "types.h"
 #include "flowctl.h"
 #include <string.h>
 #include <assert.h>
+
+X_EXTERN_C_BEGIN
 
 typedef struct x_ringbuf_st x_ringbuf;
 
@@ -177,6 +179,8 @@ size_t x_ringbuf_peek_backward(x_ringbuf *b, void *buf, size_t start, size_t siz
 void x_ringbuf_resize(x_ringbuf *ringbuf, size_t size);
 void x_ringbuf_compact(x_ringbuf *b);
 void *x_ringbuf_linearize(x_ringbuf *b);
+
+X_EXTERN_C_END
 
 #endif
 

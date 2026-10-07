@@ -23,9 +23,12 @@
 #ifndef X_LIST_H
 #define X_LIST_H
 
+#include "linkage.h"
 #include "types.h"
 #include "macros.h"
-#include <assert.h>
+#include "assert.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_LIST_INIT(name) { { &(name.head), &(name.head) } }
 #define X_SLIST_INIT { NULL }
@@ -120,38 +123,38 @@ inline static void __x_list_add(x_link *new_link, x_link *prev, x_link *next)
 
 inline static void x_list_add_front(x_list *list, x_link *new_link)
 {
-	assert(list);
-	assert(new_link);
+	x_assert(list);
+	x_assert(new_link);
 	__x_list_add(new_link, &list->head, list->head.next);
 }
 
 inline static void x_list_add_back(x_list *list, x_link *new_link)
 {
-	assert(list);
-	assert(new_link);
+	x_assert(list);
+	x_assert(new_link);
 	__x_list_add(new_link, list->head.prev, &list->head);
 }
 
 inline static void x_list_insert(x_link *link, x_link *new_link)
 {
-	assert(link);
-	assert(new_link);
+	x_assert(link);
+	x_assert(new_link);
 	__x_list_add(new_link, link->prev, link);
 }
 
 inline static void __x_list_del(x_link * prev, x_link * next)
 {
-	assert(prev);
-	assert(next);
+	x_assert(prev);
+	x_assert(next);
 	next->prev = prev;
 	prev->next = next;
 }
 
 inline static void x_list_del(x_link *link)
 {
-	assert(link);
-	assert(link->prev);
-	assert(link->next);
+	x_assert(link);
+	x_assert(link->prev);
+	x_assert(link->next);
 	__x_list_del(link->prev, link->next);
 	link->prev = link->next = 0;
 }
@@ -241,6 +244,8 @@ inline static x_slink *x_slink_replace_after(x_slink *link, x_slink *new_link)
 	link->next = new_link;
 	return del;
 }
+
+X_EXTERN_C_END
 
 #endif
 

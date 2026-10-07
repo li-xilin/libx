@@ -24,8 +24,11 @@
 #define X_TCOLOR_H
 
 #include "detect.h"
+#include "linkage.h"
 #include "types.h"
 #include <stdio.h>
+
+X_EXTERN_C_BEGIN
 
 enum {
 	X_TCOLOR_BLACK = 0,
@@ -62,6 +65,8 @@ void x_tcolor_reset(x_tcolor *tc);
 void x_tcolor_bold( x_tcolor *tc); /* Does not do anything on Windows */
 void x_tcolor_fg(x_tcolor *tc, int color);
 void x_tcolor_bg(x_tcolor *tc, int color);
+
+X_EXTERN_C_END
 
 #endif
 

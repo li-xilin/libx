@@ -22,9 +22,14 @@
 #ifndef X_RANDOM_H
 #define X_RANDOM_H
 
-#include "x/types.h"
+#include "linkage.h"
+#include "types.h"
+
+X_EXTERN_C_BEGIN
 
 int x_random(void *buf, size_t size);
+
+X_EXTERN_C_END
 
 #endif
 

@@ -19,14 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_FILE_H
 #define X_FILE_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include "macros.h"
 #include <stdio.h>
 #include <stdarg.h>
+
+X_EXTERN_C_BEGIN
 
 FILE* x_fdopen(intptr_t handle, const x_uchar *mode);
 FILE *x_fopen(const x_uchar *path, const x_uchar *mode);
@@ -52,6 +54,8 @@ int x_scanf(const x_uchar *format, ...);
 x_uchar *x_fgets(x_uchar *ws, int n, FILE *stream);
 int x_fgetc(FILE *stream);
 int x_getchar(void);
+
+X_EXTERN_C_END
 
 #endif
 

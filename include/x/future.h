@@ -22,6 +22,7 @@
 #ifndef X_FUTURE_H
 #define X_FUTURE_H
 
+#include "linkage.h"
 #include "macros.h"
 #include "splay.h"
 #include "list.h"
@@ -30,8 +31,9 @@
 #include "mutex.h"
 #include "types.h"
 
-struct x_fupool_st
-{
+X_EXTERN_C_BEGIN
+
+struct x_fupool_st {
 	uint8_t bit_buf[8192];
 	x_bitmap id_map;
 	x_cond seq_cond;
@@ -46,20 +48,17 @@ struct x_fupool_st
 #define X_FUTURE_BUSY 2
 #define X_FUTURE_READY 3
 
-struct x_future_value_st
-{
+struct x_future_value_st {
 	void *data;
 	int32_t retcode;
 	uint32_t status;
 };
 
-struct x_fuset_st
-{
+struct x_fuset_st {
 	x_list list;
 };
 
-struct x_future_st
-{
+struct x_future_st {
 	x_btnode node;
 	x_link link;
 	x_fupool *fupool;
@@ -67,8 +66,7 @@ struct x_future_st
 	uint16_t seq;
 };
 
-struct x_promise_st
-{
+struct x_promise_st {
 	x_fupool *fupool;
 	uint16_t seq;
 	struct x_future_value_st *value;
@@ -89,6 +87,8 @@ void *x_promise_start(x_promise *prom, x_fupool *fup, uint16_t seq);
 void x_promise_commit(x_promise *prom, int retcode);
 uint16_t x_fupool_alloc_seq(x_fupool *fup);
 void x_fupool_free_seq(x_fupool *fup, uint16_t seq);
+
+X_EXTERN_C_END
 
 #endif
 

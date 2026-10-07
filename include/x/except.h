@@ -22,10 +22,13 @@
 #ifndef X_EXCEPT_H
 #define X_EXCEPT_H
 
-#include <x/trick.h>
-#include <x/flowctl.h>
+#include "linkage.h"
+#include "trick.h"
+#include "flowctl.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+X_EXTERN_C_BEGIN
 
 #define __X_EXCEPT_LABEL1(n) x_catch_##n
 #define __X_EXCEPT_LABEL(n) __X_EXCEPT_LABEL1(n)
@@ -57,6 +60,8 @@
 			else 
 
 #define x_throw (void)longjmp(__x_except_jmp_buf, 1);
+
+X_EXTERN_C_END
 
 #endif
 

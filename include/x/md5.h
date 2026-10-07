@@ -22,11 +22,14 @@
 #ifndef X_MD5_H
 #define X_MD5_H
 
-#include "x/types.h"
+#include "linkage.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_MD5_ABCD { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 }
 #define X_MD5_INIT { 0, X_MD5_ABCD }
@@ -46,6 +49,8 @@ void x_md5_update(x_md5_ctx *ctx, const void *data, size_t len);
 void x_md5_finish(x_md5_ctx *ctx, x_md5 *md5);
 void x_md5_buffer(void *data, size_t len, x_md5 *result);
 int x_md5_file(void *fp, x_md5 *result);
+
+X_EXTERN_C_END
 
 #endif
 

@@ -23,6 +23,7 @@
 #ifndef X_RWLOCK_H
 #define X_RWLOCK_H
 
+#include "linkage.h"
 #include "types.h"
 #ifdef X_OS_WIN
 #include <synchapi.h>
@@ -31,6 +32,8 @@
 #include <pthread.h>
 #define X_RWLOCK_INIT { .rwlock = PTHREAD_RWLOCK_INITIALIZER }
 #endif
+
+X_EXTERN_C_BEGIN
 
 struct x_rwlock_st
 {
@@ -49,5 +52,7 @@ int x_rwlock_wlock(x_rwlock *lock);
 int x_rwlock_try_wlock(x_rwlock *lock);
 int x_rwlock_unlock(x_rwlock *lock);
 void x_rwlock_destroy(x_rwlock *lock);
+
+X_EXTERN_C_END
 
 #endif

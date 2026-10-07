@@ -23,6 +23,7 @@
 #ifndef X_MUTEX_H
 #define X_MUTEX_H
 
+#include "linkage.h"
 #include "types.h"
 #include "detect.h"
 
@@ -34,6 +35,8 @@
 #define X_MUTEX_INIT { .mutex = PTHREAD_MUTEX_INITIALIZER }
 #endif
 
+X_EXTERN_C_BEGIN
+
 struct x_mutex_st
 {
 #ifdef X_OS_WIN
@@ -44,13 +47,11 @@ struct x_mutex_st
 };
 
 void x_mutex_init(x_mutex *lock);
-
 void x_mutex_lock(x_mutex *lock);
-
 bool x_mutex_trylock(x_mutex *lock);
-
 void x_mutex_unlock(x_mutex *lock);
-
 void x_mutex_destroy(x_mutex *lock);
+
+X_EXTERN_C_END
 
 #endif

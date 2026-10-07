@@ -24,10 +24,13 @@
 #ifndef X_DIR_H
 #define X_DIR_H
 
+#include "linkage.h"
 #include "types.h"
 #include "detect.h"
 #include "uchar.h"
 #include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 #ifndef X_OS_WIN
 #  include <dirent.h>
@@ -65,5 +68,7 @@ typedef struct __x_dir_st x_dir;
 x_dir *x_dir_open(const x_uchar *path);
 x_dirent *x_dir_read(x_dir *dir);
 void x_dir_close(x_dir *dir);
+
+X_EXTERN_C_END
 
 #endif

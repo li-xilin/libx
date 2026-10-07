@@ -24,10 +24,12 @@
 #ifndef X_HEAP_H
 #define X_HEAP_H
 
+#include "linkage.h"
 #include "types.h"
 
-struct x_ranode_st
-{
+X_EXTERN_C_BEGIN
+
+struct x_ranode_st {
 	size_t index;
 };
 
@@ -53,6 +55,8 @@ static inline size_t x_heap_size(const x_heap* h)
 {
 	return h->entry_cnt;
 }
+
+X_EXTERN_C_END
 
 #endif
 

@@ -23,11 +23,14 @@
 #ifndef X_THRPOOL_H
 #define X_THRPOOL_H
 
-#include "x/types.h"
-#include "x/cond.h"
-#include "x/mutex.h"
-#include "x/thread.h"
-#include "x/memory.h"
+#include "linkage.h"
+#include "types.h"
+#include "cond.h"
+#include "mutex.h"
+#include "thread.h"
+#include "memory.h"
+
+X_EXTERN_C_BEGIN
 
 typedef void x_thrwork_handler(x_thrwork *work);
 
@@ -59,6 +62,8 @@ static inline void x_thrwork_init(x_thrwork *work, x_thrwork_handler *handler)
 	work->handler = handler;
 	x_link_init(&work->link);
 }
+
+X_EXTERN_C_END
 
 #endif
 

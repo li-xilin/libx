@@ -23,14 +23,19 @@
 #ifndef X_SPLAY_H
 #define X_SPLAY_H
 
+#include "linkage.h"
 #include "types.h"
 #include "btnode.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_splay_st {
     x_btnode *root;
     x_btnode_comp_f *comp;
     size_t size;
 };
+
+#define X_SPLAY_INIT(_cmp) { .root = NULL, .size = 0, .comp = _cmp, }
 
 inline static void x_splay_init(x_splay *t, x_btnode_comp_f *f)
 {
@@ -77,5 +82,7 @@ void x_splay_remove(x_splay *t, x_btnode *node);
 
 #define x_splay_foreach(pos, t) \
 	for (x_btnode *pos = x_splay_first(t); pos; pos = x_splay_next(pos))
+
+X_EXTERN_C_END
 
 #endif

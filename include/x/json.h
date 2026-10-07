@@ -26,15 +26,10 @@
 #ifndef X_JSON_H
 #define X_JSON_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
+#include "linkage.h"
 #include "types.h"
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_JSON_INVALID 0
 #define X_JSON_BOOL    (1 << 0)
@@ -180,9 +175,7 @@ x_json* x_json_object_add_array(x_json *const object, const char *const name);
 
 #define x_json_array_foreach(element, array) x_json_object_foreach(element, array)
 
-#ifdef __cplusplus
-}
-#endif
+X_EXTERN_C_END
 
 #endif
 

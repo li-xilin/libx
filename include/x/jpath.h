@@ -22,11 +22,13 @@
 #ifndef X_JPATH__H
 #define X_JPATH__H
 
+#include "linkage.h"
 #include "types.h"
 #include "json.h"
 #include "memory.h"
 #include "flowctl.h"
-#include <stdbool.h>
+
+X_EXTERN_C_BEGIN
 
 enum x_jpath_type {
     X_JPATH_INVALID = 0,
@@ -75,6 +77,8 @@ bool x_jpath_result_add(x_jpath_result *res, x_json *item);
 #define x_jpath_result_foreach(i, res) \
 	for (x_jpath_result_node *__x_jpath_cur = (res)->head->next; __x_jpath_cur; __x_jpath_cur = __x_jpath_cur->next) \
 		x_block_var(x_json *i = __x_jpath_cur->node)
+
+X_EXTERN_C_END
 
 #endif
 

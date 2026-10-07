@@ -22,10 +22,13 @@
 #ifndef X_MEMCACHE_H
 #define X_MEMCACHE_H
 
+#include "linkage.h"
 #include "types.h"
 #include "list.h"
 #include <stdint.h>
 #include <stddef.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_OBJPOOL_INIT(_item_size) { .item_size = _item_size }
 
@@ -50,6 +53,8 @@ void *x_objpool_alloc(x_objpool *pool);
 void x_objpool_dealloc(x_objpool *pool, void *ptr);
 void x_objpool_show(const x_objpool *pool, void *fp);
 bool x_objpool_sanitize(const x_objpool *pool);
+
+X_EXTERN_C_END
 
 #endif
 

@@ -41,17 +41,12 @@
 #ifndef X_PRINTF_H
 #define X_PRINTF_H
 
+#include "linkage.h"
 #include "macros.h"
 #include "uchar.h"
 #include "types.h"
-#ifdef __cplusplus
-#  include <cstdarg>
-#  include <cstddef>
-extern "C" {
-#else
-#  include <stdarg.h>
-#  include <stddef.h>
-#endif
+
+X_EXTERN_C_BEGIN
 
 int x_printf(const x_uchar* format, ...);
 int x_vprintf(const x_uchar* format, va_list arg);
@@ -67,9 +62,7 @@ int x_stprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x
 int x_vstprintf(int (*out)(x_uchar *s, size_t len, void* ctx), void* ctx, const x_uchar* format, va_list arg);
 int x_putchar(x_uchar ch);
 
-#ifdef __cplusplus
-}
-#endif
+X_EXTERN_C_END
 
 #endif
 

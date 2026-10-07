@@ -22,11 +22,16 @@
 #ifndef X_IPCSOCK_H
 #define X_IPCSOCK_H
 
-#include "x/socket.h"
-#include "x/uchar.h"
+#include "linkage.h"
+#include "socket.h"
+#include "uchar.h"
+
+X_EXTERN_C_BEGIN
 
 x_sock x_ipcsock_listen(const x_uchar *sock_file, bool nonblock);
 x_sock x_ipcsock_connect(const x_uchar *sock_file, bool nonblock);
 int x_ipcsock_set_fastpath(x_sock fd, bool enable);
+
+X_EXTERN_C_END
 
 #endif

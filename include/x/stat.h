@@ -23,9 +23,12 @@
 #ifndef X_STAT_H
 #define X_STAT_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include "types.h"
 #include "time.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_S_IFMT 0170000
 
@@ -54,4 +57,7 @@ struct x_stat_st
 
 int x_lstat(const x_uchar* path, x_stat *stat_buf);
 
+X_EXTERN_C_END
+
 #endif
+

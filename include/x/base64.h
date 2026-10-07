@@ -23,11 +23,16 @@
 #ifndef X_BASE64_H
 #define X_BASE64_H
 
+#include "linkage.h"
 #include <stdint.h>
 #include <stddef.h>
 
+X_EXTERN_C_BEGIN
+
 char* x_base64_encode(const void *data, size_t size);
 void* x_base64_decode(const char *base64, size_t size, size_t *plain_size);
+
+X_EXTERN_C_END
 
 #endif
 

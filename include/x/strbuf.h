@@ -25,8 +25,11 @@
 #ifndef X_STRBUF_H
 #define X_STRBUF_H
 
+#include "linkage.h"
 #include "types.h"
 #include "uchar.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_STRBUF_INIT { 0 }
 
@@ -56,5 +59,7 @@ x_uchar *x_strbuf_str(const x_strbuf *sb);
 x_uchar *x_strbuf_data(x_strbuf *sb);
 x_uchar *x_strbuf_gets(x_strbuf *sb);
 void x_strbuf_endgets(x_strbuf *sb);
+
+X_EXTERN_C_END
 
 #endif

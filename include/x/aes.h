@@ -22,9 +22,12 @@
 #ifndef X_AES_H
 #define X_AES_H
 
+#include "linkage.h"
 #include "types.h"
 #include <stdint.h>
 #include <stddef.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_AES_BLOCKLEN 16
 #define X_AES_KEYEXPSIZE 240
@@ -40,10 +43,11 @@ void x_aes_init(x_aes_ctx* ctx, const uint8_t* key, int key_bits);
 void x_aes_set_iv(x_aes_ctx* ctx, const uint8_t* iv);
 void x_aes_encrypt(const x_aes_ctx* ctx, uint8_t* buf);
 void x_aes_decrypt(const x_aes_ctx* ctx, uint8_t* buf);
-
 void x_aes_cbc_encrypt(x_aes_ctx* ctx, uint8_t* buf, size_t length);
 void x_aes_cbc_decrypt(x_aes_ctx* ctx, uint8_t* buf, size_t length);
 void x_aes_ctr_xcrypt(x_aes_ctx* ctx, uint8_t* buf, size_t length);
+
+X_EXTERN_C_END
 
 #endif
 

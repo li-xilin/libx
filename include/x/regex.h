@@ -1,7 +1,10 @@
 #ifndef X_REGEX_H
 #define X_REGEX_H
 
+#include "linkage.h"
 #include "types.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_REGEX_CATCH_MAX 16
 
@@ -25,6 +28,8 @@ int x_recatch_len_at(x_recatch *c, int index);
 char *x_recatch_fetch(x_recatch *c, char *str, int index);
 char *x_recatch_replace(x_recatch *c, char *new_str, const char *rpl_str, int id);
 char *x_recatch_put(x_recatch *c, char *new_str, const char *put_str);
+
+X_EXTERN_C_END
 
 #endif
 

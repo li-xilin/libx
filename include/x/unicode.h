@@ -26,8 +26,11 @@
 #ifndef X_UNICODE_H
 #define X_UNICODE_H
 
+#include "linkage.h"
 #include <stdint.h>
 #include <stddef.h>
+
+X_EXTERN_C_BEGIN
 
 #define MAX_UTF8_LEN 4
 
@@ -135,5 +138,7 @@ inline static size_t x_utf16_strlen(const uint16_t *str)
 		len++;
 	return len;
 }
+
+X_EXTERN_C_END
 
 #endif

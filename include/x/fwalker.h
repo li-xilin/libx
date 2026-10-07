@@ -22,13 +22,15 @@
 #ifndef X_FWALKER_H
 #define X_FWALKER_H
 
-#include "x/types.h"
-#include "x/path.h"
-#include "x/list.h"
-#include "x/memory.h"
+#include "linkage.h"
+#include "types.h"
+#include "path.h"
+#include "list.h"
+#include "memory.h"
 
-struct x_fwalker_st
-{
+X_EXTERN_C_BEGIN
+
+struct x_fwalker_st {
 	x_mset mset;
 	x_list dir_list;
 	x_uchar path[X_PATH_MAX];
@@ -39,6 +41,8 @@ void x_fwalker_close(x_fwalker *fwalker);
 x_uchar *x_fwalker_read(x_fwalker *fwalker, x_stat *statbuf);
 int x_fwalker_rewind(x_fwalker *fwalker);
 void x_fwalker_leave(x_fwalker *fwalker);
+
+X_EXTERN_C_END
 
 #endif
 

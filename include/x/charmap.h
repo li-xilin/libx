@@ -22,7 +22,10 @@
 #ifndef X_CHARMAP_H
 #define X_CHARMAP_H
 
-#include "x/types.h"
+#include "linkage.h"
+#include "types.h"
+
+X_EXTERN_C_BEGIN
 
 typedef enum {
 	X_CHARMAP_BMP_TO_GBK = 0,
@@ -43,6 +46,8 @@ typedef enum {
 bool x_charmap_get(uint16_t chr, uint16_t *out, x_charmap_mode mode);
 size_t x_charmap_gets(const uint16_t *src, uint16_t *dst, size_t n, uint16_t invalid_char, x_charmap_mode mode);
 size_t x_charmap_strlen(const uint16_t *str);
+
+X_EXTERN_C_END
 
 #endif
 

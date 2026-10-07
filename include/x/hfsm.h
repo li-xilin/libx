@@ -23,7 +23,10 @@
 #ifndef X_HFSM_H
 #define X_HFSM_H
 
-#include "x/types.h"
+#include "linkage.h"
+#include "types.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_HFSM_INIT(cur_state, err_state) { NULL, cur_state, err_state }
 #define X_HFSM_BUILTIN_TRANS 16
@@ -98,6 +101,8 @@ static inline bool x_hfsm_stopped(x_hfsm *fsm)
 }
 
 enum x_hfsm_status x_hfsm_handle_event(x_hfsm *fsm, x_hfsm_event *event);
+
+X_EXTERN_C_END
 
 #endif
 

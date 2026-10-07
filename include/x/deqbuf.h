@@ -22,11 +22,14 @@
 #ifndef X_DEQBUF_H
 #define X_DEQBUF_H
 
-#include "x/types.h"
-#include "x/ringbuf.h"
-#include "x/memory.h"
-#include "x/mutex.h"
-#include "x/cond.h"
+#include "linkage.h"
+#include "types.h"
+#include "ringbuf.h"
+#include "memory.h"
+#include "mutex.h"
+#include "cond.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_DEQBUF_SEGMENT_SIZE (1 << 9)
 #define X_DEQBUF_FREE_LIMITS 8
@@ -102,6 +105,8 @@ void x_deqbuf_clear(x_deqbuf *deq);
 size_t x_deqbuf_size(x_deqbuf *deq);
 bool x_deqbuf_is_empty(x_deqbuf *deq);
 bool x_deqbuf_is_full(x_deqbuf *deq);
+
+X_EXTERN_C_END
 
 #endif
 

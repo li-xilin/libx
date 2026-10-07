@@ -19,30 +19,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_PROC_H
 #define X_PROC_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include "types.h"
 #include "file.h"
 #include <stdint.h>
 
-#ifndef X_PROC_DEFINED
-#define X_PROC_DEFINED
-typedef struct x_proc_st x_proc;
-#endif
+X_EXTERN_C_BEGIN
 
 x_proc *x_proc_open(const x_uchar* file, x_uchar *const argv[]);
-
 FILE *x_proc_stdio(const x_proc *proc, int fd);
-
 int x_proc_fclose(x_proc *proc, int fd);
-
 x_pid x_proc_pid(const x_proc *proc);
-
 int x_proc_kill(const x_proc *proc);
-
 int x_proc_close(x_proc *proc);
+
+X_EXTERN_C_END
 
 #endif

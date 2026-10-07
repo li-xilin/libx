@@ -23,8 +23,11 @@
 #ifndef X_HASH_H
 #define X_HASH_H
 
+#include "linkage.h"
 #include <stdint.h>
 #include <stddef.h>
+
+X_EXTERN_C_BEGIN
 
 uint32_t x_hash32_twang(uint32_t key);
 uint32_t x_hash32_twang_inv(uint32_t key);
@@ -36,5 +39,7 @@ uint32_t x_hash32_lookup3(const void *data, size_t size, uint32_t seed);
 uint64_t x_hash64_lookup3(const void *data, size_t size, uint64_t seed);
 uint32_t x_hash32_crc(const void *data, size_t size, uint32_t initval);
 uint64_t x_hash64_crc(const void *data, size_t size, uint64_t initval);
+
+X_EXTERN_C_END
 
 #endif

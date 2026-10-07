@@ -24,6 +24,7 @@
 #define X_UCHAR_H
 
 #include "detect.h"
+#include "linkage.h"
 #include "unicode.h"
 #include "assert.h"
 #include <string.h>
@@ -109,6 +110,8 @@ typedef char x_uchar;
 
 #define x_uconv(s) __x_uconv(sizeof (s)[0], (s), (s)[0])
 
+X_EXTERN_C_BEGIN
+
 typedef int x_umain_fn(int argc, x_uchar *argv[]);
 
 int x_utf8_to_ustr(const char *from, x_uchar *us, size_t size);
@@ -124,6 +127,8 @@ size_t x_ustrnihash(const x_uchar *s, size_t len);
 x_uchar *x_utss_utf8(char *utf8);
 x_uchar *x_utss_utf16(wchar_t *utf16);
 int x_umain(x_umain_fn *umain, int argc, char *argv[]);
+
+X_EXTERN_C_END
 
 static inline x_uchar *__x_uconv(int char_size, const void *s, wchar_t test)
 {

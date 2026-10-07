@@ -23,12 +23,15 @@
 #ifndef X_INI_H
 #define X_INI_H
 
+#include "linkage.h"
 #include "types.h"
 #include "macros.h"
 #include "list.h"
 #include "memory.h"
 #include "flowctl.h"
 #include <stdio.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_INI_EBADNAME 1
 #define X_INI_ETOOLONG 2
@@ -112,6 +115,8 @@ void x_ini_pure(x_ini *d);
 		x_list_foreach(__x_ini_foreach_link, &(sec)->opt_list) \
 			x_block_var(struct x_ini_option_st *opt = x_container_of( \
 						__x_ini_foreach_link, struct x_ini_option_st, link))
+
+X_EXTERN_C_END
 
 #endif
 

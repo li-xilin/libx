@@ -23,6 +23,7 @@
 #ifndef X_REACTOR_H
 #define X_REACTOR_H
 
+#include "linkage.h"
 #include "socket.h"
 #include "event.h"
 #include "list.h"
@@ -31,6 +32,8 @@
 #include "mutex.h"
 #include "socket.h"
 #include "event.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_reactor_st
 {
@@ -62,6 +65,8 @@ void x_reactor_signal(x_reactor *r);
 void x_reactor_break(x_reactor *r);
 x_event *x_reactor_pop_event(x_reactor *r);
 void x_reactor_do_events(x_reactor *r);
+
+X_EXTERN_C_END
 
 #endif
 

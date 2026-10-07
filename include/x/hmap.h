@@ -23,11 +23,13 @@
 #ifndef X_HMAP_H
 #define X_HMAP_H
 
+#include "linkage.h"
 #include "list.h"
 #include "types.h"
 #include "memory.h"
 #include "flowctl.h"
-#include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 #define X_HMAP_INIT(factor, equal_fn) { \
 	.load_factor = factor, \
@@ -64,6 +66,8 @@ x_hnode *x_hmap_find_and_remove(x_hmap *ht, const x_hnode *node);
 void x_hmap_remove(x_hmap *ht, const x_hnode *node);
 void x_hmap_clear(x_hmap *ht);
 bool x_hmap_sanitize(x_hmap *ht);
+
+X_EXTERN_C_END
 
 #endif
 

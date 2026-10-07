@@ -22,11 +22,14 @@
 #ifndef X_PATHSET_H
 #define X_PATHSET_H
 
-#include "x/types.h"
-#include "x/list.h"
-#include "x/rwlock.h"
-#include "x/memory.h"
-#include "x/uchar.h"
+#include "linkage.h"
+#include "types.h"
+#include "list.h"
+#include "rwlock.h"
+#include "memory.h"
+#include "uchar.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_pathset_st
 {
@@ -53,6 +56,8 @@ uint32_t x_pathset_unitary_mask(x_pathset *pset);
 void x_pathset_dump(x_pathset *pset, x_strbuf *strbuf);
 void x_pathset_find_top(x_pathset *pset, x_list *list);
 void x_pathset_free_entry_list(x_list *list);
+
+X_EXTERN_C_END
 
 #endif
 

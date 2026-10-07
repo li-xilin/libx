@@ -23,11 +23,16 @@
 #ifndef X_MEMORY_H
 #define X_MEMORY_H
 
+#include "linkage.h"
 #include "types.h"
 #include "list.h"
 #include "mutex.h"
 #include <stddef.h>
 #include <stdint.h>
+
+X_EXTERN_C_BEGIN
+
+#define X_MSET_INIT(mset) { .list = X_LIST_INIT(mset.list), .lock = X_MUTEX_INIT }
 
 struct x_mblock_st
 {
@@ -41,8 +46,6 @@ struct x_mset_st
 	x_list list;
 	x_mutex lock;
 };
-
-#define X_MSET_INIT(mset) { .list = X_LIST_INIT(mset.list), .lock = X_MUTEX_INIT }
 
 void x_mset_init(x_mset *mset);
 void x_mset_clear(x_mset *mset);
@@ -59,6 +62,8 @@ void x_mattach(x_mset *mset, void *ptr);
 void *x_aligned_alloc(size_t align, size_t size);
 void *x_aligned_alloc_retry(size_t align, size_t size);
 void x_aligned_free(void *ptr);
+
+X_EXTERN_C_END
 
 #endif
 

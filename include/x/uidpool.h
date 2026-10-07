@@ -22,8 +22,11 @@
 #ifndef X_UIDPOOL_H
 #define X_UIDPOOL_H
 
-#include <x/types.h>
-#include <x/sklist.h>
+#include "linkage.h"
+#include "types.h"
+#include "sklist.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_BADUID 0
 
@@ -45,6 +48,8 @@ void x_uidpool_free(x_uidpool *pool);
 int x_uidpool_get(x_uidpool *pool, x_uidlink *link);
 void x_uidpool_put(x_uidpool *pool, x_uidlink *link);
 x_uidlink *x_uidpool_find(x_uidpool *pool, uint32_t uid);
+
+X_EXTERN_C_END
 
 #endif
 

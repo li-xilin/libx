@@ -23,7 +23,9 @@
 #define X_UUID_H
 
 #include "types.h"
-#include <stdint.h>
+#include "linkage.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_uuid_st {
 	uint8_t u8[16];
@@ -34,5 +36,7 @@ int x_uuid_gen_v4(x_uuid *uuid);
 int x_uuid_gen_v7(x_uuid *uuid);
 void x_uuid_text(const x_uuid *uuid, char *out);
 int x_uuid_parse(const char *text, x_uuid *out);
+
+X_EXTERN_C_END
 
 #endif

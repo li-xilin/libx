@@ -19,10 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #ifndef X_PATH_H
 #define X_PATH_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include "detect.h"
 #include <limits.h>
@@ -54,6 +54,8 @@
 #  define X_PATHNAME_MAX NAME_MAX
 #endif
 
+X_EXTERN_C_BEGIN
+
 void x_path_empty(x_uchar *path);
 x_uchar *x_path_fixsep(x_uchar *path);
 x_uchar *x_path_trim(x_uchar *path);
@@ -70,6 +72,8 @@ int x_path_setcwd(const x_uchar *path);
 x_uchar *x_path_homedir(x_uchar *path, size_t size);
 x_uchar *x_path_tmpdir(x_uchar *path, size_t size);
 int x_path_root_len(const x_uchar *path);
+
+X_EXTERN_C_END
 
 #endif
 

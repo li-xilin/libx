@@ -19,10 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #ifndef X_ONCE_H
 #define X_ONCE_H
 
+#include "linkage.h"
 #include "types.h"
 #include "detect.h"
 #include <errno.h>
@@ -45,7 +45,11 @@ struct x_once_st
 #define X_ONCE_INIT { PTHREAD_ONCE_INIT }
 #endif
 
+X_EXTERN_C_BEGIN
+
 int x_once_init(x_once *once, x_once_fn *once_proc);
+
+X_EXTERN_C_END
 
 #endif
 

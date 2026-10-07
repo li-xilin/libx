@@ -28,8 +28,11 @@
 #ifndef X_EDIT_H
 #define X_EDIT_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include <stddef.h>
+
+X_EXTERN_C_BEGIN
 
 #ifndef NO_COMPLETION
 typedef struct x_edit_completions_st {
@@ -132,6 +135,8 @@ int x_edit_columns(void);
  * Enable or disable multiline mode (disabled by default)
  */
 void x_edit_set_multi_line(int enableml);
+
+X_EXTERN_C_END
 
 #endif
 

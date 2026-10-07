@@ -19,7 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef X_TWISTER_H
+#define X_TWISTER_H
+
 #include "types.h"
+#include "linkage.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_MT19937_STATE_MAXLEN 624
 
@@ -30,4 +36,8 @@ struct x_mt19937_st {
 
 void x_mt19937_init(x_mt19937* rand, uint32_t seed);
 uint32_t x_mt19937_next(x_mt19937* rand);
+
+X_EXTERN_C_END
+
+#endif
 

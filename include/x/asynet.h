@@ -22,14 +22,17 @@
 #ifndef X_ASYNET_H
 #define X_ASYNET_H
 
-#include "x/types.h"
-#include "x/socket.h"
-#include "x/hmap.h"
-#include "x/memory.h"
-#include "x/event.h"
-#include "x/thrpool.h"
-#include "x/sklist.h"
-#include "x/uidpool.h"
+#include "linkage.h"
+#include "types.h"
+#include "socket.h"
+#include "hmap.h"
+#include "memory.h"
+#include "event.h"
+#include "thrpool.h"
+#include "sklist.h"
+#include "uidpool.h"
+
+X_EXTERN_C_BEGIN
 
 typedef void x_dialer_handler(int err, x_sock fd, void *user);
 typedef void x_listener_handler(x_sock fd, void *user);
@@ -63,6 +66,8 @@ x_timer *x_timer_create(x_reactor *reactor);
 void x_timer_free(x_timer *timer);
 uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_handler *on_timedout, void *user);
 void x_timer_remove(x_timer *timer, uint32_t id);
+
+X_EXTERN_C_END
 
 #endif
 

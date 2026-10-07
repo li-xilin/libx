@@ -19,9 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_SOCKET_H
 #define	X_SOCKET_H
+
+#include "linkage.h"
 #include "log.h"
 #include "types.h"
 #include "detect.h"
@@ -45,6 +46,8 @@ typedef SOCKET x_sock;
 typedef int x_sock;
 #define X_BADSOCK -1
 #endif
+
+X_EXTERN_C_BEGIN
 
 #ifdef X_OS_WIN32
 #define x_sock_errno() WSAGetLastError()
@@ -122,6 +125,8 @@ inline static int x_sock_send_u32(x_sock sock, uint32_t value)
 }
 
 int x_parse_ipaddr(const char *str, x_ipaddr *ipaddr);
+
+X_EXTERN_C_END
 
 #endif
 

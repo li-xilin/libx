@@ -23,7 +23,10 @@
 #define X_ENDIAN_H
 
 #include "detect.h"
+#include "linkage.h"
 #include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 /* Detect machine byte-order */
 #if defined(X_OS_WIN)
@@ -79,5 +82,7 @@ uint32_t x_le32toh(uint32_t v);
 uint64_t x_be64toh(uint64_t v);
 uint64_t x_le64toh(uint64_t v);
 uint32_t x_pdp32toh(uint32_t v);
+
+X_EXTERN_C_END
 
 #endif

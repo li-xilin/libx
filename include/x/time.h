@@ -24,6 +24,7 @@
 #define X_TIME_H
 
 #include "detect.h"
+#include "linkage.h"
 #ifdef X_OS_WIN
 #include <sysinfoapi.h>
 #include <winsock2.h>
@@ -31,6 +32,8 @@
 #include <sys/time.h>
 #endif
 #include <stdint.h>
+
+X_EXTERN_C_BEGIN
 
 #define x_time_diff(tv1, tv2, tv_out) \
 	do { \
@@ -79,6 +82,8 @@ int x_time_now(struct timeval *tv);
 int x_time_monotonic(struct timeval *tv);
 int x_time_from_iso8601(const char *datetime, struct timeval *tv);
 uint64_t x_time_tick(void);
+
+X_EXTERN_C_END
 
 #endif
 

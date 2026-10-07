@@ -23,6 +23,10 @@
 #ifndef X_TSIGNAL_H
 #define X_TSIGNAL_H
 
+#include "linkage.h"
+
+X_EXTERN_C_BEGIN
+
 #define X_TSIGNAL_INT 1
 #define X_TSIGNAL_QUIT 2
 #define X_TSIGNAL_CLOSE 3
@@ -32,5 +36,7 @@ typedef void (x_tsignal_fn)(int action);
 
 int x_tsignal_set(x_tsignal_fn *proc);
 void x_tsignal_reset(void);
+
+X_EXTERN_C_END
 
 #endif

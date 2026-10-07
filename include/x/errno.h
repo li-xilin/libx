@@ -23,10 +23,13 @@
 #ifndef X_ERROR_H
 #define X_ERROR_H
 
-#include "x/detect.h"
-#include "x/uchar.h"
+#include "linkage.h"
+#include "detect.h"
+#include "uchar.h"
 #include <stddef.h>
 #include <errno.h>
+
+X_EXTERN_C_BEGIN
 
 #define __X_EBASE 700
 
@@ -107,6 +110,8 @@
 
 int x_eval_errno(void);
 const x_uchar *x_last_error(int xerr);
+
+X_EXTERN_C_END
 
 #endif
 

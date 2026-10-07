@@ -23,9 +23,12 @@
 #ifndef X_DEBUG_H
 #define X_DEBUG_H
 
-#include "x/types.h"
-#include "x/detect.h"
-#include "x/macros.h"
+#include "linkage.h"
+#include "types.h"
+#include "detect.h"
+#include "macros.h"
+
+X_EXTERN_C_BEGIN
 
 #define X_TRACE_MAX 512
 
@@ -75,5 +78,7 @@ void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)
 void __x_sanitize_stub(const x_location *loc);
 
 #define x_sanitize_stub() __x_sanitize_stub(X_WHERE)
+
+X_EXTERN_C_END
 
 #endif

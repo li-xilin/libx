@@ -24,11 +24,14 @@
 #define X_TYPES_H
 
 #include "detect.h"
+
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 #include <stdarg.h>
 #include <limits.h>
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 
 #ifdef X_OS_WIN
 typedef struct { uint8_t fileid[16]; } x_ino;
@@ -479,6 +482,11 @@ typedef struct x_objpool_st x_objpool;
 #ifndef X_SLAB_DEFINED
 #define X_SLAB_DEFINED
 typedef struct x_slab_st x_slab;
+#endif
+
+#ifndef X_PROC_DEFINED
+#define X_PROC_DEFINED
+typedef struct x_proc_st x_proc;
 #endif
 
 #endif

@@ -23,7 +23,10 @@
 #ifndef X_BTNODE_H
 #define X_BTNODE_H
 
+#include "linkage.h"
 #include "types.h"
+
+X_EXTERN_C_BEGIN
 
 typedef int x_btnode_comp_f(const x_btnode *left, const x_btnode *right);
 
@@ -46,6 +49,8 @@ void x_btnode_rotate_left(x_btnode *x);
 void x_btnode_rotate(x_btnode *x);
 void x_btnode_insert_before(x_btnode *x, x_btnode *y);
 void x_btnode_insert_after(x_btnode *x, x_btnode *y);
+
+X_EXTERN_C_END
 
 #endif
 

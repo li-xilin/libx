@@ -23,11 +23,14 @@
 #ifndef X_ASSERT_H
 #define X_ASSERT_H
 
+#include "linkage.h"
 #include "types.h"
 #include "debug.h"
 #include "trick.h"
 #include "compiler.h"
 #include <assert.h>
+
+X_EXTERN_C_BEGIN
 
 int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, ...);
 
@@ -42,6 +45,8 @@ int __x_assert_fail(const x_location *loc, const char* brief, const char* fmt, .
 	#define x_assert_printf(_exp, ...) ((void)0)
 	#define x_static_assert(_exp) typedef char X_CATENATE(__x_static_assert_, __LINE__)[1] X_UNUSED
 #endif
+
+X_EXTERN_C_END
 
 #endif
 

@@ -22,9 +22,12 @@
 #ifndef X_INDEX_H
 #define X_INDEX_H
 
-#include "x/splay.h"
-#include "x/list.h"
-#include "x/memory.h"
+#include "linkage.h"
+#include "splay.h"
+#include "list.h"
+#include "memory.h"
+
+X_EXTERN_C_BEGIN
 
 struct x_indexset_st
 {
@@ -61,6 +64,8 @@ x_index *x_indexset_next(const x_index *idx);
 
 #define x_indexset_foreach(idx, set) \
 	for (x_index *idx = x_indexset_first(iset); idx; idx = x_indexset_next(idx))
+
+X_EXTERN_C_END
 
 #endif
 

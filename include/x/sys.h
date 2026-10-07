@@ -23,11 +23,14 @@
 #ifndef X_SYS_H
 #define X_SYS_H
 
+#include "linkage.h"
 #include "uchar.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+
+X_EXTERN_C_BEGIN
 
 int x_sys_mkdir(const x_uchar *path, int mode);
 int x_sys_unlink(const x_uchar *path);
@@ -41,6 +44,8 @@ int x_sys_setenv(const x_uchar *name, const x_uchar *value);
 int x_sys_utime(const x_uchar *path, time_t atime, time_t mtime);
 int x_sys_nprocs(void);
 size_t x_page_size(void);
+
+X_EXTERN_C_END
 
 #endif
 
