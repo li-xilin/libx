@@ -38,6 +38,7 @@ global:
 	x_aes_init;
 	x_aes_set_iv;
 	x_aligned_alloc;
+	x_aligned_alloc_retry;
 	x_aligned_free;
 	x_ansi_to_ustr;
 	x_base64_decode;

@@ -226,6 +226,19 @@ void *x_aligned_alloc(size_t align, size_t size)
 #endif
 }
 
+void *x_aligned_alloc_retry(size_t align, size_t size)
+{
+	void *ptr = x_aligned_alloc(align, size);
+	for (int i = 0; !ptr && i < RETRY_TIMES; i++) {
+		x_thread_sleep(RETRY_INTERVAL);
+		ptr = x_aligned_alloc(align, size);
+	}
+	if (!ptr)
+		x_tsignal_send_nomem();
+	return ptr;
+}
+
+
 void x_aligned_free(void *ptr)
 {
 #if defined(X_OS_WIN)
