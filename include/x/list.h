@@ -210,7 +210,7 @@ inline static x_slink *x_slist_del_front(x_slist *list)
 	return first;
 }
 
-inline static x_slink *x_slist_first(x_slist *list, x_slink *link)
+inline static x_slink *x_slist_first(x_slist *list)
 {
 	return list->head.next;
 }

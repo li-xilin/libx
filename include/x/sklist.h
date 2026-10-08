@@ -33,7 +33,7 @@ X_EXTERN_C_BEGIN
 
 #define x_sklist_foreach(elem, sklist) \
 	x_block_if ((sklist)->level) \
-		x_list_foreach (__sklist_##elem, &(sklist)->list[0]) \
+		x_slist_foreach (__sklist_##elem, &(sklist)->list[0]) \
 			x_block_var (void *elem = x_container_of(__sklist_##elem, x_sklink, link[0])->data)
 
 typedef struct x_sklist_st x_sklist;
@@ -46,16 +46,16 @@ struct x_sklist_st {
 	uint8_t level;
 	uint32_t seed;
 	x_sklist_compare_fn *compare;
-	x_list list[X_SKLIST_LEVEL_MAX];
+	x_slist list[X_SKLIST_LEVEL_MAX];
 };
 
 struct x_sklink_st {
 	void *data;
-	x_link link[];
+	x_slink link[];
 };
 
 struct x_skpath_st {
-	x_link *link[X_SKLIST_LEVEL_MAX];
+	x_slink *link[X_SKLIST_LEVEL_MAX];
 };
 
 bool x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path);

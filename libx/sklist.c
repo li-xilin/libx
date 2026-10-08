@@ -33,7 +33,7 @@ void x_sklist_init(x_sklist *sklist, x_sklist_compare_fn *compare)
 	sklist->level = 0;
 	x_mset_init(&sklist->mset);
 	for (int i = 0; i < X_SKLIST_LEVEL_MAX; i++)
-		x_list_init(&sklist->list[i]);
+		x_slist_init(&sklist->list[i]);
 	sklist->compare = compare;
 	sklist->seed = 1;
 }
@@ -54,28 +54,33 @@ bool x_sklist_path_find(x_sklist *sklist, const void *data, x_skpath *path)
 	bool matched = false;
 	if (!sklist->level)
 		return false;
-	x_link *end = &sklist->list[sklist->level - 1].head;
-	x_link *pos = end;
+	x_slink *pos = &sklist->list[sklist->level - 1].head;
+	x_slink *end = NULL;
 	for (int i = sklist->level - 1; i >= 0; i--) {
-		pos = pos->next;
-		for (;pos != end; pos = pos->next) {
-			x_sklink *sklink = x_container_of(pos, x_sklink, link[i]);
+		for (;pos->next != end; pos = pos->next) {
+			x_sklink *sklink = x_container_of(pos->next, x_sklink, link[i]);
 			int cmp = sklist->compare(sklink->data, data);
 			if (cmp > 0) {
-				end = pos;
+				end = pos->next->next;
 				break;
 			}
 			else if (cmp == 0) {
 				matched = true;
-				for (int j = 0; j < i + 1; j++)
-					path->link[j] = &sklink->link[j];
+				x_slink *matched_link = pos->next;
+				for (int j = i; j >= 0; j--) {
+					while (pos->next != matched_link)
+						pos = pos->next;
+					path->link[j] = pos;
+					pos--;
+					matched_link--;
+				}
 				goto out;
 			}
 		}
-		pos = end->prev;
 		path->link[i] = pos;
 		pos--;
-		end--;
+		if (end)
+			end--;
 	}
 out:
 	return matched;
@@ -93,7 +98,7 @@ void x_sklist_path_insert(x_sklist *sklist, x_skpath *path, void *data)
 	x_sklink *sklink = x_malloc(&sklist->mset, sizeof *sklink + link_level * sizeof(x_link));
 	sklink->data = data;
 	for (int i = 0; i < link_level; i++) {
-		x_list_insert(path->link[i]->next, &sklink->link[i]);
+		x_slink_insert_after(path->link[i], &sklink->link[i]);
 	}
 }
 
@@ -102,18 +107,17 @@ void x_sklist_path_remove(x_sklist *sklist, x_skpath *path)
 	int i = 0;
 	if (!sklist->level)
 		return;
-	x_sklink *sklink = x_container_of(path->link[0], x_sklink, link[0]);
+	x_sklink *sklink = x_container_of(path->link[0]->next, x_sklink, link[0]);
 	do {
-		x_list_del(&sklink->link[i]);
-		if (x_list_is_empty(&sklist->list[i])) {
-			for (int j = i; j < sklist->level; j++)
-				x_list_init(sklist->list + j);
+		x_slink_del_after(path->link[i]);
+		if (x_slist_is_empty(&sklist->list[i])) {
+			for (int j = i + 1; j < sklist->level; j++)
+				x_slist_init(sklist->list + j);
 			sklist->level = i;
 			break;
 		}
 		i++;
-	}
-	while (i < sklist->level && path->link[i] == path->link[i - 1] + 1);
+	} while (i < sklist->level && path->link[i]->next == &sklink->link[i]);
 	x_free(sklink);
 }
 
@@ -121,7 +125,7 @@ void *x_sklist_find(x_sklist *sklist, const void *data)
 {
 	x_skpath path;
 	if (x_sklist_path_find(sklist, data, &path))
-		return x_container_of(path.link[0], x_sklink, link[0])->data;
+		return x_container_of(path.link[0]->next, x_sklink, link[0])->data;
 	return NULL;
 }
 
@@ -129,7 +133,7 @@ void *x_sklist_find_or_insert(x_sklist *sklist, void *data)
 {
 	x_skpath path;
 	if (x_sklist_path_find(sklist, data, &path))
-		return x_container_of(path.link[0], x_sklink, link[0])->data;
+		return x_container_of(path.link[0]->next, x_sklink, link[0])->data;
 	x_sklist_path_insert(sklist, &path, data);
 	return NULL;
 }
@@ -138,7 +142,7 @@ void *x_sklist_replace_or_insert(x_sklist *sklist, void *data)
 {
 	x_skpath path;
 	if (x_sklist_path_find(sklist, data, &path)) {
-		x_sklink *sklink = x_container_of(path.link[0], x_sklink, link[0]);
+		x_sklink *sklink = x_container_of(path.link[0]->next, x_sklink, link[0]);
 		void *orig_data = sklink->data;
 		sklink->data = data;
 		return orig_data;
@@ -152,7 +156,7 @@ void *x_sklist_remove(x_sklist *sklist, const void *data)
 	x_skpath path;
 	if (!x_sklist_path_find(sklist, data, &path))
 		return NULL;
-	void *value = x_container_of(path.link[0], x_sklink, link[0])->data;
+	void *value = x_container_of(path.link[0]->next, x_sklink, link[0])->data;
 	x_sklist_path_remove(sklist, &path);
 	return value;
 }
@@ -162,11 +166,11 @@ x_dump *x_sklist_dump(x_sklist *sklist, x_dump *(*print_val)(const void *data))
 	int cnt = 0;
 	if (!sklist->level)
 		return x_dump_empty_block(x_u("sklist"), 0);
-	x_list_foreach(cur, &sklist->list[0])
+	x_slist_foreach(cur, &sklist->list[0])
 		cnt++;
 	x_dump *blk = x_dump_empty_block(x_u("sklist"), cnt);
 	int i = 0;
-	x_list_foreach(cur, &sklist->list[0]) {
+	x_slist_foreach(cur, &sklist->list[0]) {
 		x_sklink *sklink = x_container_of(cur, x_sklink, link[0]);
 		x_dump_bind(blk, i++, print_val(sklink->data));
 	}
@@ -180,17 +184,17 @@ bool x_sklist_sanitize(x_sklist *sklist)
 		return false;
 	}
 	for (int i = sklist->level + 1; i < X_SKLIST_LEVEL_MAX; i++)
-		if (!x_list_is_empty(&sklist->list[i])) {
+		if (!x_slist_is_empty(&sklist->list[i])) {
 			x_sanitize_stub();
 			return false;
 		}
 	for (int i = 0; i < sklist->level; i++) {
 		x_sklink *prev = NULL;
-		if (x_list_is_empty(&sklist->list[i])) {
+		if (x_slist_is_empty(&sklist->list[i])) {
 			x_sanitize_stub();
 			return false;
 		}
-		x_list_foreach(pos, &sklist->list[i]) {
+		x_slist_foreach(pos, &sklist->list[i]) {
 			x_sklink *sklink = x_container_of(pos, x_sklink, link[i]);
 			if (prev && sklist->compare(sklink->data, prev->data) <= 0) {
 				x_sanitize_stub();
@@ -206,7 +210,7 @@ void x_sklist_free(x_sklist *sklist)
 {
 	if (!sklist->level)
 		return;
-	x_list_popeach(cur, &sklist->list[0]) {
+	x_slist_popeach(cur, &sklist->list[0]) {
 		x_sklink *sklink = x_container_of(cur, x_sklink, link);
 		x_free(sklink);
 	}

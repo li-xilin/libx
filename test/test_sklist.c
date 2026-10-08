@@ -20,7 +20,7 @@ x_dump *dump(const void *p) {
 	return x_dump_int(*x);
 }
 
-static void fuzzing(ut_runner *r)
+static void sklist_fuzzing(ut_runner *r)
 {
 	x_sklist skl;
 	x_sklist_init(&skl, compare);
@@ -37,14 +37,15 @@ static void fuzzing(ut_runner *r)
 	ut_assert(r, x_ustrcmp(x_u(DUMP), x_strbuf_str(&sb)) == 0);
 
 	for (int i = 0; i < x_arrlen(arr); i++) {
-		x_sklist_remove(&skl, &arr[i]);
+		int *val = x_sklist_remove(&skl, &arr[i]);
+		ut_assert_int_equal(r, (uintptr_t)val, (uintptr_t)(arr + i));
 		ut_assert(r, x_sklist_sanitize(&skl));
 	}
 	ut_assert(r, skl.level == 0);
 	x_sklist_free(&skl);
 }
 
-static void foreach(ut_runner *r)
+static void sklist_foreach(ut_runner *r)
 {
 	x_sklist skl;
 	x_sklist_init(&skl, compare);
@@ -66,6 +67,7 @@ static void foreach(ut_runner *r)
 void sklist_test_init(ut_suite *s)
 {
 	ut_suite_init(s, "sklist.h");
-	ut_suite_add(s, fuzzing);
-	ut_suite_add(s, foreach);
+	ut_suite_add(s, sklist_fuzzing);
+	ut_suite_add(s, sklist_foreach);
 }
+

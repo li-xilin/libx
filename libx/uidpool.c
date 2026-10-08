@@ -67,13 +67,12 @@ int x_uidpool_get(x_uidpool *pool, x_uidlink *link)
 		goto out;
 	}
 	increase_uid(pool);
-	for (x_link *pos = path.link[0]->next; pos != path.link[0];) {
-		x_uidlink *uid = x_container_of(pos, x_sklink, link[0])->data;
+	for (x_slink *pos = path.link[0]->next; pos->next; ) {
+		x_uidlink *uid = x_container_of(pos->next, x_sklink, link[0])->data;
 		if (pool->next_uid != uid->num)
 			break;
 		if (increase_uid(pool)) {
-			assert(pos->next == &pool->uid_set.list[0].head);
-			pos = x_list_first(&pool->uid_set.list[0]);
+			pos = &pool->uid_set.list[0].head;
 			continue;
 		}
 		pos = pos->next;
@@ -94,7 +93,7 @@ void x_uidpool_put(x_uidpool *pool, x_uidlink *link)
 	x_skpath path;
 	if (!x_sklist_path_find(&pool->uid_set, link, &path))
 		return;
-	x_uidlink *res = x_container_of(path.link[0], x_sklink, link[0])->data;
+	x_uidlink *res = x_container_of(path.link[0]->next, x_sklink, link[0])->data;
 	if (res != link)
 		return;
 	x_sklist_path_remove(&pool->uid_set, &path);
