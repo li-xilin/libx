@@ -44,6 +44,7 @@ global:
 	x_base64_decode;
 	x_base64_encode;
 	x_bitmap_count;
+	x_bitmap_fill;
 	x_bitmap_find;
 	x_bprintf;
 	x_btnode_first;

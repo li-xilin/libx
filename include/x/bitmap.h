@@ -39,7 +39,7 @@ X_EXTERN_C_BEGIN
 			return index;
 		return 64;
 	}
-	#define X_BITMAP64_FIRST_ONE(s) __x_msvc_ctzll(x);
+	#define X_BITMAP64_FIRST_ONE(s) __x_msvc_ctzll((uint64_t)s);
 	#define X_BITMAP64_ONE_COUNT(s) __popcnt64(s)
 #elif defined(X_CC_GNU) || defined(X_CC_CLANG)
 	#define X_BITMAP64_FIRST_ONE(s) ((size_t)__builtin_ctzll((unsigned long long)(s)))
@@ -68,31 +68,34 @@ X_EXTERN_C_BEGIN
 	#define X_BITMAP64_ONE_COUNT(s) __x_fallback_popcountll((unsigned long long)(s))
 #endif
 
+#define X_BITMAP_NPOS ((size_t)-1)
+#define X_BITMAP_INIT(_buf, _size) { (_size), (uint8_t *)(_buf) }
+
 struct x_bitmap_st
 {
 	size_t nbytes;
 	uint8_t *data;
 };
 
-inline static void x_bitmap_init(x_bitmap *bm, void *data, size_t size)
+static inline void x_bitmap_init(x_bitmap *bm, void *data, size_t size)
 {
 	bm->data = data;
 	bm->nbytes = size;
 }
 
-inline static size_t x_bitmap_nbits(x_bitmap *bm)
+static inline size_t x_bitmap_nbits(x_bitmap *bm)
 {
 	return bm->nbytes * 8;
 }
 
-inline static int x_bitmap_get(x_bitmap *bm, size_t idx)
+static inline int x_bitmap_get(x_bitmap *bm, size_t idx)
 {
 	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
 	return (bm->data[byte_idx] >> bit_idx) & 1;
 }
 
-inline static void x_bitmap_set(x_bitmap *bm, size_t idx, int bit)
+static inline void x_bitmap_set(x_bitmap *bm, size_t idx, int bit)
 {
 	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
@@ -100,35 +103,47 @@ inline static void x_bitmap_set(x_bitmap *bm, size_t idx, int bit)
 	bm->data[byte_idx] ^= (old_bit ^ !!bit) << bit_idx;
 }
 
-inline static void x_bitmap_clear(x_bitmap *bm, int val)
+static inline void x_bitmap_clear(x_bitmap *bm, int bit)
 {
-	memset(bm->data, !!val * 0xFF, bm->nbytes);
+	memset(bm->data, !!bit * 0xFF, bm->nbytes);
 }
 
-inline static void x_bitmap_and(x_bitmap *bm, size_t idx, int bit)
-{
-	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
-	int byte_idx = idx / 8, bit_idx = idx % 8;
-	bm->data[byte_idx] &=  ~(!bit << bit_idx);
-}
-
-inline static void x_bitmap_or(x_bitmap *bm, size_t idx, int bit)
+static inline void x_bitmap_and(x_bitmap *bm, size_t idx, int bit)
 {
 	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
-	bm->data[byte_idx] |=  !!bit << bit_idx;
+	if (!bit)
+		bm->data[byte_idx] &=  ~(1 << bit_idx);
 }
 
-inline static void x_bitmap_toggle(x_bitmap *bm, size_t idx)
+static inline void x_bitmap_or(x_bitmap *bm, size_t idx, int bit)
 {
 	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
 	int byte_idx = idx / 8, bit_idx = idx % 8;
-	bm->data[byte_idx] ^=  (1 << bit_idx);
+	if (bit)
+		bm->data[byte_idx] |=  1 << bit_idx;
 }
 
-int x_bitmap_find(x_bitmap *bm, int bit, size_t start, size_t len);
-size_t x_bitmap_count(x_bitmap *bm);
+static inline void x_bitmap_xor(x_bitmap *bm, size_t idx, int bit)
+{
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
+	int byte_idx = idx / 8, bit_idx = idx % 8;
+	if (bit)
+		bm->data[byte_idx] ^=  1 << bit_idx;
+}
+
+static inline void x_bitmap_not(x_bitmap *bm, size_t idx)
+{
+	x_assert_printf(idx < bm->nbytes * 8, "Index out of bounds");
+	int byte_idx = idx / 8, bit_idx = idx % 8;
+	bm->data[byte_idx] ^=  1 << bit_idx;
+}
+
+size_t x_bitmap_find(x_bitmap *bm, int bit, size_t start, size_t len);
+size_t x_bitmap_count(x_bitmap *bm, int bit, size_t start, size_t len);
+void x_bitmap_fill(x_bitmap *bm, void *bitarr, size_t start, size_t len);
 
 X_EXTERN_C_END
 
 #endif
+

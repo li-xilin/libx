@@ -23,9 +23,9 @@ int main(void)
 	print(&bm);
 
 	for (int i = 0; i < x_bitmap_nbits(&bm); i += 1)
-		x_bitmap_toggle(&bm, i);
+		x_bitmap_not(&bm, i);
 	print(&bm);
 
-	printf("The num of set bits: %zu\n", x_bitmap_count(&bm));
+	printf("The num of set bits: %zu\n", x_bitmap_count(&bm, 1, 0, x_bitmap_nbits(&bm)));
 }
 
