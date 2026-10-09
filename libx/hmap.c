@@ -86,7 +86,7 @@ static x_slink *hmap_locate_prev(const x_hmap *ht, const x_hnode *node, size_t s
 	return NULL;
 }
 
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn)
+void x_hmap_init1(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn)
 {
 	ht->prime_index = 1;
 	ht->load_factor = load_factor;
@@ -96,6 +96,11 @@ void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn)
 	ht->table = x_malloc(NULL, ht->slot_cnt * sizeof(x_hnode));
 	for(size_t i = 0; i < ht->slot_cnt; ++i)
 		x_slist_init(ht->table + i);
+}
+
+void x_hmap_init(x_hmap *ht, x_hmap_equal_fn *equal_fn)
+{
+	x_hmap_init1(ht, 0.5, equal_fn);
 }
 
 x_hnode *x_hmap_find(const x_hmap *ht, const x_hnode *node)
@@ -176,7 +181,7 @@ void x_hmap_free(x_hmap * ht)
 void x_hmap_clear(x_hmap *ht)
 {
 	x_free(ht->table);
-	x_hmap_init(ht, ht->load_factor, ht->equal);
+	x_hmap_init1(ht, ht->load_factor, ht->equal);
 }
 
 bool x_hmap_sanitize(x_hmap *ht)

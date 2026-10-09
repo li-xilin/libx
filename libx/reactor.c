@@ -157,7 +157,7 @@ int x_reactor_init(x_reactor *r)
 	if (x_sock_pair(AF_UNIX, SOCK_STREAM, 0, pair) == -1)
 		goto fail;
 	x_mutex_init(&r->lock);
-	x_hmap_init(&r->sock_ht, 0.5, evsocket_equal);
+	x_hmap_init(&r->sock_ht, evsocket_equal);
 	x_list_init(&r->pending_list);
 	x_list_init(&r->obj_list);
 	x_heap_init(&r->timer_heap, timer_ordered);

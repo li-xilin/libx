@@ -57,7 +57,8 @@ struct x_hnode_st {
 	size_t hash;
 };
 
-void x_hmap_init(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn);
+void x_hmap_init(x_hmap *ht, x_hmap_equal_fn *equal_fn);
+void x_hmap_init1(x_hmap *ht, float load_factor, x_hmap_equal_fn *equal_fn);
 void x_hmap_free(x_hmap *ht);
 x_hnode *x_hmap_find(const x_hmap *ht, const x_hnode *node);
 x_hnode *x_hmap_find_or_insert(x_hmap *ht, x_hnode *node);
