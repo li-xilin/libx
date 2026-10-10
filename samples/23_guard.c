@@ -1,4 +1,4 @@
-#include <x/except.h>
+#include <x/guard.h>
 #include <stdio.h>
 
 int init1(void)
@@ -36,24 +36,24 @@ void clean3(void)
 
 int main(void)
 {
-	x_finish {
-		printf("finished\n");
-		return 1;
+	x_guard {
+		if (init1())
+			x_bail;
+		x_cleanup (1) {
+			clean1();
+		}
+
+		if (init2())
+			x_bail;
+		x_cleanup (2) {
+			clean2();
+		}
+
+		if (init3())
+			x_bail;
+		x_cleanup (3) {
+			clean3();
+		}
 	}
-
-	if (init1())
-		x_throw;
-	x_catch (1)
-		clean1();
-
-	if (init2())
-		x_throw;
-	x_catch (2)
-		clean2();
-
-	if (init3())
-		x_throw;
-	x_catch (3)
-		clean3();
 }
 

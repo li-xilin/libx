@@ -19,47 +19,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef X_EXCEPT_H
-#define X_EXCEPT_H
+#ifndef X_GUARD_H
+#define X_GUARD_H
 
 #include "linkage.h"
 #include "trick.h"
+#include "assert.h"
 #include "flowctl.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 X_EXTERN_C_BEGIN
 
-#define __X_EXCEPT_LABEL1(n) x_catch_##n
-#define __X_EXCEPT_LABEL(n) __X_EXCEPT_LABEL1(n)
+#define __X_GUARD_LABEL1(n) x_catch_##n
+#define __X_GUARD_LABEL(n) __X_GUARD_LABEL1(n)
 
-#define x_finish \
-	jmp_buf __x_except_jmp_buf; \
+#define x_guard \
+	x_block_var(int __x_except_pos = 0) \
+	x_block_var(jmp_buf __x_except_jmp_buf) \
+		if (setjmp(__x_except_jmp_buf) != 0) { \
+			__X_GUARD_LABEL(0): \
+			(void)__x_except_pos; \
+		} else
+
+#define x_cleanup(n) \
+	x_static_assert(__x_except_pos == n - 1); \
+	__x_except_pos = n; \
 	if (setjmp(__x_except_jmp_buf) == 0) \
 		; \
 	else \
-		for (int __x_except_flag = 0; __x_except_flag < 2; __x_except_flag++) \
+		__X_GUARD_LABEL(n): \
+		for (volatile int __x_except_flag = 0; ; __x_except_flag++) \
 			if (__x_except_flag == 1) { \
-				abort(); \
-				goto __X_EXCEPT_LABEL(0); \
-			} \
-			else \
-				__X_EXCEPT_LABEL(0):
+				goto __X_GUARD_LABEL(X_DEC(n)); \
+				goto __X_GUARD_LABEL(n); \
+			} else 
 
-
-#define x_catch(n) \
-	if (setjmp(__x_except_jmp_buf) == 0) \
-		; \
-	else \
-		__X_EXCEPT_LABEL(n): \
-		for (int __x_except_flag = 0; __x_except_flag < 2; __x_except_flag++) \
-			if (__x_except_flag == 1) { \
-				goto __X_EXCEPT_LABEL(X_DEC(n)); \
-				goto __X_EXCEPT_LABEL(n); \
-			} \
-			else 
-
-#define x_throw (void)longjmp(__x_except_jmp_buf, 1);
+#define x_bail (void)longjmp(__x_except_jmp_buf, 1);
 
 X_EXTERN_C_END
 

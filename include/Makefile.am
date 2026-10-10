@@ -53,7 +53,7 @@ xinclude_HEADERS = \
 	x/index.h \
 	x/pathset.h \
 	x/fwalker.h \
-	x/except.h \
+	x/guard.h \
 	x/debug.h \
 	x/hfsm.h \
 	x/sklist.h \

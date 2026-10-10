@@ -258,7 +258,7 @@ AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debug build (de
 			  [enable_debug=$enableval],
 			  [enable_debug=no])
 
-regular_CFLAGS="-std=c99 -Wshadow -Wstrict-prototypes -Wformat=2 -pipe"
+regular_CFLAGS="-std=c99 -Wstrict-prototypes -Wformat=2 -pipe"
 
 AS_IF([test "x$enable_debug" = "xyes"], [
 	PC_DEBUG_CFLAGS="-DX_DEBUG=1"
