@@ -168,11 +168,11 @@ out:
 static int get_file_creation_time(const char *filename, const struct stat *st, time_t *creat_time)
 {
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
-    *creat_time = st.st_birthtime;
+#if defined(X_OS_BSD4)
+	*creat_time = st->st_birthtim.tv_sec;
 	return 0;
 #elif defined(st_birthtime)
-    *creat_time = st.st_birthtime;
+	*creat_time = st->st_birthtime;
 	return 0;
 #elif defined(__linux__) && defined(SYS_statx)
 	struct statx stx;

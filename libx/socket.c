@@ -410,9 +410,7 @@ int x_sock_sendall(x_sock sock, const void *data, size_t len)
 {
 	size_t sent = 0;
 	int flags = 0;
-#ifndef X_OS_WIN32
 	flags = MSG_NOSIGNAL;
-#endif
 	while (sent != len) {
 		ssize_t ret = send(sock, (char *)data + sent, len - sent, flags);
 		if (ret <  0) {

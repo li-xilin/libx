@@ -95,7 +95,6 @@ static int errno_is_common(int err)
 		case X_ENETRESET:
 		case X_ENETUNREACH:
 		case X_ENOBUFS:
-		case X_ENODATA:
 		case X_ENOMSG:
 		case X_ENOPROTOOPT:
 		case X_ENOTCONN:

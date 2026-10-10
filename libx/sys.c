@@ -256,7 +256,7 @@ int x_sys_nprocs(void)
 
 size_t x_page_size(void)
 {
-#ifdef _WIN32
+#ifdef X_OS_WIN
 	SYSTEM_INFO sys_info;
 	GetSystemInfo(&sys_info);
 	return (size_t)sys_info.dwPageSize;

@@ -41,7 +41,7 @@ void x_thread_kill(x_thread *t);
 void x_thread_testcancel(int retcode);
 void x_thread_cancel(x_thread *t);
 void *x_thread_data(void);
-uint32_t x_thread_native_id(void);
+uint64_t x_thread_native_id(void);
 void x_thread_cleanup(void);
 bool x_thread_canceled(void);
 

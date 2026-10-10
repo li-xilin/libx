@@ -44,6 +44,11 @@
 #endif
 #include <setjmp.h>
 
+#if defined(X_OS_FREEBSD) || defined(X_OS_NETBSD)
+#include <pthread_np.h>
+#endif
+
+
 struct x_thread_st
 {
 #ifdef X_OS_WIN
@@ -87,15 +92,21 @@ static void init(void)
 	}
 }
 
-uint32_t x_thread_native_id(void)
+uint64_t x_thread_native_id(void)
 {
 #ifdef X_OS_WIN
 	return GetCurrentThreadId();
 #elif defined(X_OS_LINUX)
 #define PTHREAD_OFFSETOF_TID 0x2d0
 	return *(uint32_t *)(((char *)pthread_self()) + PTHREAD_OFFSETOF_TID);
+#elif defined(X_OS_MACOS)
+	uint64_t tid;
+	pthread_threadid_np(NULL, &tid);
+	return tid;
+#elif defined(X_OS_FREEBSD) || defined(X_OS_NETBSD)
+	return pthread_getthreadid_np();
 #else
-	return (uint32_t)pthread_self();
+	return 0;
 #endif
 }
 

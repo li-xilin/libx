@@ -325,12 +325,12 @@ static const struct x_dump_format_st pretty_format =
 	.indent = pretty_indent,
 };
 
-const x_dump_format *x_dump_default_format()
+const x_dump_format *x_dump_default_format(void)
 {
 	return &default_format;
 }
 
-const x_dump_format *x_dump_pretty_format()
+const x_dump_format *x_dump_pretty_format(void)
 {
 	return &pretty_format;
 }

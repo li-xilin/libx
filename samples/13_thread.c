@@ -17,7 +17,7 @@ static void free_index_tss(void *p)
 static void thread_cleanup(void)
 {
 	size_t i = (size_t)x_thread_data();
-	printf("[-] clean: %zd tid = %d\n", i, x_thread_native_id());
+	printf("[-] clean: %zd tid = %lu\n", i, (unsigned long)x_thread_native_id());
 }
 
 static int thread_entry(void)
@@ -27,7 +27,7 @@ static int thread_entry(void)
 
 	size_t i = (size_t)x_tss_get(&s_index_tss);
 
-	printf("[+] creat: %zd tid = %d\n", i, x_thread_native_id());
+	printf("[+] creat: %zd tid = %lu\n", i, (unsigned long)x_thread_native_id());
 	for (int j = 0; j < 30; j++) {
 		x_thread_sleep(100);
 		x_thread_testcancel(1);

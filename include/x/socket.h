@@ -30,9 +30,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #define X_BADSOCK INVALID_SOCKET
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
 #else
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -43,6 +40,10 @@
 #endif
 
 X_EXTERN_C_BEGIN
+
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 
 #ifdef X_OS_WIN32
 #define x_sock_errno() WSAGetLastError()

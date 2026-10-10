@@ -132,7 +132,7 @@ case "$host" in
 	PLATFORM=freebsd
 	LT_INIT
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-	CFLAGS="$CFLAGS -I/usr/local/include"
+	regular_CFLAGS="$regular_CFLAGS -I/usr/local/include -D__BSD_VISIBLE"
 	AC_CHECK_POSIX_HEADERS
 	AC_CHECK_LINUX_HEADERS
 	;;
@@ -145,11 +145,13 @@ case "$host" in
 	PLATFORM=openbsd
 	LT_INIT
 	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -I/usr/local/include -D__BSD_VISIBLE"
 	;;
 *-*-netbsd*)
 	PLATFORM=netbsd
 	LT_INIT
 	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D__BSD_VISIBLE"
 	;;
 *-*-solaris* | *-*-sunos*)
 	PLATFORM=solaris
@@ -257,21 +259,20 @@ AH_TEMPLATE([X_NDEBUG],
 AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debug build (default: no)])],
 			  [enable_debug=$enableval],
 			  [enable_debug=no])
-
-regular_CFLAGS="-std=c99 -Wstrict-prototypes -Wformat=2 -pipe"
+regular_CFLAGS="$regular_CFLAGS -std=c99 -Wstrict-prototypes -Wformat=2 -pipe"
 
 AS_IF([test "x$enable_debug" = "xyes"], [
 	PC_DEBUG_CFLAGS="-DX_DEBUG=1"
 	CFLAGS="$CFLAGS -Wpedantic -g3 -O0 -Wall -Werror $PC_DEBUG_CFLAGS"
 ], [
-	CFLAGS="$CFLAGS -O2 -DNDEBUG -s"
+	CFLAGS="$CFLAGS -O2 -DNDEBUG"
 ])
 AC_SUBST([PC_DEBUG_CFLAGS])
 
 AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
 AM_COND_IF([WINDOWS],
 	regular_CFLAGS="$regular_CFLAGS -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN",
-	regular_CFLAGS="$regular_CFLAGS -D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=500")
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600")
 
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([LT_VERSION_INFO], ["1:0:0"])

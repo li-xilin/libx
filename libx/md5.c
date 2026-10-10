@@ -177,7 +177,7 @@ int x_md5_file(void *fp, x_md5 *result)
 	x_md5_init(&ctx);
 	while((len = fread(buf, 1, sizeof buf, fp)) > 0)
 		x_md5_update(&ctx, (uint8_t *)buf, len);
-	if (ferror(fp))
+	if (ferror((FILE *)fp))
 		return -1;
 	x_md5_finish(&ctx, result);
 	return 0;

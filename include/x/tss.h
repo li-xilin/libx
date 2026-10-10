@@ -29,7 +29,11 @@ X_EXTERN_C_BEGIN
 
 struct x_tss_st
 {
+#if defined(X_OS_BSD4)
+	int32_t key;
+#else
 	uint32_t key;
+#endif
 };
 
 typedef void (x_tss_free_f)(void *ptr);

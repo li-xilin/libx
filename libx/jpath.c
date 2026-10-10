@@ -327,7 +327,7 @@ static void x_jpath_result_init(x_jpath_result *res)
 	res->len = 0;
 }
 
-x_jpath_result *x_jpath_result_create()
+x_jpath_result *x_jpath_result_create(void)
 {
 	x_jpath_result* res = (x_jpath_result*)x_malloc(NULL, sizeof(x_jpath_result));
 	x_jpath_result_init(res);
