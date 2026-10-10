@@ -36,11 +36,8 @@ void x_heap_init(x_heap* h, x_heap_ordered_fn *cmp)
 {
 	assert(h != NULL);
 	assert(cmp != NULL);
+	memset(h, 0, sizeof *h);
 	h->cmp = cmp;
-	h->entry_cnt = 0;
-	h->page_cnt = 1;
-	h->min_page_cnt = h->page_cnt;
-	h->table = x_malloc(NULL, h->page_cnt * PAGE_SIZE);
 }
 
 void x_heap_free(x_heap* h)
@@ -64,10 +61,10 @@ void x_heap_push(x_heap* h, x_ranode *p)
 
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);
 	if (h->entry_cnt + 1 > mx_entries) {
-		int new_size = h->page_cnt * 2;
-		x_ranode **new_table = x_realloc(h->table, new_size * PAGE_SIZE);
+		int new_npages = h->page_cnt ? h->page_cnt * 2 : 1;
+		x_ranode **new_table = x_realloc(h->table, new_npages * PAGE_SIZE);
 		h->table = new_table;
-		h->page_cnt = new_size;
+		h->page_cnt = new_npages;
 	}
 	int current_index = h->entry_cnt, parent_index;
 	x_ranode **current = h->table + current_index, **parent;

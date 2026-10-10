@@ -29,6 +29,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_HEAP_INIT(cmp_fn) { (cmp_fn) }
+
 struct x_ranode_st {
 	size_t index;
 };

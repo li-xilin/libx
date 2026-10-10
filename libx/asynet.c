@@ -726,7 +726,7 @@ void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_handler *on_
 x_timer *x_timer_create(x_reactor *reactor)
 {
 	x_timer *timer = x_malloc(NULL, sizeof *timer);
-	x_uidpool_init(&timer->uidpool, 0);
+	x_uidpool_init(&timer->uidpool);
 	timer->reactor = reactor;
 	x_mset_init(&timer->mset);
 	return timer;

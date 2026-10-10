@@ -28,6 +28,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_BTNODE_INIT { _parent, _left, _right } { (_parent), (_left), (_right) }
+
 typedef int x_btnode_comp_f(const x_btnode *left, const x_btnode *right);
 
 struct x_btnode_st

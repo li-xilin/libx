@@ -40,6 +40,23 @@ do { \
 } while(0)
 #endif
 
+#define X_UNHEXLIFY_CHAR(ch) \
+	((ch) >= '0' && (ch) <= '9' \
+	 ? ((ch) - '0') \
+	 : ((ch) >= 'a' && (ch) <= 'f' \
+		 ? (ch) - 'a' + 0xa \
+		 : ((ch) >= 'A' && (ch) <= 'F' \
+			 ? (ch) - 'A' + 0xa\
+			 : 0)))
+#define X_HEXLIFY_CHAR_HI(x) \
+	(((x) >> 4) >= 0 && ((x) >> 4) <= 9 \
+	 ? (((x) >> 4) + '0') \
+	 : (((x) >> 4) - 0xa + 'a'))
+#define X_HEXLIFY_CHAR_LO(x) \
+	(((x) & 0xF) >= 0 && ((x) & 0xF) <= 9 \
+	 ? (((x) & 0xF) + '0') \
+	 : (((x) & 0xF) - 0xa + 'a'))
+
 inline static uint32_t x_hash32(const void *key, size_t size)
 {
 	uint32_t h = 3323198485ul;

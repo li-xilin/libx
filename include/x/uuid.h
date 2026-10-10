@@ -22,10 +22,49 @@
 #ifndef X_UUID_H
 #define X_UUID_H
 
+#include "string.h"
 #include "types.h"
 #include "linkage.h"
 
 X_EXTERN_C_BEGIN
+
+#define X_UUID_INIT_RAW(str) {{ \
+	(X_UNHEXLIFY_CHAR(str[ 0]) << 4) | (X_UNHEXLIFY_CHAR(str[ 1]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 2]) << 4) | (X_UNHEXLIFY_CHAR(str[ 3]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 4]) << 4) | (X_UNHEXLIFY_CHAR(str[ 5]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 6]) << 4) | (X_UNHEXLIFY_CHAR(str[ 7]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 8]) << 4) | (X_UNHEXLIFY_CHAR(str[ 9]) ), \
+	(X_UNHEXLIFY_CHAR(str[10]) << 4) | (X_UNHEXLIFY_CHAR(str[11]) ), \
+	(X_UNHEXLIFY_CHAR(str[12]) << 4) | (X_UNHEXLIFY_CHAR(str[13]) ), \
+	(X_UNHEXLIFY_CHAR(str[14]) << 4) | (X_UNHEXLIFY_CHAR(str[15]) ), \
+	(X_UNHEXLIFY_CHAR(str[16]) << 4) | (X_UNHEXLIFY_CHAR(str[17]) ), \
+	(X_UNHEXLIFY_CHAR(str[18]) << 4) | (X_UNHEXLIFY_CHAR(str[19]) ), \
+	(X_UNHEXLIFY_CHAR(str[20]) << 4) | (X_UNHEXLIFY_CHAR(str[21]) ), \
+	(X_UNHEXLIFY_CHAR(str[22]) << 4) | (X_UNHEXLIFY_CHAR(str[23]) ), \
+	(X_UNHEXLIFY_CHAR(str[24]) << 4) | (X_UNHEXLIFY_CHAR(str[25]) ), \
+	(X_UNHEXLIFY_CHAR(str[26]) << 4) | (X_UNHEXLIFY_CHAR(str[27]) ), \
+	(X_UNHEXLIFY_CHAR(str[28]) << 4) | (X_UNHEXLIFY_CHAR(str[29]) ), \
+	(X_UNHEXLIFY_CHAR(str[30]) << 4) | (X_UNHEXLIFY_CHAR(str[31]) ), \
+}}
+
+#define X_UUID_INIT(str) {{ \
+	(X_UNHEXLIFY_CHAR(str[ 0 + 0]) << 4) | (X_UNHEXLIFY_CHAR(str[ 1 + 0]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 2 + 0]) << 4) | (X_UNHEXLIFY_CHAR(str[ 3 + 0]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 4 + 0]) << 4) | (X_UNHEXLIFY_CHAR(str[ 5 + 0]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 6 + 0]) << 4) | (X_UNHEXLIFY_CHAR(str[ 7 + 0]) ), \
+	(X_UNHEXLIFY_CHAR(str[ 8 + 1]) << 4) | (X_UNHEXLIFY_CHAR(str[ 9 + 1]) ), \
+	(X_UNHEXLIFY_CHAR(str[10 + 1]) << 4) | (X_UNHEXLIFY_CHAR(str[11 + 1]) ), \
+	(X_UNHEXLIFY_CHAR(str[12 + 2]) << 4) | (X_UNHEXLIFY_CHAR(str[13 + 2]) ), \
+	(X_UNHEXLIFY_CHAR(str[14 + 2]) << 4) | (X_UNHEXLIFY_CHAR(str[15 + 2]) ), \
+	(X_UNHEXLIFY_CHAR(str[16 + 3]) << 4) | (X_UNHEXLIFY_CHAR(str[17 + 3]) ), \
+	(X_UNHEXLIFY_CHAR(str[18 + 3]) << 4) | (X_UNHEXLIFY_CHAR(str[19 + 3]) ), \
+	(X_UNHEXLIFY_CHAR(str[20 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[21 + 4]) ), \
+	(X_UNHEXLIFY_CHAR(str[22 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[23 + 4]) ), \
+	(X_UNHEXLIFY_CHAR(str[24 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[25 + 4]) ), \
+	(X_UNHEXLIFY_CHAR(str[26 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[27 + 4]) ), \
+	(X_UNHEXLIFY_CHAR(str[28 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[29 + 4]) ), \
+	(X_UNHEXLIFY_CHAR(str[30 + 4]) << 4) | (X_UNHEXLIFY_CHAR(str[31 + 4]) ), \
+}}
 
 struct x_uuid_st {
 	uint8_t u8[16];

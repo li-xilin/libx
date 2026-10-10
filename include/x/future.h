@@ -34,19 +34,27 @@
 X_EXTERN_C_BEGIN
 
 struct x_fupool_st {
-	uint8_t bit_buf[8192];
 	x_bitmap id_map;
 	x_cond seq_cond;
 	x_cond status_cond;
 	x_mutex lock;
 	x_splay fut_set;
 	uint16_t last_id;
+	uint8_t bit_buf[8192];
 };
 
 #define X_FUTURE_NULL 0
 #define X_FUTURE_PENDING 1
 #define X_FUTURE_BUSY 2
 #define X_FUTURE_READY 3
+#define X_FUPOOL_INIT(var) { \
+	X_BITMAP_INIT((var).bit_buf, sizeof (var).bit_buf), \
+	X_COND_INIT, \
+	X_COND_INIT, \
+	X_MUTEX_INIT, \
+	X_SPLAY_INIT(x_future_compare), \
+	0xFFFF, \
+}
 
 struct x_future_value_st {
 	void *data;
@@ -72,9 +80,11 @@ struct x_promise_st {
 	struct x_future_value_st *value;
 };
 
+
 void x_fupool_init(x_fupool *fup);
 void x_fupool_free(x_fupool *fup);
 void x_fuset_init(x_fuset *set);
+int x_future_compare(const x_btnode *n1, const x_btnode *n2);
 void x_fuset_add_many(x_fuset *set, x_future **fut, size_t n);
 void x_fuset_add(x_fuset *set, x_future *fut);
 uint16_t x_future_init(x_future *fut, x_fupool *fup, void *value);

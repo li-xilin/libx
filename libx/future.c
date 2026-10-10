@@ -34,7 +34,7 @@
 		|| (fut)->value.status == X_FUTURE_READY \
 		|| (fut)->value.status == X_FUTURE_BUSY)
 
-static int future_cmp(const x_btnode *n1, const x_btnode *n2)
+int x_future_compare(const x_btnode *n1, const x_btnode *n2)
 {
 	x_future *fu1 = x_container_of(n1, x_future, node);
 	x_future *fu2 = x_container_of(n2, x_future, node);
@@ -47,7 +47,7 @@ void x_fupool_init(x_fupool *fup)
 	x_cond_init(&fup->status_cond);
 	x_cond_init(&fup->seq_cond);
 	x_bitmap_init(&fup->id_map, fup->bit_buf, sizeof fup->bit_buf);
-	x_splay_init(&fup->fut_set, future_cmp);
+	x_splay_init(&fup->fut_set, x_future_compare);
 	memset(fup->bit_buf, 0 , sizeof fup->bit_buf);
 	fup->last_id = 0xFFFF;
 }

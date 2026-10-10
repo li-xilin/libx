@@ -30,7 +30,7 @@
 X_EXTERN_C_BEGIN
 
 #define X_SKLIST_LEVEL_MAX 32
-
+#define X_SKLIST_INIT(var, cmp) { X_MSET_INIT((var).mset), 0, 1, cmp }
 #define x_sklist_foreach(elem, sklist) \
 	x_block_if ((sklist)->level) \
 		x_slist_foreach (__sklist_##elem, &(sklist)->list[0]) \

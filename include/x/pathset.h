@@ -31,6 +31,12 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_PATHSET_INIT(var) { \
+	X_MSET_INIT((var).mset), \
+	0, \
+	X_LIST_INIT((var).dir_list), X_RWLOCK_INIT \
+}
+
 struct x_pathset_st
 {
 	x_mset mset;

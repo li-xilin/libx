@@ -31,10 +31,10 @@ X_EXTERN_C_BEGIN
 
 #ifdef X_OS_WIN
 #include <synchapi.h>
-#define X_COND_INIT { .condvar = NULL }
+#define X_COND_INIT { NULL }
 #else
 #include <pthread.h>
-#define X_COND_INIT { .cond = PTHREAD_COND_INITIALIZER }
+#define X_COND_INIT { PTHREAD_COND_INITIALIZER }
 #endif
 
 struct x_cond_st

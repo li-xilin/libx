@@ -41,11 +41,12 @@ static int pool_worker(void)
 		work = x_container_of(x_list_first(&pool->work_list), x_thrwork, link);
 		x_list_del(&work->link);
 		pool->working_cnt++;
+
+		x_thrwork_handler *handler = work->handler;
 		x_mutex_unlock(&(pool->work_mutex));
-		{
-			work->handler(work);
-		}
+		handler(work);
 		x_mutex_lock(&(pool->work_mutex));
+
 		pool->working_cnt--;
 		if (pool->working_cnt == 0 && x_list_is_empty(&pool->work_list))
 			x_cond_wake_all(&(pool->complete_cond));

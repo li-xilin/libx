@@ -30,7 +30,7 @@
 
 X_EXTERN_C_BEGIN
 
-#define X_OBJPOOL_INIT(_item_size) { .item_size = _item_size }
+#define X_OBJPOOL_INIT(_item_size) { _item_size }
 
 struct x_slab_st {
 	x_link link;

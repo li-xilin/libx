@@ -24,7 +24,7 @@ static bool node_equal(const x_hnode *node1, const x_hnode *node2)
 
 static void hmap_insert(ut_runner *r)
 {
-	x_hmap ht = X_HMAP_INIT(0.75, node_equal);
+	x_hmap ht = X_HMAP_INIT(node_equal);
 	struct node *nodes = x_malloc(NULL, sizeof(struct node) * NODE_MAX);
 	for (int i = 0; i < NODE_MAX; i++) {
 		nodes[i].key = i;
@@ -55,7 +55,7 @@ static void hmap_insert(ut_runner *r)
 
 static void hmap_remove(ut_runner *r)
 {
-	x_hmap ht = X_HMAP_INIT(0.75, node_equal);
+	x_hmap ht = X_HMAP_INIT(node_equal);
 	struct node *nodes = x_malloc(NULL, sizeof(struct node) * NODE_MAX);
 	for (int i = 0; i < NODE_MAX; i++) {
 		nodes[i].key = i;

@@ -30,15 +30,13 @@
 
 X_EXTERN_C_BEGIN
 
-typedef struct x_ringbuf_st x_ringbuf;
+#define X_RINGBUF_INIT(p, sz) { (char *)(p), (sz) }
 
 struct x_ringbuf_st
 {
-	size_t size, front, rear;
 	char *buf;
+	size_t size, front, rear;
 };
-
-#define X_RINGBUF_INIT(p, sz) { .size = (sz), .front = 0, .rear = 0, .buf = (char *)p }
 
 static inline void x_ringbuf_init(x_ringbuf *b, void *buf, size_t size)
 {

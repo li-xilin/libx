@@ -34,7 +34,6 @@
 #define x_cyclic_dec(i, n) ((i + n - 1) % n)
 #define x_bit(i) (1LL << i)
 #define x_powerof2(n)  ((n) != 0 && !((n) & ((n)-1)))
-
 #define x_unused(_var) ((void)&(_var))
 
 #define x_align(_size, _align) \

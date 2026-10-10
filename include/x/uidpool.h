@@ -29,6 +29,14 @@
 X_EXTERN_C_BEGIN
 
 #define X_BADUID 0
+#define X_UIDPOOL_INIT_1(var, _max) { \
+	X_SKLIST_INIT((var).uid_set, \
+			(x_sklist_compare_fn *)x_uidpool_compare_uid), \
+	0, \
+	1, \
+	(_max) == 0 ? UINT32_MAX : (_max) \
+}
+#define X_UIDPOOL_INIT(var) X_UIDPOOL_INIT_1(var, 0)
 
 struct x_uidlink_st
 {
@@ -43,8 +51,11 @@ struct x_uidpool_st {
 	uint32_t max_uid;
 };
 
-void x_uidpool_init(x_uidpool *pool, uint32_t max_uid);
+
+void x_uidpool_init1(x_uidpool *pool, uint32_t max_uid);
+void x_uidpool_init(x_uidpool *pool);
 void x_uidpool_free(x_uidpool *pool);
+int x_uidpool_compare_uid(const x_uidlink *a, const x_uidlink *b);
 int x_uidpool_get(x_uidpool *pool, x_uidlink *link);
 void x_uidpool_put(x_uidpool *pool, x_uidlink *link);
 x_uidlink *x_uidpool_find(x_uidpool *pool, uint32_t uid);

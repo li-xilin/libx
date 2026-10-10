@@ -47,6 +47,11 @@ static void hmap_expand(x_hmap *ht, int elem_cnt)
 {
 	int new_slot_cnt, new_idx, new_load_limit;
 	x_slist *new_table;
+	if (ht->prime_index == x_arrlen(s_prime_table) - 1) {
+		x_assert_printf(elem_cnt <= s_prime_table[x_arrlen(s_prime_table) - 1], "elements exceed the max capacity limit");
+		abort();
+		return;
+	}
 	new_idx = ht->prime_index;
 	do {
 		new_idx++;

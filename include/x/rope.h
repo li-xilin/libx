@@ -30,6 +30,11 @@
 X_EXTERN_C_BEGIN
 
 #define X_ROPE_SPLIT_SIZE 4096
+#define x_rope_foreach(var, rope) \
+	for (x_rope_node *var = x_container_of(x_btnode_first(&(rope)->root_node->node), x_rope_node, node); \
+			(&(var)->node) != NULL; \
+			(var) = x_container_of(x_btnode_next(&(var)->node), x_rope_node, node))
+#define X_ROPE_INIT { NULL }
 
 struct x_rope_node_st {
 	x_btnode node;
@@ -61,11 +66,6 @@ void x_rope_dump_tree(const x_rope *r, void *fp);
 int x_rope_vprintf(x_rope *r, size_t index, const char *fmt, va_list ap);
 int x_rope_printf(x_rope *r, size_t index, const char *fmt, ...);
 int x_rope_balance(x_rope *r);
-
-#define x_rope_foreach(var, rope) \
-	for (x_rope_node *var = x_container_of(x_btnode_first(&(rope)->root_node->node), x_rope_node, node); \
-			(&(var)->node) != NULL; \
-			(var) = x_container_of(x_btnode_next(&(var)->node), x_rope_node, node))
 
 X_EXTERN_C_END
 

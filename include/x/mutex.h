@@ -29,10 +29,10 @@
 
 #ifdef X_OS_WIN
 #include <synchapi.h>
-#define X_MUTEX_INIT { .section = NULL }
+#define X_MUTEX_INIT {  NULL }
 #else
 #include <pthread.h>
-#define X_MUTEX_INIT { .mutex = PTHREAD_MUTEX_INITIALIZER }
+#define X_MUTEX_INIT { PTHREAD_MUTEX_INITIALIZER }
 #endif
 
 X_EXTERN_C_BEGIN

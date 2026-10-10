@@ -78,7 +78,7 @@ static void size_limit(ut_runner *r)
 {
 	char buf[10];
 	size_t len;
-	x_deqbuf deq = X_DEQBUF_INIT3(deq, 3, 1);
+	x_deqbuf deq = X_DEQBUF_INIT_1(deq, 3, 1);
 
 	x_deqbuf_push_front(&deq, "0123456", 7);
 	len = x_deqbuf_pop_back(&deq, buf, sizeof buf - 1);
@@ -95,7 +95,7 @@ static void peek_front(ut_runner *r)
 {
 	char buf[10];
 	size_t len;
-	x_deqbuf deq = X_DEQBUF_INIT3(deq, 3, 4);
+	x_deqbuf deq = X_DEQBUF_INIT_1(deq, 3, 4);
 
 	x_deqbuf_push(&deq, "90123456", 8);
 	x_deqbuf_pop(&deq, NULL, 1);
@@ -123,7 +123,7 @@ static void peek_backward(ut_runner *r)
 {
 	char buf[10];
 	size_t len;
-	x_deqbuf deq = X_DEQBUF_INIT3(deq, 3, 4);
+	x_deqbuf deq = X_DEQBUF_INIT_1(deq, 3, 4);
 
 	x_deqbuf_push(&deq, "90123456", 8);
 	x_deqbuf_pop(&deq, NULL, 1);

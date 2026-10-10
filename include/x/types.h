@@ -99,6 +99,11 @@ typedef struct x_tss_st x_tss;
 typedef struct x_pipe_st x_pipe;
 #endif
 
+#ifndef X_RINGBUF_DEFINED
+#define X_RINGBUF_DEFINED
+typedef struct x_ringbuf_st x_ringbuf;
+#endif
+
 #ifndef X_ONCE_DEFINED
 #define X_ONCE_DEFINED
 typedef struct x_once_st x_once;

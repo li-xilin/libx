@@ -41,26 +41,26 @@ X_EXTERN_C_BEGIN
 #define X_EV_ACCURATE (1 << 5)
 
 #define X_EVENT_INIT(_type, _flags, _handler) {  \
-	.type = _type, \
-	.ev_flags = _flags, \
-	.handler = _handler, \
-	.label = 0, \
-	.res_flags = 0, \
-	.reactor = NULL, \
+	_type, \
+	0, \
+	_flags, \
+	0, \
+	_handler, \
 }
 
-#define X_EVSOCKET_INIT(X_EVENT_SOCKET, _flags, _handler, _fd) { \
-	.base = X_EVENT_INIT(_type, _flags, _handler), \
-	.sock = _fd, \
+#define X_EVSOCKET_INIT(_fd, _flags, _handler) { \
+	X_EVENT_INIT(X_EVENT_SOCKET, _flags, _handler), \
+	X_HNODE_INIT, \
+	_fd, \
 }
 
-#define X_EVTIMER_INIT(_flags, _handler, _interval_ms) { \
-	.base = X_EVENT_INIT(X_EVENT_TIMER,_flags, _handler), \
+#define X_EVTIMER_INIT(_interval_ms, _flags, _handler) { \
+	X_EVENT_INIT(X_EVENT_TIMER,_flags, _handler), \
 	.interval = _interval_ms, \
 }
 
 #define X_EVOBJECT_INIT(_flags, _handler) { \
-	.base = X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
+	X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
 }
 
 enum {
@@ -76,10 +76,10 @@ struct x_event_st
 	uint16_t type;
 	uint16_t label;
 	short ev_flags, res_flags;
+	x_event_handler *handler;
 	x_link event_link;
 	x_link pending_link;
 	x_reactor *reactor;
-	x_event_handler *handler;
 };
 
 struct x_evsocket_st
@@ -92,17 +92,15 @@ struct x_evsocket_st
 struct x_evtimer_st
 {
 	x_event base;
+	size_t interval;
 	x_ranode node;
 	struct timeval expiration;
-	size_t interval;
-	size_t index;
 };
 
 struct x_evobject_st
 {
 	x_event base;
 	x_link link;
-	size_t index;
 };
 
 void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler);

@@ -31,20 +31,17 @@
 X_EXTERN_C_BEGIN
 
 #define X_LIST_INIT(name) { { &(name.head), &(name.head) } }
-#define X_SLIST_INIT { NULL }
-
+#define X_LINK_INIT { NULL }
+#define X_SLIST_INIT { { NULL } }
+#define X_SLINK_INIT { NULL }
 #define x_list_foreach(pos, list) \
 	for (x_link *pos = (list)->head.next; (pos) != &(list)->head; (pos) = (pos)->next)
-
 #define x_list_popeach(pos, list) \
 	for (x_link *pos, __x_cur; (pos) = (list)->head.next, __x_cur = *(pos), !x_list_is_empty(list); x_list_del(&__x_cur))
-
 #define x_slist_foreach(pos, list) \
 	for (x_slink *pos = (list)->head.next; pos; (pos) = (pos)->next)
-
 #define x_slist_foreach_prev(prev, list) \
 	for (x_slink *prev = &(list)->head, *__x_cur; prev->next && (__x_cur = (prev)->next, 1); (prev) = __x_cur)
-
 #define x_slist_popeach(pos, list) \
 	for (x_slink *pos; (pos = (list)->head.next) && ((list)->head.next = pos->next, 1); )
 

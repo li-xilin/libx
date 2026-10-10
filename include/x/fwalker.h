@@ -30,6 +30,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_FWALKER_INIT(var, path) { X_MSET_INIT((var).mset), X_LIST_INIT((var).dir_list) , path}
+
 struct x_fwalker_st {
 	x_mset mset;
 	x_list dir_list;

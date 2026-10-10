@@ -32,6 +32,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_THRWORK_INIT(fn) { (fn) }
+
 typedef void x_thrwork_handler(x_thrwork *work);
 
 struct x_thrpool_st
@@ -46,8 +48,8 @@ struct x_thrpool_st
 
 struct x_thrwork_st
 {
-	x_link link;
 	x_thrwork_handler *handler;
+	x_link link;
 };
 
 int x_thrpool_init(x_thrpool *pool, size_t thr_cnt);

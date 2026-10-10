@@ -27,10 +27,10 @@
 #include "types.h"
 #ifdef X_OS_WIN
 #include <synchapi.h>
-#define X_RWLOCK_INIT { .bExclusive = FALSE, .SrwLock = SRWLOCK_INIT }
+#define X_RWLOCK_INIT { SRWLOCK_INIT, FALSE }
 #else
 #include <pthread.h>
-#define X_RWLOCK_INIT { .rwlock = PTHREAD_RWLOCK_INITIALIZER }
+#define X_RWLOCK_INIT { PTHREAD_RWLOCK_INITIALIZER }
 #endif
 
 X_EXTERN_C_BEGIN

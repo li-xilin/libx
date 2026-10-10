@@ -22,7 +22,7 @@
 #include "x/uidpool.h"
 #include "x/errno.h"
 
-static int compare_uid(const void *a, const void *b)
+int x_uidpool_compare_uid(const x_uidlink *a, const x_uidlink *b)
 {
 	const x_uidlink *u1 = a, *u2 = b;
 	if (u1->num < u2->num)
@@ -32,12 +32,17 @@ static int compare_uid(const void *a, const void *b)
 	return 0;
 }
 
-void x_uidpool_init(x_uidpool *pool, uint32_t max_uid)
+void x_uidpool_init1(x_uidpool *pool, uint32_t max_uid)
 {
-	x_sklist_init(&pool->uid_set, compare_uid);
+	x_sklist_init(&pool->uid_set, (x_sklist_compare_fn *)x_uidpool_compare_uid);
 	pool->uid_count = 0;
 	pool->next_uid = 1;
 	pool->max_uid = max_uid == 0 ? UINT32_MAX : max_uid;
+}
+
+void x_uidpool_init(x_uidpool *pool)
+{
+	x_uidpool_init1(pool, 0);
 }
 
 void x_uidpool_free(x_uidpool *pool)

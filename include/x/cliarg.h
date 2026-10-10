@@ -29,6 +29,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_CLIARG_INIT(_argc, _argv) { (_argv), 1, (_argv)[0] != 0 }
+
 struct x_cliarg_st {
     x_uchar **argv;
     int permute;

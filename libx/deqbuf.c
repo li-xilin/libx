@@ -28,6 +28,38 @@
 
 typedef size_t slice_handler_fn(char *slice, size_t slice_size, void *user);
 
+void x_deqbuf_init1(x_deqbuf *deq, size_t seg_size, size_t segs_max)
+{
+	x_mset_init(&deq->mset);
+	x_ringbuf_init(&deq->map, NULL, 1);
+	deq->front = 0;
+	deq->rear = 0;
+	deq->free_cnt = 0;
+	deq->seg_size = seg_size;
+	deq->segs_max = segs_max;
+	x_mutex_init(&deq->lock);
+	x_cond_init(&deq->cons_cond);
+	x_cond_init(&deq->prod_cond);
+}
+
+void x_deqbuf_init(x_deqbuf *deq)
+{
+	x_deqbuf_init1(deq, X_DEQBUF_SEGMENT_SIZE, SIZE_MAX / X_DEQBUF_SEGMENT_SIZE);
+}
+
+void x_deqbuf_free(x_deqbuf *deq)
+{
+	x_cond_destroy(&deq->cons_cond);
+	x_cond_destroy(&deq->prod_cond);
+	x_mutex_destroy(&deq->lock);
+	x_mset_free(&deq->mset);
+}
+
+size_t x_deqbuf_max_size(x_deqbuf *deq)
+{
+	return deq->segs_max * deq->seg_size;
+}
+
 static void map_realloc(x_deqbuf *deq, size_t bucket_cnt)
 {
 	x_deqbuf b = X_DEQBUF_INIT(b);

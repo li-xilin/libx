@@ -82,6 +82,10 @@ global:
 	x_deqbuf_peek_backward;
 	x_deqbuf_modify;
 	x_deqbuf_modify_backward;
+	x_deqbuf_free;
+	x_deqbuf_init;
+	x_deqbuf_init1;
+	x_deqbuf_max_size;
 	x_deqbuf_pop;
 	x_deqbuf_pop_back;
 	x_deqbuf_push;
@@ -151,6 +155,7 @@ global:
 	x_fuset_init;
 	x_fuset_wait_all;
 	x_fuset_wait_any;
+	x_future_compare;
 	x_future_free;
 	x_future_init;
 	x_future_is_ready;
@@ -596,6 +601,7 @@ global:
 	x_ucode_utf8len;
 	x_ucode_width;
 	x_uidpool_init;
+	x_uidpool_init1;
 	x_uidpool_find;
 	x_uidpool_free;
 	x_uidpool_get;

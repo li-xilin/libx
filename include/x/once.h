@@ -28,6 +28,8 @@
 #include <errno.h>
 #include <assert.h>
 
+X_EXTERN_C_BEGIN
+
 #ifdef X_OS_WIN
 #include <synchapi.h>
 struct x_once_st
@@ -44,8 +46,6 @@ struct x_once_st
 };
 #define X_ONCE_INIT { PTHREAD_ONCE_INIT }
 #endif
-
-X_EXTERN_C_BEGIN
 
 int x_once_init(x_once *once, x_once_fn *once_proc);
 

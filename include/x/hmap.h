@@ -31,11 +31,9 @@
 
 X_EXTERN_C_BEGIN
 
-#define X_HMAP_INIT(factor, equal_fn) { \
-	.load_factor = factor, \
-	.equal = equal_fn, \
-}
-
+#define X_HMAP_INIT_1(factor, equal_fn) { factor, 0, equal_fn, }
+#define X_HMAP_INIT(equal_fn) X_HMAP_INIT_1(0.75, equal_fn)
+#define X_HNODE_INIT { X_SLINK_INIT }
 #define x_hmap_foreach(hnode, hmap) \
 	for (size_t __x_i = 0; __x_i < (hmap)->slot_cnt; __x_i++) \
 		x_slist_foreach_prev(__x_prev, &(hmap)->table[__x_i]) \
@@ -44,12 +42,12 @@ X_EXTERN_C_BEGIN
 typedef bool x_hmap_equal_fn(const x_hnode *a, const x_hnode *b);
 
 struct x_hmap_st {
-	x_slist *table;
-	size_t elem_cnt;
-	size_t slot_cnt;
 	float load_factor;
 	uint8_t prime_index;
 	x_hmap_equal_fn *equal;
+	size_t elem_cnt;
+	size_t slot_cnt;
+	x_slist *table;
 };
 
 struct x_hnode_st {

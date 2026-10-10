@@ -9,11 +9,10 @@ static void fuzzing(ut_runner *r)
 {
 	int res;
 	x_uidpool pool;
-#define MAX 10
-	x_uidpool_init(&pool, MAX);
-
-	x_uidlink ul[MAX];
-	for (int i = 0; i < MAX; i++) {
+#define N 10
+	x_uidpool_init1(&pool, N);
+	x_uidlink ul[N];
+	for (int i = 0; i < N; i++) {
 		res = x_uidpool_get(&pool, &ul[i]);
 		ut_assert_uint_equal(r, 0, res);
 		ut_assert_uint_equal(r, i + 1, ul[i].num);

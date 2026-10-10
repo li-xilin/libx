@@ -29,47 +29,49 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_SPLAY_INIT(_cmp) { NULL, (_cmp) }
+#define x_splay_foreach(pos, t) \
+	for (x_btnode *pos = x_splay_first(t); pos; pos = x_splay_next(pos))
+
 struct x_splay_st {
     x_btnode *root;
     x_btnode_comp_f *comp;
     size_t size;
 };
 
-#define X_SPLAY_INIT(_cmp) { .root = NULL, .size = 0, .comp = _cmp, }
-
-inline static void x_splay_init(x_splay *t, x_btnode_comp_f *f)
+static inline void x_splay_init(x_splay *t, x_btnode_comp_f *f)
 {
 	t->root = NULL;
 	t->comp = f;
 	t->size = 0;
 }
 
-inline static bool x_splay_linked(x_splay *t, const x_btnode *node)
+static inline bool x_splay_linked(x_splay *t, const x_btnode *node)
 {
 	return node->left || node->right || node->parent || t->root == node;
 }
 
-inline static x_btnode *x_splay_first(x_splay *t)
+static inline x_btnode *x_splay_first(x_splay *t)
 {
 	return x_btnode_first(t->root);
 }
 
-inline static x_btnode *x_splay_next(x_btnode *node)
+static inline x_btnode *x_splay_next(x_btnode *node)
 {
 	return x_btnode_next(node);
 }
 
-inline static x_btnode *x_splay_prev(x_btnode *node)
+static inline x_btnode *x_splay_prev(x_btnode *node)
 {
 	return x_btnode_prev(node);
 }
 
-inline static x_btnode *x_splay_last(x_splay *t)
+static inline x_btnode *x_splay_last(x_splay *t)
 {
 	return x_btnode_last(t->root);
 }
 
-inline static bool x_splay_empty(x_splay *t)
+static inline bool x_splay_empty(x_splay *t)
 {
 	return !t->root;
 }
@@ -79,9 +81,6 @@ x_btnode *x_splay_find_or_insert(x_splay *t, x_btnode *new_node);
 void x_splay_replace(x_splay *t, x_btnode *old, x_btnode *new_node);
 x_btnode *x_splay_replace_or_insert(x_splay *t, x_btnode *new_node);
 void x_splay_remove(x_splay *t, x_btnode *node);
-
-#define x_splay_foreach(pos, t) \
-	for (x_btnode *pos = x_splay_first(t); pos; pos = x_splay_next(pos))
 
 X_EXTERN_C_END
 
