@@ -37,11 +37,15 @@
 typedef struct { uint8_t fileid[16]; } x_ino;
 typedef uint64_t x_dev;
 typedef uint32_t x_pid;
+typedef uintptr_t x_sock;
+typedef uint16_t x_uchar;
 #else
 #include <sys/types.h>
 typedef ino_t x_ino;
 typedef dev_t x_dev;
 typedef pid_t x_pid;
+typedef int x_sock;
+typedef char x_uchar;
 #endif
 
 #if SIZE_MAX == UINT16_MAX
@@ -53,11 +57,6 @@ typedef int64_t x_ssize ;
 #else
 #error "Unknown the size of size_t"
 #endif
-
-struct x_iovec_st {
-	void *base;
-	size_t len;
-};
 
 #ifndef X_LOCATION_DEFINED
 #define X_LOCATION_DEFINED
@@ -281,7 +280,10 @@ typedef struct x_sockmux_st x_sockmux;
 
 #ifndef X_IOVEC_DEFINED
 #define X_IOVEC_DEFINED
-typedef struct x_iovec_st x_iovec;
+typedef struct x_iovec_st {
+	void *base;
+	size_t len;
+} x_iovec;
 #endif
 
 #ifndef X_HOSTPORT_DEFINED

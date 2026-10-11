@@ -23,16 +23,12 @@
 #define	X_SOCKET_H
 
 #include "linkage.h"
-#include "log.h"
 #include "types.h"
 #include "detect.h"
-#include <stddef.h>
-#include <stdbool.h>
 
 #ifdef X_OS_WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-typedef SOCKET x_sock;
 #define X_BADSOCK INVALID_SOCKET
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -43,7 +39,6 @@ typedef SOCKET x_sock;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-typedef int x_sock;
 #define X_BADSOCK -1
 #endif
 

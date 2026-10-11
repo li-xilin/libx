@@ -25,11 +25,9 @@
 
 #include "detect.h"
 #include "linkage.h"
+#include "types.h"
 #include "unicode.h"
 #include "assert.h"
-#include <string.h>
-#include <stdint.h>
-#include <stddef.h>
 #include <string.h>
 
 #ifdef X_OS_WIN
@@ -65,7 +63,6 @@
 #  define X_PRIuc "lc"
 #  define X_PRIc "hc"
 #  define X_UCHAR_BYTES 2
-typedef WCHAR x_uchar;
 #else
 #  define __x_u(s) s
 #  define x_ustrlen strlen
@@ -96,7 +93,6 @@ typedef WCHAR x_uchar;
 #  define X_PRIuc "c"
 #  define X_PRIc "c"
 #  define X_UCHAR_BYTES 1
-typedef char x_uchar;
 #endif
 
 #define x_u(s) __x_u(s)
