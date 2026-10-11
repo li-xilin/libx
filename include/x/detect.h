@@ -391,5 +391,15 @@
 #  error "Unknown machine word size"
 #endif
 
+#if defined(__BIGGEST_ALIGNMENT__)
+#  define X_MAX_ALIGN __BIGGEST_ALIGNMENT__
+#elif defined(X_CC_MSVC)
+#  define X_MAX_ALIGN __alignof(long double)
+#elif X_WORDSIZE == 32
+#  define X_MAX_ALIGN 8
+#else
+#  define X_MAX_ALIGN 16
+#endif
+
 #endif
 
