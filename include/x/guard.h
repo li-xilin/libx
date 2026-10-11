@@ -26,8 +26,6 @@
 #include "trick.h"
 #include "assert.h"
 #include "flowctl.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 X_EXTERN_C_BEGIN
 

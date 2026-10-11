@@ -25,11 +25,7 @@
 #include "x/unicode.h"
 #include "x/string.h"
 #include "x/memory.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
+#include "x/uchar.h"
 
 #define SB_INCREMENT 4096
 
@@ -66,7 +62,7 @@ void x_strbuf_append(x_strbuf *sb, const x_uchar *str)
 
 void x_strbuf_append_len(x_strbuf *sb, const x_uchar *str, int len)
 {
-	assert(!sb->line);
+	x_assert(!sb->line);
 	len = len == -1 ? x_ustrlen(str): x_min(x_ustrlen(str), len);
 	if (len == 0)
 		return;
@@ -95,8 +91,8 @@ x_uchar *x_strbuf_data(x_strbuf *sb)
  */
 static void strbuf_insert_space(x_strbuf *sb, int pos, int len)
 {
-	assert(pos <= sb->last);
-	assert(!sb->line);
+	x_assert(pos <= sb->last);
+	x_assert(!sb->line);
 
 	/* Make sure there is enough space */
 	if (sb->remaining < len)
@@ -115,9 +111,9 @@ static void strbuf_insert_space(x_strbuf *sb, int pos, int len)
  */
 static void strbuf_delete_space(x_strbuf *sb, int pos, int len)
 {
-	assert(pos < sb->last);
-	assert(pos + len <= sb->last);
-	assert(!sb->line);
+	x_assert(pos < sb->last);
+	x_assert(pos + len <= sb->last);
+	x_assert(!sb->line);
 	sb->chars -= x_ustr_charcnt(sb->data + pos, len);
 	/* Now move it up */
 	memmove(sb->data + pos, sb->data + pos + len, (sb->last - pos - len) * sizeof(x_uchar));
@@ -193,7 +189,7 @@ x_uchar *x_strbuf_gets(x_strbuf *sb)
 	else 
 		sb->line[-1] = '\n';
 
-	assert(sb->line >= sb->data && sb->line <= sb->data + sb->last);
+	x_assert(sb->line >= sb->data && sb->line <= sb->data + sb->last);
 
 	for (x_uchar *p = sb->line; *p; p++) {
 		if (*p != x_u('\n'))

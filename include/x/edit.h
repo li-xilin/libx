@@ -1,9 +1,9 @@
 /*
+ * Copyright (c) 2022-2023,2025-2026 Li Xilin <lixilin@gmx.com>
  * Copyright (c) 2010, Salvatore Sanfilippo <antirez@gmail.com>
  * Copyright (c) 2010, Pieter Noordhuis <pcnoordhuis@gmail.com>
- * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
  *
- * Guerrilla line editing library against the idea that a
+ * @note Guerrilla line editing library against the idea that a
  * line editing lib needs to be 20,000 lines of C code.
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
@@ -29,8 +29,7 @@
 #define X_EDIT_H
 
 #include "linkage.h"
-#include "uchar.h"
-#include <stddef.h>
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

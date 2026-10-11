@@ -40,7 +40,7 @@ static x_jpath *jsonpath_parse_any(const char *data, int *idx);
 static bool jsonpath_match(x_json *item, x_jpath *jp, bool case_sensitive, x_jpath_result *res)
 {
 	int old_len = res->len;
-	assert (item && jp);
+	x_assert(item && jp);
 	while (jp) {
 		switch (jp->type) {
 			case X_JPATH_START:

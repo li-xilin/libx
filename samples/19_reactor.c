@@ -5,6 +5,7 @@
 #include "x/tsignal.h"
 #include "x/errno.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LISTEN_PORT 9999
 
@@ -23,7 +24,7 @@ static x_sock sock_listen(short port)
 		.sin_port = htons(port),
 	};
 	if (bind(sock, (struct sockaddr *)&si, sizeof si) == -1) {
-		fprintf(stderr, "bind error (%s)\n", strerror(errno));
+		fprintf(stderr, "bind error (%d)\n", errno);
 		exit(1);
 	}
 

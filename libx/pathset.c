@@ -26,6 +26,7 @@
 #include "x/strbuf.h"
 #include "x/printf.h"
 #include "x/detect.h"
+#include "x/uchar.h"
 
 #define PATH_DEPTH_MAX 256
 

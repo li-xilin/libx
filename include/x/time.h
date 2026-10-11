@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2022-2023,2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,8 @@
 #ifndef X_TIME_H
 #define X_TIME_H
 
-#include "detect.h"
 #include "linkage.h"
+#include "detect.h"
 #ifdef X_OS_WIN
 #include <sysinfoapi.h>
 #include <winsock2.h>

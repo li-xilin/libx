@@ -24,13 +24,6 @@
 
 #include "linkage.h"
 #include "types.h"
-#include "socket.h"
-#include "hmap.h"
-#include "memory.h"
-#include "event.h"
-#include "thrpool.h"
-#include "sklist.h"
-#include "uidpool.h"
 
 X_EXTERN_C_BEGIN
 

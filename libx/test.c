@@ -25,13 +25,10 @@
 #include "x/splay.h"
 #include "x/memory.h"
 #include "x/uchar.h"
-#include <setjmp.h>
-#include <stdlib.h>
-#include <string.h>
+#include "x/rope.h"
+#include "x/errno.h"
 #include <stdio.h>
-#include <assert.h>
 #include <inttypes.h>
-#include <errno.h>
 
 struct notice
 {
@@ -46,55 +43,39 @@ void ut_case_free(ut_case *tc)
 	while (!x_list_is_empty(&tc->msg_list)) {
 		struct notice *m = x_container_of(x_list_first(&tc->msg_list), struct notice, link);
 		x_list_del(&m->link);
-		free(m);
+		x_free(m);
 	}
-	free(tc->name);
-	free(tc->file);
-	free(tc->log);
+	x_free(tc->name);
+	x_free(tc->file);
+	x_free(tc->log);
 }
 
-int ut_case_init(ut_case *tc, const char *name, int line, ut_check_fn *fn)
+void ut_case_init(ut_case *tc, const char *name, int line, ut_check_fn *fn)
 {
 	memset(tc, 0, sizeof *tc);
-	if (!(tc->name = x_strdup(name)))
-		return -1;
+	tc->name = x_mcopy(NULL, name, strlen(name) + 1);
 	x_list_init(&tc->msg_list);
 	tc->line = line;
 	tc->state = UT_CS_READY;
 	tc->proc = fn;
-	return 0;
 }
 
-int ut_case_copy(ut_case *dst_tc, const ut_case *src_tc)
+void ut_case_copy(ut_case *dst_tc, const ut_case *src_tc)
 {
 	memcpy(dst_tc, src_tc, sizeof *dst_tc);
 	dst_tc->name = dst_tc->log = dst_tc->file = NULL;
-	dst_tc->name = x_strdup(src_tc->name);
-	if (!src_tc->name) {
-		errno = EINVAL;
-		goto fail;
-	}
-
+	dst_tc->name = x_mcopy(NULL, src_tc->name, strlen(src_tc->name) + 1);
 	if (src_tc->log)
-		if (!(dst_tc->log =  x_strdup(src_tc->log)))
-			goto fail;
+		dst_tc->log =  x_mcopy(NULL, src_tc->log, strlen(src_tc->log));
 	if (src_tc->file)
-		if (!(dst_tc->file =  x_strdup(src_tc->file)))
-			goto fail;
+		dst_tc->file =  x_mcopy(NULL, src_tc->file, strlen(src_tc->file) + 1);
 	x_list_init(&dst_tc->msg_list);
-
-	return 0;
-fail:
-	free(dst_tc->name);
-	free(dst_tc->log);
-	free(dst_tc->file);
-	return -1;
 }
 
 int ut_case_add_text(ut_case *c, const char *file, int line, char *text)
 {
 	int size = strlen(text) + 1;
-	struct notice *m = malloc(sizeof *m + size);
+	struct notice *m = x_malloc(NULL, sizeof *m + size);
 	if (!m)
 		return -1;
 	memcpy(m->text, text, size);
@@ -120,7 +101,7 @@ void ut_runner_free(ut_runner *r)
 void ut_case_dump_rope(const char *suite_name, ut_case *tc, void *arg)
 {
 	x_rope *out = arg;
-	assert(tc->state != UT_CS_READY);
+	x_assert(tc->state != UT_CS_READY);
 	x_list_foreach(link, &tc->msg_list) {
 		struct notice *m = x_container_of(link, struct notice, link);
 		x_rope_printf(out, x_rope_length(out),"[INFO] " TITLE_FMT " %s:%s:%d: %s\n",
@@ -144,7 +125,7 @@ void ut_case_dump_rope(const char *suite_name, ut_case *tc, void *arg)
 void ut_case_dump_file(const char *suite_name, ut_case *tc, void *arg)
 {
 	FILE *fp = arg;
-	assert(tc->state != UT_CS_READY);
+	x_assert(tc->state != UT_CS_READY);
 	x_list_foreach(link, &tc->msg_list) {
 		struct notice *m = x_container_of(link, struct notice, link);
 		fprintf(fp, "[INFO] " TITLE_FMT " %s:%s:%d: %s\n",
@@ -176,15 +157,15 @@ int ut_runner_summary(const ut_runner *r, int *pass, int *term)
 
 void ut_runner_add(ut_runner *r, ut_suite* s)
 {
-	assert(r != NULL);
-	assert(s != NULL);
+	x_assert(r != NULL);
+	x_assert(s != NULL);
 	x_list_add_back(&r->suites, &s->link);
 }
 
 void ut_runner_remove(ut_runner *r, ut_suite* s)
 {
-	assert(r != NULL);
-	assert(s != NULL);
+	x_assert(r != NULL);
+	x_assert(s != NULL);
 	x_list_del(&s->link);
 }
 
@@ -242,20 +223,18 @@ void *ut_runner_arg(const ut_runner *r)
 
 static void leave(ut_runner *r, ut_case_state cs, const char *file, int line, const char *fmt, va_list args)
 {
-	free(r->current.tc->file);
-	r->current.tc->file = x_strdup(file);
-
+	x_free(r->current.tc->file);
+	r->current.tc->file = x_mcopy(NULL, file, strlen(file) + 1);
 	r->current.tc->line = line;
-
-	free(r->current.tc->log);
+	x_free(r->current.tc->log);
 	r->current.tc->log = NULL;
 	if (fmt) {
 		char buf[1024];
 		vsprintf(buf, fmt, args);
-		r->current.tc->log =  x_strdup(buf);
+		r->current.tc->log =  x_mcopy(NULL, buf, strlen(buf) + 1);
 	}
 
-	assert(cs == UT_CS_FAIL || cs == UT_CS_TERM);
+	x_assert(cs == UT_CS_FAIL || cs == UT_CS_TERM);
 	if (cs == UT_CS_FAIL)
 		longjmp(*r->current.jump_ptr, 1);
 	else
@@ -381,22 +360,22 @@ void ut_suite_free(ut_suite *s)
 	x_list_popeach(cur, &s->tctab) {
 		ut_case *c = x_container_of(cur, ut_case, link);
 		ut_case_free(c);
-		free(c);
+		x_free(c);
 	}
 }
 
 void ut_suite_init(ut_suite *s, const char* name)
 {
-	assert(name != NULL);
-	assert(s != NULL);
-	assert(strlen(name) < 256);
+	x_assert(name != NULL);
+	x_assert(s != NULL);
+	x_assert(strlen(name) < 256);
 	x_list_init(&s->tctab);
 	strcpy(s->name, name);
 }
 
 int ut_suite_add_case(ut_suite *suite, const char *name, ut_check_fn *proc)
 {
-	ut_case *c = malloc(sizeof *c);
+	ut_case *c = x_malloc(NULL, sizeof *c);
 	if (!c)
 		return -1;
 	ut_case_init(c, name, 0, proc);

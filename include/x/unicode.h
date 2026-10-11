@@ -1,8 +1,6 @@
 /*
- * Unicode utility functions
- *
+ * Copyright (c) 2022-2023,2025-2026 Li Xilin <lixilin@gmx.com>
  * Copyright (c) 2010-2019 Steve Bennett <steveb@workware.net.au>
- * Copyright (c) 2022-2023,2025 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +20,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 #ifndef X_UNICODE_H
 #define X_UNICODE_H
 

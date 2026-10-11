@@ -24,7 +24,7 @@
 #include "x/errno.h"
 #include "x/mutex.h"
 #include "x/memory.h"
-#include "x/assert.h"
+#include "assert.h"
 #ifdef X_OS_WIN
 #include <synchapi.h>
 #include <windef.h>
@@ -51,7 +51,7 @@ static inline void cond_init_competitive(x_cond *cond)
 
 int x_cond_init(x_cond *cond)
 {
-	assert(cond);
+	x_assert(cond);
 #ifdef X_OS_WIN
 	cond->condvar = NULL;
 	cond_init_competitive(cond);
@@ -71,8 +71,8 @@ int x_cond_init(x_cond *cond)
 
 int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise)
 {
-	assert(cond);
-	assert(mutex);
+	x_assert(cond);
+	x_assert(mutex);
 #ifdef X_OS_WIN
 	cond_init_competitive(cond);
 	if (!SleepConditionVariableCS(cond->condvar, mutex->section,
@@ -113,7 +113,7 @@ int x_cond_sleep(x_cond *cond, x_mutex *mutex, int millise)
 
 void x_cond_wake(x_cond *cond)
 {
-	assert(cond != NULL);
+	x_assert(cond != NULL);
 #ifdef X_OS_WIN
 	cond_init_competitive(cond);
 	WakeConditionVariable(cond->condvar);
@@ -128,7 +128,7 @@ void x_cond_wake(x_cond *cond)
 
 void x_cond_wake_all(x_cond *cond)
 {
-	assert(cond != NULL);
+	x_assert(cond != NULL);
 #ifdef X_OS_WIN
 	cond_init_competitive(cond);
 	WakeAllConditionVariable(cond->condvar);
@@ -143,7 +143,7 @@ void x_cond_wake_all(x_cond *cond)
 
 void x_cond_destroy(x_cond *cond)
 {
-	assert(cond != NULL);
+	x_assert(cond != NULL);
 #ifdef X_OS_WIN
 	if (!cond->condvar)
 		return;

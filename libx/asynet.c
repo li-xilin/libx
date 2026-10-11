@@ -23,6 +23,8 @@
 #include "x/socket.h"
 #include "x/event.h"
 #include "x/reactor.h"
+#include "x/thrpool.h"
+#include "x/uidpool.h"
 #include "x/log.h"
 #include "x/memory.h"
 #include "x/pipe.h"
@@ -272,10 +274,8 @@ static void on_listen_event(x_event *ev)
 {
 	x_listener *lnr = x_container_of(ev, x_listener, listen_event.base);
 	x_sock fd = accept(lnr->listen_event.sock, NULL, NULL);
-	if (fd == X_BADSOCK) {
-		x_perror("failed to accept client (%s)", strerror(errno));
+	if (fd == X_BADSOCK)
 		return;
-	}
 	lnr->on_accept(fd, lnr->user);
 }
 

@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 #include "x/md5.h"
+#include <stdio.h>
 
 static uint32_t S[] = {
 	7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,

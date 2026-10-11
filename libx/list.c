@@ -3,8 +3,8 @@
 
 void x_list_merge_front(x_list *dest, x_list *src)
 {
-	assert(dest);
-	assert(src);
+	x_assert(dest);
+	x_assert(src);
 	if (!x_list_is_empty(src)) {
 		src->head.prev->next = dest->head.next;
 		src->head.next->prev = &dest->head;
@@ -15,8 +15,8 @@ void x_list_merge_front(x_list *dest, x_list *src)
 
 void x_list_merge_back(x_list *dest, x_list *src)
 {
-	assert(dest);
-	assert(src);
+	x_assert(dest);
+	x_assert(src);
 	if (!x_list_is_empty(src)) {
 		src->head.prev->next = &dest->head;
 		src->head.next->prev = dest->head.prev;

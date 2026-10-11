@@ -24,8 +24,9 @@
 #include "x/sys.h"
 #include "x/detect.h"
 #include "x/string.h"
+#include "x/uchar.h"
+#include "x/errno.h"
 
-#include <errno.h>
 #include <stdarg.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -70,7 +71,7 @@ x_uchar *x_path_push(x_uchar *path, size_t size, const x_uchar *name)
 		need_sep = false;
 
 	if (path_len + name_len + !!need_sep + 1 > size) {
-		errno = ENOBUFS;
+		errno = X_ENOBUFS;
 		return NULL;
 	}
 	if (need_sep)
@@ -247,7 +248,7 @@ x_uchar *x_path_realize(const x_uchar *path, x_uchar *resolved_path, size_t size
 		return NULL;
 	int len = strlen(resolved_buf);
 	if (len + 1 > size) {
-		errno = ENOBUFS;
+		errno = X_ENOBUFS;
 		return NULL;
 	}
 	memcpy(resolved_path, resolved_buf, len + 1);
@@ -312,13 +313,13 @@ x_uchar *x_path_homedir(x_uchar *path, size_t size)
 #endif
 	);
 	if (!home_dir) {
-		errno = ENOENT;
+		errno = X_ENOENT;
 		return NULL;
 	}
 	int len = x_ustrlen(home_dir);
 
 	if (len + 1 > size) {
-		errno = ENOBUFS;
+		errno = X_ENOBUFS;
 		return NULL;
 	}
 	memcpy(path, home_dir, (len + 1) * sizeof(x_uchar));
@@ -334,7 +335,7 @@ x_uchar *x_path_tmpdir(x_uchar *path, size_t size)
 #else
 #define UNIX_TEMP_PATH "/tmp"
 	if (size < sizeof UNIX_TEMP_PATH) {
-		errno = ENOBUFS;
+		errno = X_ENOBUFS;
 		return NULL;
 	}
 	

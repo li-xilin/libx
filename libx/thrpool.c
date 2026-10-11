@@ -59,7 +59,7 @@ out:
 
 int x_thrpool_init(x_thrpool *pool, size_t thr_cnt)
 {
-	assert(pool);
+	x_assert(pool);
 	x_thread **thr_list = NULL;
 	thr_cnt = x_max(thr_cnt, 2);
 	memset(pool, 0, sizeof *pool);
@@ -93,7 +93,7 @@ static void clear_pending_works(x_thrpool *pool)
 
 void x_thrpool_clear_work(x_thrpool *pool)
 {
-	assert(pool);
+	x_assert(pool);
 	x_mutex_lock(&(pool->work_mutex));
 	clear_pending_works(pool);
 	x_mutex_unlock(&(pool->work_mutex));
@@ -120,9 +120,9 @@ void x_thrpool_free(x_thrpool *pool)
 
 void x_thrpool_add_work(x_thrpool *pool, x_thrwork *work)
 {
-	assert(pool);
-	assert(work);
-	assert(!work->link.next);
+	x_assert(pool);
+	x_assert(work);
+	x_assert(!work->link.next);
 	x_mutex_lock(&(pool->work_mutex));
 	x_cond_wake(&(pool->work_cond));
 	x_list_add_back(&pool->work_list, &work->link);
@@ -131,8 +131,8 @@ void x_thrpool_add_work(x_thrpool *pool, x_thrwork *work)
 
 void x_thrpool_remove_work(x_thrpool *pool, x_thrwork *work)
 {
-	assert(pool);
-	assert(work);
+	x_assert(pool);
+	x_assert(work);
 	if (work->link.next) {
 		x_mutex_lock(&(pool->work_mutex));
 		x_list_del(&work->link);
@@ -144,7 +144,7 @@ void x_thrpool_remove_work(x_thrpool *pool, x_thrwork *work)
 
 void x_thrpool_sync(x_thrpool *pool)
 {
-	assert(pool);
+	x_assert(pool);
 	x_mutex_lock(&(pool->work_mutex));
 	while (!x_list_is_empty(&pool->work_list) || pool->working_cnt != 0)
 		x_cond_sleep(&pool->complete_cond, &pool->work_mutex, -1);

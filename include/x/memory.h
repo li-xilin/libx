@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2024-2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,6 @@
 #include "types.h"
 #include "list.h"
 #include "mutex.h"
-#include <stddef.h>
-#include <stdint.h>
 
 X_EXTERN_C_BEGIN
 

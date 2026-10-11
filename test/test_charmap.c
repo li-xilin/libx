@@ -1,6 +1,8 @@
 #include "x/test.h"
 #include "x/charmap.h"
+#include "x/unicode.h"
 #include <unistd.h>
+#include <string.h>
 #include <stdio.h>
 #include <time.h>
 

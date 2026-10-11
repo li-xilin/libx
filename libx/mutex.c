@@ -48,7 +48,7 @@ void x_mutex_init(x_mutex *lock)
 #ifdef X_OS_WIN
 static inline void mutex_init_win32(x_mutex *lock)
 {
-	assert(lock != NULL);
+	x_assert(lock != NULL);
 	if (!lock->section) {
 		CRITICAL_SECTION *secp = x_malloc(NULL, sizeof *secp);
 		InitializeCriticalSection(secp);
@@ -62,7 +62,7 @@ static inline void mutex_init_win32(x_mutex *lock)
 
 void x_mutex_lock(x_mutex *lock)
 {
-	assert(lock != NULL);
+	x_assert(lock != NULL);
 #ifdef X_OS_WIN
 	mutex_init_win32(lock);
 	EnterCriticalSection(lock->section);
@@ -77,7 +77,7 @@ void x_mutex_lock(x_mutex *lock)
 
 bool x_mutex_trylock(x_mutex *lock)
 {
-	assert(lock != NULL);
+	x_assert(lock != NULL);
 #ifdef X_OS_WIN
 	mutex_init_win32(lock);
 	return TryEnterCriticalSection(lock->section);
@@ -98,7 +98,7 @@ bool x_mutex_trylock(x_mutex *lock)
 
 void x_mutex_unlock(x_mutex *lock)
 {
-	assert(lock != NULL);
+	x_assert(lock != NULL);
 #ifdef X_OS_WIN
 	if (!lock->section) {
 		fprintf(stderr, "fatal: x_mutex object not initialized");
@@ -116,7 +116,7 @@ void x_mutex_unlock(x_mutex *lock)
 
 void x_mutex_destroy(x_mutex *lock)
 {
-	assert(lock != NULL);
+	x_assert(lock != NULL);
 #ifdef X_OS_WIN
 	if (lock->section) {
 		DeleteCriticalSection(lock->section);

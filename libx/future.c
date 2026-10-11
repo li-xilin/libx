@@ -30,7 +30,7 @@
 
 #define SEQ_ALIGN 0x10000
 
-#define CHECK_FUTURE(fut) assert((fut)->value.status == X_FUTURE_PENDING \
+#define CHECK_FUTURE(fut) x_assert((fut)->value.status == X_FUTURE_PENDING \
 		|| (fut)->value.status == X_FUTURE_READY \
 		|| (fut)->value.status == X_FUTURE_BUSY)
 
@@ -135,9 +135,9 @@ void x_fuset_add_many(x_fuset *set, x_future **fut_buf, size_t n)
 		if (!prev_fup)
 			prev_fup = fut_buf[i]->fupool;
 		else {
-			assert(prev_fup == fut_buf[i]->fupool);
+			x_assert(prev_fup == fut_buf[i]->fupool);
 		}
-		assert(!fut_buf[i]->link.prev);
+		x_assert(!fut_buf[i]->link.prev);
 		x_list_add_back(&set->list, &fut_buf[i]->link);
 	}
 }
@@ -271,7 +271,7 @@ void x_promise_commit(x_promise *prom, int retcode)
 	x_mutex_lock(&prom->fupool->lock);
 	if (!prom->value)
 		goto out;
-	assert(prom->value->status == X_FUTURE_BUSY);
+	x_assert(prom->value->status == X_FUTURE_BUSY);
 	prom->value->retcode = retcode;
 	prom->value->status = X_FUTURE_READY;
 	x_cond_wake_all(&prom->fupool->status_cond);

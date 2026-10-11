@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
 
 #define N 32
 

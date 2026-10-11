@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,6 @@
 #include "list.h"
 #include "rwlock.h"
 #include "memory.h"
-#include "uchar.h"
 
 X_EXTERN_C_BEGIN
 

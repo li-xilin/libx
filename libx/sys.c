@@ -27,7 +27,8 @@
 #include "x/once.h"
 #include "x/tss.h"
 #include "x/mutex.h"
-#include "x/macros.h"
+#include "x/assert.h"
+#include <stdlib.h>
 
 #ifdef X_OS_WIN
 #  include <windows.h>
@@ -167,7 +168,7 @@ static void getcwd_init(void)
 
 const x_uchar *x_sys_getenv(const x_uchar *name)
 {
-	assert(name);
+	x_assert(name);
 
 	x_uchar *tss_buf = NULL, *val;
 		if (x_once_init(&s_env_once, getcwd_init))

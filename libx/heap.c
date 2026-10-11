@@ -34,8 +34,8 @@
 
 void x_heap_init(x_heap* h, x_heap_ordered_fn *cmp)
 {
-	assert(h != NULL);
-	assert(cmp != NULL);
+	x_assert(h != NULL);
+	x_assert(cmp != NULL);
 	memset(h, 0, sizeof *h);
 	h->cmp = cmp;
 }
@@ -56,8 +56,8 @@ x_ranode *x_heap_top(const x_heap* h)
 
 void x_heap_push(x_heap* h, x_ranode *p)
 {
-	assert(h != NULL);
-	assert(p != NULL);
+	x_assert(h != NULL);
+	x_assert(p != NULL);
 
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);
 	if (h->entry_cnt + 1 > mx_entries) {
@@ -149,9 +149,9 @@ x_ranode * x_heap_pop(x_heap* h)
 
 void x_heap_remove(x_heap *h, x_ranode *n)
 {
-	assert(h != NULL);
-	assert(n != NULL);
-	assert(n->index < h->entry_cnt);
+	x_assert(h != NULL);
+	x_assert(n != NULL);
+	x_assert(n->index < h->entry_cnt);
 	h->entry_cnt--;
 	if (n->index == h->entry_cnt) {
 		n->index = SIZE_MAX;

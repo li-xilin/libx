@@ -25,6 +25,8 @@
 #include "x/tsignal.h"
 #include "x/detect.h"
 #include "x/errno.h"
+#include <string.h>
+#include <stdlib.h>
 
 static x_tsignal_fn *s_signal_handler = NULL;
 

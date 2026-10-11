@@ -43,8 +43,8 @@
 
 CHAR_TYPE **STRARGV(const CHAR_TYPE *cmdline, int* count)
 {
-	assert(count !=  NULL);
-	assert(cmdline !=  NULL);
+	x_assert(count !=  NULL);
+	x_assert(cmdline !=  NULL);
 	CHAR_TYPE **argv, *d;
 	int argc, qcount, bcount;
 	/* --- First count the arguments */

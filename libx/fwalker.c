@@ -23,6 +23,7 @@
 #include "x/stat.h"
 #include "x/dir.h"
 #include "x/printf.h"
+#include "x/uchar.h"
 
 struct fwalker_dir
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Borislav Stanimirov
+ * Copyright (c) 2020-2026 Borislav Stanimirov
  * Copyright (c) 2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy

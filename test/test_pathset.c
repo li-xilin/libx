@@ -2,6 +2,7 @@
 #include "x/strbuf.h"
 #include "x/test.h"
 #include "x/printf.h"
+#include "x/uchar.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>

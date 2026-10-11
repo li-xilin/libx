@@ -22,6 +22,7 @@
 
 #include "x/cliarg.h"
 #include "x/string.h"
+#include "x/uchar.h"
 
 #define OPT_MSG_INVALID x_u("invalid option")
 #define OPT_MSG_MISSING x_u("option requires an argument")

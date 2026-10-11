@@ -23,11 +23,9 @@
 #ifndef X_TEST_H
 #define X_TEST_H
 
-#include "types.h"
 #include "linkage.h"
-#include "rope.h"
+#include "types.h"
 #include "list.h"
-#include "uchar.h"
 #include <setjmp.h>
 
 X_EXTERN_C_BEGIN
@@ -102,13 +100,13 @@ typedef void ax_case_enum_text_f(ut_case *c, const char *file, int line, char *m
 
 void ut_case_free(ut_case *tc);
 
-int ut_case_copy(ut_case *dst_tc, const ut_case *src_tc);
+void ut_case_copy(ut_case *dst_tc, const ut_case *src_tc);
 
 int ut_case_add_text(ut_case *c, const char *file, int line, char *text);
 
 void ut_case_enum_text(ut_case *c, ax_case_enum_text_f *f, void *ctx);
 
-int ut_case_init(ut_case *tc, const char *name, int line, ut_check_fn *fn);
+void ut_case_init(ut_case *tc, const char *name, int line, ut_check_fn *fn);
 
 void ut_case_dump_rope(const char *suite_name, ut_case *tc, void *arg);
 

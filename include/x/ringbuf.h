@@ -25,8 +25,7 @@
 #include "linkage.h"
 #include "types.h"
 #include "flowctl.h"
-#include <string.h>
-#include <assert.h>
+#include "assert.h"
 
 X_EXTERN_C_BEGIN
 
@@ -40,7 +39,7 @@ struct x_ringbuf_st
 
 static inline void x_ringbuf_init(x_ringbuf *b, void *buf, size_t size)
 {
-	assert(size > 0);
+	x_assert(size > 0);
 	b->size = size;
 	b->buf = buf;
 	b->rear = b->front = 0;
@@ -88,7 +87,7 @@ static inline const x_iovec x_ringbuf_acquire_read(const x_ringbuf *b)
 
 static inline void x_ringbuf_commit_read(x_ringbuf *b, size_t size)
 {
-	assert(size <= __x_ringbuf_read_size(b));
+	x_assert(size <= __x_ringbuf_read_size(b));
 	b->front = (b->front + size) % b->size;
 }
 
@@ -111,7 +110,7 @@ static inline const x_iovec x_ringbuf_acquire_read_back(const x_ringbuf *b)
 
 static inline void x_ringbuf_commit_read_back(x_ringbuf *b, size_t size)
 {
-	assert(size <= __x_ringbuf_read_back_size(b));
+	x_assert(size <= __x_ringbuf_read_back_size(b));
 	b->rear = (b->rear + b->size - size) % b->size;
 }
 
@@ -132,7 +131,7 @@ static inline x_iovec x_ringbuf_acquire_write(x_ringbuf *b)
 
 static inline void x_ringbuf_commit_write(x_ringbuf *b, size_t size)
 {
-	assert(size <= __x_ringbuf_write_size(b));
+	x_assert(size <= __x_ringbuf_write_size(b));
 	b->rear = (b->rear + size) % b->size;
 }
 
@@ -155,7 +154,7 @@ static inline x_iovec x_ringbuf_acquire_write_front(x_ringbuf *b)
 
 static inline void x_ringbuf_commit_write_front(x_ringbuf *b, size_t size)
 {
-	assert(size <= __x_ringbuf_write_front_size(b));
+	x_assert(size <= __x_ringbuf_write_front_size(b));
 	b->rear = (b->front + b->size - size) % b->size;
 }
 

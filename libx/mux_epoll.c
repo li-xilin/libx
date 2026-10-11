@@ -25,6 +25,7 @@
 #include "x/time.h"
 #include "x/memory.h"
 #include "x/errno.h"
+#include <string.h>
 
 #ifdef X_OS_WIN32
 #include "wepoll.h"
@@ -32,9 +33,6 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #endif
-
-#include <assert.h>
-#include <stdlib.h>
 
 #define EPOLL_INIT_EVENT_SIZE 32
 
@@ -63,7 +61,7 @@ struct x_sockmux_st
 static void epoll_resize(x_sockmux * mux, int size)
 {
 	struct epoll_event *pee;
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	pee = x_realloc(mux->events, size * sizeof(struct epoll_event));
 	mux->events = pee;
 	mux->max_events = size;
@@ -104,7 +102,7 @@ static int epoll_mux_add(x_sockmux *mux, x_sock fd, short flags)
 {
 	struct epoll_event e;
 	int ret;
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	if (mux->n_events >= mux->max_events)
 		epoll_resize(mux, mux->max_events << 1);
 	e.data.fd = fd;
@@ -125,7 +123,7 @@ out:
 
 static int epoll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 {
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	struct epoll_event e;
 	e.data.fd = fd;
 	e.events = epoll_setup_mask(flags);
@@ -138,7 +136,7 @@ static int epoll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 
 static int epoll_mux_del(x_sockmux *mux, x_sock fd)
 {
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	struct epoll_event e; // must be specified before linux 2.6.9
 	if (epoll_ctl(mux->epoll_fd, EPOLL_CTL_DEL, fd, &e)) {
 		x_eval_errno();
@@ -152,7 +150,7 @@ static int epoll_mux_del(x_sockmux *mux, x_sock fd)
 static int epoll_mux_poll(x_sockmux *mux, struct timeval * timeout)
 {
 	int nreadys;
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	mux->iterator = 0;
 	mux->nreadys = 0;
 redo:

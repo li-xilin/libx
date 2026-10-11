@@ -23,13 +23,8 @@
 #ifndef X_THREAD_H
 #define X_THREAD_H
 
-#include "types.h"
 #include "linkage.h"
-#include "assert.h"
-#include "detect.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

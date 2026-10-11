@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023,2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,7 @@
 
 #include "linkage.h"
 #include "detect.h"
-#include "uchar.h"
-#include <stddef.h>
+#include "types.h"
 #include <errno.h>
 
 X_EXTERN_C_BEGIN

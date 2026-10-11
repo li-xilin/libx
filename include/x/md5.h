@@ -24,10 +24,6 @@
 
 #include "linkage.h"
 #include "types.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 
 X_EXTERN_C_BEGIN
 

@@ -25,8 +25,6 @@
 #include "linkage.h"
 #include "types.h"
 #include "list.h"
-#include <stdint.h>
-#include <stddef.h>
 
 X_EXTERN_C_BEGIN
 

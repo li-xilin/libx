@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023,2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,9 @@
 #define X_PATH_H
 
 #include "linkage.h"
-#include "uchar.h"
+#include "types.h"
 #include "detect.h"
 #include <limits.h>
-#include <stdbool.h>
 
 #ifdef X_OS_WIN
 #  include <windef.h>

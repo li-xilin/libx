@@ -25,14 +25,14 @@ static int cmp_index_list(const x_btnode *x, const x_btnode *y);
 
 void x_index_init(x_index *idx)
 {
-	assert(idx);
+	x_assert(idx);
 	idx->ilist = NULL;
 }
 
 void x_index_insert(x_index *idx, x_indexer *indexer)
 {
-	assert(idx);
-	assert(indexer);
+	x_assert(idx);
+	x_assert(indexer);
 	x_indexset *ilist = idx->ilist;
 	if (ilist) {
 		if (!x_list_has_multiple(&ilist->entries))
@@ -66,7 +66,7 @@ void x_index_insert(x_index *idx, x_indexer *indexer)
 
 void x_index_remove(x_index *idx)
 {
-	assert(idx);
+	x_assert(idx);
 	x_indexset *ilist = idx->ilist;
 	if (!ilist)
 		return;
@@ -89,8 +89,8 @@ static int cmp_index_list(const x_btnode *x, const x_btnode *y)
 
 void x_indexer_init(x_indexer *indexer, x_index_cmp_f *cmp)
 {
-	assert(indexer);
-	assert(cmp);
+	x_assert(indexer);
+	x_assert(cmp);
 	x_splay_init(&indexer->indexes, cmp_index_list);
 	indexer->cmp = cmp;
 	x_mset_init(&indexer->mset);
@@ -98,8 +98,8 @@ void x_indexer_init(x_indexer *indexer, x_index_cmp_f *cmp)
 
 const x_indexset *x_indexer_find(x_indexer *indexer, const x_index *pattern)
 {
-	assert(indexer);
-	assert(pattern);
+	x_assert(indexer);
+	x_assert(pattern);
 	x_indexset tmp;
 	x_list_init(&tmp.entries);
 	tmp.entries.head.prev = (x_link *)&pattern->link;
@@ -112,7 +112,7 @@ const x_indexset *x_indexer_find(x_indexer *indexer, const x_index *pattern)
 
 x_index *x_indexset_first(const x_indexset *iset)
 {
-	assert(iset);
+	x_assert(iset);
 	x_link *first = x_list_first(&iset->entries);
 	if (!first)
 		return NULL;
@@ -121,7 +121,7 @@ x_index *x_indexset_first(const x_indexset *iset)
 
 x_index *x_indexset_next(const x_index *idx)
 {
-	assert(idx);
+	x_assert(idx);
 	x_link *next = idx->link.next;
 	if (next == &idx->ilist->entries.head)
 		return NULL;

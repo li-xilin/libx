@@ -47,7 +47,7 @@ static void free_option(struct x_ini_option_st *opt);
 
 x_ini *x_ini_create(const char *ext_keych)
 {
-	assert (!ext_keych || strlen(ext_keych) <= 14);
+	x_assert (!ext_keych || strlen(ext_keych) <= 14);
 	x_ini *d = x_malloc(NULL, sizeof *d);
 	x_mset_init(&d->mset);
 	if (ext_keych)

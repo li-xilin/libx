@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,11 @@
 #define X_EVENT_H
 
 #include "linkage.h"
-#include "socket.h"
 #include "time.h"
 #include "list.h"
 #include "heap.h"
 #include "hmap.h"
-#include <stdint.h>
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

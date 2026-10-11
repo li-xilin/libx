@@ -84,7 +84,7 @@ int x_uidpool_get(x_uidpool *pool, x_uidlink *link)
 	}
 	link->num = pool->next_uid;
 	void *origin = x_sklist_find_or_insert(&pool->uid_set, link);
-	assert(!origin);
+	x_assert(!origin);
 	x_unused(origin);
 out:
 	pool->uid_count++;

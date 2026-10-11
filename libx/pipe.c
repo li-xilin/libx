@@ -26,7 +26,7 @@
 
 size_t x_pipe_write(x_pipe *pipe, const void *p, size_t size)
 {
-	assert(p != NULL);
+	x_assert(p != NULL);
 	size_t buf_size = x_min(x_pipe_buffer_size(pipe), size);
 	size_t size1 = x_min(pipe->size - pipe->rear, buf_size);
 	memcpy(pipe->buf + pipe->rear, p, size1);
@@ -37,7 +37,7 @@ size_t x_pipe_write(x_pipe *pipe, const void *p, size_t size)
 
 size_t x_pipe_peek(x_pipe *pipe, void *buf, size_t start, size_t size)
 {
-	assert(buf != NULL);
+	x_assert(buf != NULL);
 	size_t data_size = x_pipe_data_size(pipe);
 	if (start >= data_size)
 		return 0;
@@ -63,9 +63,9 @@ size_t x_pipe_read(x_pipe *pipe, void *buf, size_t size)
 
 void x_pipe_resize(x_pipe *pipe, size_t size)
 {
-	assert(pipe);
-	assert(size > 1);
-	assert(x_pipe_data_size(pipe) < size - 1);
+	x_assert(pipe);
+	x_assert(size > 1);
+	x_assert(x_pipe_data_size(pipe) < size - 1);
 	if (pipe->front > pipe->rear) {
 		long shift = (long)size - (long)pipe->size;
 		memmove(pipe->buf + pipe->front + shift, pipe->buf + pipe->front, pipe->size - pipe->front);
@@ -89,8 +89,8 @@ void *x_pipe_change_buffer(x_pipe *pipe, void *buf, size_t size)
 
 size_t x_pipe_drain(x_pipe *pipe, size_t size, x_pipe_drain_f cb, void *arg)
 {
-	assert(pipe);
-	assert(cb);
+	x_assert(pipe);
+	x_assert(cb);
 	size_t read_size = x_min(x_pipe_data_size(pipe), size);
 	size_t size1 = x_min((pipe->size - pipe->front), read_size);
 	if (size1)
@@ -103,7 +103,7 @@ size_t x_pipe_drain(x_pipe *pipe, size_t size, x_pipe_drain_f cb, void *arg)
 
 void *x_pipe_pullup(x_pipe *pipe)
 {
-	assert(pipe);
+	x_assert(pipe);
 	if (pipe->front <= pipe->rear)
 		return pipe->buf + pipe->front;
 	size_t size = (pipe->rear + pipe->size - pipe->front) % pipe->size;

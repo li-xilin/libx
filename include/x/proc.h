@@ -26,7 +26,6 @@
 #include "uchar.h"
 #include "types.h"
 #include "file.h"
-#include <stdint.h>
 
 X_EXTERN_C_BEGIN
 

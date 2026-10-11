@@ -22,12 +22,8 @@
 #ifndef X_TSS_H
 #define X_TSS_H
 
-#include "types.h"
-#include "detect.h"
 #include "linkage.h"
-#include <errno.h>
-#include <assert.h>
-#include <stdint.h>
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

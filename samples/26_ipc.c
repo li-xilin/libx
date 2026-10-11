@@ -1,8 +1,9 @@
 #include "x/ipcsock.h"
 #include "x/path.h"
 #include "x/printf.h"
+#include "x/uchar.h"
+#include "x/errno.h"
 #include <stdio.h>
-#include <errno.h>
 
 static int send_and_recv(x_sock fd, const char *message)
 {

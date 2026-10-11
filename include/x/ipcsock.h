@@ -24,7 +24,7 @@
 
 #include "linkage.h"
 #include "socket.h"
-#include "uchar.h"
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

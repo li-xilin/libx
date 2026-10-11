@@ -21,7 +21,7 @@
  */
 
 #include "x/event.h"
-#include <stdio.h>
+#include <string.h>
 
 void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler)
 {
@@ -31,7 +31,6 @@ void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handle
 	event->base.type = X_EVENT_SOCKET;
 	event->base.handler = handler;
 }
-
 
 void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_handler *handler)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2025-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@
 #ifndef X_TWISTER_H
 #define X_TWISTER_H
 
-#include "types.h"
 #include "linkage.h"
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

@@ -22,9 +22,8 @@
 #ifndef X_UUID_H
 #define X_UUID_H
 
-#include "string.h"
-#include "types.h"
 #include "linkage.h"
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

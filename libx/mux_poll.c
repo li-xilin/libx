@@ -20,16 +20,10 @@
  * THE SOFTWARE.
  */
 #include "sockmux.h"
-#include "x/time.h"
 #include "x/event.h"
-#include "x/memory.h"
-#include "x/macros.h"
-#include <x/errno.h>
+#include "x/errno.h"
 #include <poll.h>
-#include <memory.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
 #define INITIAL_EVENT_COUNT 32
 
@@ -48,7 +42,7 @@ struct x_sockmux_st
 static void poll_resize(x_sockmux * mux, int size)
 {
 	struct pollfd * pfds;
-	assert(mux != NULL);
+	x_assert(mux != NULL);
 	pfds = x_realloc(mux->fds_in, size * sizeof(struct pollfd));
 	mux->fds_in = pfds;
 	mux->max_events = size;
@@ -88,7 +82,7 @@ static inline int poll_setup_mask(short flags)
 static int poll_mux_add(x_sockmux *mux, x_sock fd, short flags)
 {
 	int i;
-	assert(mux);
+	x_assert(mux);
 	for(i = 0; i < mux->n_events; ++i) {
 		if(fd == mux->fds_in[i].fd) {
 			/* Override the existing event */
@@ -107,7 +101,7 @@ static int poll_mux_add(x_sockmux *mux, x_sock fd, short flags)
 
 static int poll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 {
-	assert(mux);
+	x_assert(mux);
 	for(int i = 0; i < mux->n_events; ++i) {
 		if(fd == mux->fds_in[i].fd) {
 			mux->fds_in[i].events = poll_setup_mask(flags);
@@ -120,7 +114,7 @@ static int poll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 
 static int poll_mux_del(x_sockmux *mux, x_sock fd)
 {
-	assert(mux);
+	x_assert(mux);
 	for(int i = 0; i < mux->n_events; i++)
 		if(mux->fds_in[i].fd == fd) {
 			x_swap(mux->fds_in + i, mux->fds_in + mux->n_events - 1, struct pollfd);
@@ -133,7 +127,7 @@ static int poll_mux_del(x_sockmux *mux, x_sock fd)
 
 static int poll_mux_poll(x_sockmux *mux, struct timeval *timeout)
 {
-	assert(mux);
+	x_assert(mux);
 	mux->iterator = 0;
 	mux->nreadys = 0;
 	if(mux->need_realoc) {
@@ -154,7 +148,7 @@ static int poll_mux_poll(x_sockmux *mux, struct timeval *timeout)
 
 static x_sock poll_mux_next(x_sockmux *mux, short *res_flags)
 {
-	assert(mux);
+	x_assert(mux);
 	if (!mux->nreadys)
 		return X_BADSOCK;
 	*res_flags = 0;

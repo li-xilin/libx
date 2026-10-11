@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2023-2026 Li Xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,7 @@
 #define X_SYS_H
 
 #include "linkage.h"
-#include "uchar.h"
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <time.h>
+#include "types.h"
 
 X_EXTERN_C_BEGIN
 

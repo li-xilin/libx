@@ -22,8 +22,6 @@
 #ifndef X_LINKAGE_H
 #define X_LINKAGE_H
 
-#include "compiler.h"
-
 #ifdef __cplusplus
 # define X_EXTERN_C extern "C"
 # define X_EXTERN_C_BEGIN extern "C" {

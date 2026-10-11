@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Li Xilin <lixilin@gmx.com>
+ * Copyright (c) 2021-2024,2026 Li Xilin <lixilin@gmx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #define X_DUMP_H
 
 #include "linkage.h"
-#include "macros.h"
 #include "types.h"
 #include "uchar.h"
 #include <stdio.h>

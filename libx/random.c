@@ -25,6 +25,8 @@
 #include <stdint.h>
 
 #ifdef X_OS_WIN
+#include "windef.h"
+#include "winbase.h"
 #include "wincrypt.h"
 
 int x_random(void *buf, size_t size)

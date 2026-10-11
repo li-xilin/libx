@@ -30,6 +30,10 @@
 
 X_EXTERN_C_BEGIN
 
+#define x_jpath_result_foreach(i, res) \
+	for (x_jpath_result_node *__x_jpath_cur = (res)->head->next; __x_jpath_cur; __x_jpath_cur = __x_jpath_cur->next) \
+		x_block_var(x_json *i = __x_jpath_cur->node)
+
 enum x_jpath_type {
     X_JPATH_INVALID = 0,
     X_JPATH_START,
@@ -73,10 +77,6 @@ x_jpath_result *x_jpath_result_create(void);
 void x_jpath_result_free(x_jpath_result *res);
 x_json *x_jpath_result_to_array(x_jpath_result *res);
 bool x_jpath_result_add(x_jpath_result *res, x_json *item);
-
-#define x_jpath_result_foreach(i, res) \
-	for (x_jpath_result_node *__x_jpath_cur = (res)->head->next; __x_jpath_cur; __x_jpath_cur = __x_jpath_cur->next) \
-		x_block_var(x_json *i = __x_jpath_cur->node)
 
 X_EXTERN_C_END
 

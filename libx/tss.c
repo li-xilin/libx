@@ -60,7 +60,7 @@ static void TryInitTlsContext(void)
 int x_tss_init(x_tss *key, x_tss_free_f *free_cb)
 {
 	int rc = -1;
-	assert(key);
+	x_assert(key);
 	TryInitTlsContext();
 
 	EnterCriticalSection(&s_TlsContext->Lock);
@@ -80,8 +80,8 @@ int x_tss_init(x_tss *key, x_tss_free_f *free_cb)
 
 void x_tss_remove(x_tss *key)
 {
-	assert(key != NULL);
-	assert(s_TlsContext != NULL);
+	x_assert(key != NULL);
+	x_assert(s_TlsContext != NULL);
 	EnterCriticalSection(&s_TlsContext->Lock);
 	TlsFree(key->key);
 	x_list_foreach(cur, &s_TlsContext->TlsList) {
@@ -120,7 +120,7 @@ void __x_tss_free_all_win32(void)
 
 void *x_tss_get(x_tss *key)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	void *val;;
 	if (!(val = TlsGetValue(key->key)))
 		x_eval_errno();
@@ -129,7 +129,7 @@ void *x_tss_get(x_tss *key)
 
 int x_tss_set(x_tss *key, void *value)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	if (!TlsSetValue(key->key, value)) {
 		x_eval_errno();
 		return -1;
@@ -141,7 +141,7 @@ int x_tss_set(x_tss *key, void *value)
 
 int x_tss_init(x_tss *key, x_tss_free_f *free_cb)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	int err = pthread_key_create(&key->key, free_cb);
 	if (err) {
 		errno = err;
@@ -153,19 +153,19 @@ int x_tss_init(x_tss *key, x_tss_free_f *free_cb)
 
 void x_tss_remove(x_tss *key)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	(void)pthread_key_delete(key->key);
 }
 
 void *x_tss_get(x_tss *key)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	return pthread_getspecific(key->key);
 }
 
 int x_tss_set(x_tss *key, void *value)
 {
-	assert(key != NULL);
+	x_assert(key != NULL);
 	int err = pthread_setspecific(key->key, value);
 	if (err) {
 		errno = err;

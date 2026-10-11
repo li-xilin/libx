@@ -26,6 +26,8 @@
 #include "x/mutex.h"
 #include "x/cond.h"
 #include "x/once.h"
+#include "x/errno.h"
+#include "x/memory.h"
 
 #ifdef X_OS_WIN
 #  include <processthreadsapi.h>
@@ -120,7 +122,7 @@ static void free_thread(x_thread *thread)
 	if (thread->cleanup)
 		thread->cleanup();
 	if (thread->detached)
-		free(thread);
+		x_free(thread);
 	else
 		thread->exited = 1;
 	x_mutex_unlock(&s_lock);
@@ -179,18 +181,18 @@ x_thread *x_thread_create(x_thread_fn *thread_func, x_thread_clean_fn *cleanup, 
 	struct thread_info *info = NULL;
 	x_thread *t = NULL;
 
-	assert(thread_func);
+	x_assert(thread_func);
 
 	x_once_init(&s_thread_once, init);
 	if (s_init_errno) {
 		errno = s_init_errno;
 		return NULL;
 	}
-	if (!(t = calloc(1, sizeof *t)))
+	if (!(t = x_zalloc(NULL, sizeof *t)))
 		goto fail;
 	t->cleanup = cleanup;
 	t->data = arg;
-	if (!(info = calloc(1, sizeof *info)))
+	if (!(info = x_zalloc(NULL, sizeof *info)))
 		goto fail;
 	if (x_cond_init(&info->finished_cond))
 		goto fail;
@@ -224,11 +226,11 @@ x_thread *x_thread_create(x_thread_fn *thread_func, x_thread_clean_fn *cleanup, 
 		errno = info->error;
 		goto fail;
 	}
-	free(info);
+	x_free(info);
 	return t;
 fail:
-	free(t);
-	free(info);
+	x_free(t);
+	x_free(info);
 	return NULL;
 }
 
@@ -257,7 +259,7 @@ int x_thread_sleep(unsigned int millise)
 
 int x_thread_join(x_thread *t, int *ret_code)
 {
-	assert(t);
+	x_assert(t);
 	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	DWORD dwRetCode = -1;
@@ -289,7 +291,7 @@ int x_thread_join(x_thread *t, int *ret_code)
 
 int x_thread_free(x_thread *t)
 {
-	assert(t);
+	x_assert(t);
 	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	int retval = CloseHandle(t->hThread);
@@ -298,7 +300,7 @@ int x_thread_free(x_thread *t)
 #endif
 	x_mutex_lock(&s_lock);
 	if (t->exited)
-		free(t);
+		x_free(t);
 	else
 		t->detached = 1;
 	x_mutex_unlock(&s_lock);
@@ -317,7 +319,7 @@ void x_thread_yield(void)
 
 void x_thread_kill(x_thread *t)
 {
-	assert(t);
+	x_assert(t);
 	x_assert_printf(!t->detached, "Thread already detached");
 #ifdef X_OS_WIN
 	(void)TerminateThread(t->hThread, -1);
@@ -345,7 +347,7 @@ bool x_thread_canceled(void)
 
 void x_thread_cancel(x_thread *t)
 {
-	assert(t);
+	x_assert(t);
 	x_assert_printf(!t->detached, "Thread already detached");
 	t->canceled = 1;
 }

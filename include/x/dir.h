@@ -1,6 +1,6 @@
 /*
+ * Copyright (c) 2023,2026 Li Xilin <lixilin@gmx.com>
  * Copyright (c) 2019 win32ports
- * Copyright (c) 2023 Li xilin <lixilin@gmx.com>
  * 
  * Permission is hereby granted, free of charge, to one person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,6 @@
 #include "linkage.h"
 #include "types.h"
 #include "detect.h"
-#include "uchar.h"
-#include <stdint.h>
 
 X_EXTERN_C_BEGIN
 

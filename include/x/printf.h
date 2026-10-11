@@ -1,23 +1,7 @@
 /**
- * @author (c) Li Xilin (lixilin@gmx.com)
- *             2025, Shenyang, China
- * @author (c) Eyal Rozenberg <eyalroz1@gmx.com>
- *             2021-2023, Haifa, Palestine/Israel
- * @author (c) Marco Paland (info@paland.com)
- *             2014-2019, PALANDesign Hannover, Germany
- *
- * @note Others have made smaller contributions to this file: see the
- * contributors page at https://github.com/eyalroz/printf/graphs/contributors
- * or ask one of the authors.
- *
- * @brief Small stand-alone implementation of the printf family of functions
- * (`(v)printf`, `(v)s(n)printf` etc., geared towards use on embedded systems
- * with a very limited resources.
- *
- * @note the implementations are thread-safe; re-entrant; use no functions from
- * the standard library; and do not dynamically allocate any memory.
- *
- * @license The MIT License (MIT)
+ * Copyright (c) 2025-2026 Li Xilin <lixilin@gmx.com>, Shenyang, China
+ * Copyright (c) 2021-2023 Eyal Rozenberg <eyalroz1@gmx.com>, Haifa, Palestine/Israel
+ * Copyright (c) 2014-2019 Marco Paland <info@paland.com>, PALANDesign Hannover, Germany
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,8 +26,6 @@
 #define X_PRINTF_H
 
 #include "linkage.h"
-#include "macros.h"
-#include "uchar.h"
 #include "types.h"
 
 X_EXTERN_C_BEGIN

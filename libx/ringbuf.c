@@ -22,7 +22,6 @@
 
 #include "x/ringbuf.h"
 #include "x/string.h"
-#include <errno.h>
 
 size_t x_ringbuf_write(x_ringbuf *rb, const void *data, size_t size)
 {
@@ -74,9 +73,9 @@ size_t x_ringbuf_read(x_ringbuf *rb, void *buf, size_t size)
 
 void x_ringbuf_resize(x_ringbuf *rb, size_t size)
 {
-	assert(rb);
-	assert(size > 0);
-	assert(x_ringbuf_used_size(rb) <= size - 1);
+	x_assert(rb);
+	x_assert(size > 0);
+	x_assert(x_ringbuf_used_size(rb) <= size - 1);
 	if (rb->front > rb->rear) {
 		long shift = (long)size - (long)rb->size;
 		memmove(rb->buf + rb->front + shift, rb->buf + rb->front, rb->size - rb->front);
@@ -92,7 +91,7 @@ void x_ringbuf_resize(x_ringbuf *rb, size_t size)
 
 void *x_ringbuf_linearize(x_ringbuf *rb)
 {
-	assert(rb);
+	x_assert(rb);
 	if (rb->front <= rb->rear)
 		return rb->buf + rb->front;
 	size_t size = (rb->rear + rb->size - rb->front) % rb->size;
@@ -178,7 +177,7 @@ size_t x_ringbuf_copy_backward(x_ringbuf *src, size_t start, size_t size, x_ring
 
 size_t x_ringbuf_peek(x_ringbuf *rb, void *buf, size_t start, size_t size)
 {
-	assert(buf != NULL);
+	x_assert(buf != NULL);
 	x_ringbuf tmp = *rb;
 	x_ringbuf_read(&tmp, NULL, start);
 	return x_ringbuf_read(&tmp, buf, size);
@@ -186,7 +185,7 @@ size_t x_ringbuf_peek(x_ringbuf *rb, void *buf, size_t start, size_t size)
 
 size_t x_ringbuf_peek_backward(x_ringbuf *rb, void *buf, size_t start, size_t size)
 {
-	assert(buf != NULL);
+	x_assert(buf != NULL);
 	x_ringbuf tmp = *rb;
 	x_ringbuf_read_back(&tmp, NULL, start);
 	return x_ringbuf_read_back(&tmp, buf, size);

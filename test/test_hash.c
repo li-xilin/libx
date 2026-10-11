@@ -2,7 +2,7 @@
 #include "x/test.h"
 #include "x/printf.h"
 #include <unistd.h>
-#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 const char *str = "Some rise by sin, and some by virtue fall.";

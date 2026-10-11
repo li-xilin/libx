@@ -146,7 +146,7 @@ void *x_realloc(void *ptr, size_t size)
 	if (!ptr)
 		return x_malloc(NULL, size);
 	x_mblock *b = x_container_of(ptr, x_mblock, data);
-	assert(b->mset);
+	x_assert(b->mset);
 	x_mutex_lock(&b->mset->lock);
 	x_list_del(&b->link);
 	x_mutex_unlock(&b->mset->lock);
@@ -164,7 +164,7 @@ void x_free(void *ptr)
 	if (!ptr)
 		return;
 	x_mblock *b = x_container_of(ptr, x_mblock, data);
-	assert(b->mset);
+	x_assert(b->mset);
 	if ((uintptr_t)b->mset == DOUBLE_FREE_MAGIC) {
 		fprintf(stderr, "memory 0x%p maybe double freed", ptr);
 		return;
