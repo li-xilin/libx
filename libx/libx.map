@@ -41,6 +41,10 @@ global:
 	x_aligned_alloc_retry;
 	x_aligned_free;
 	x_ansi_to_ustr;
+	x_arena_alloc;
+	x_arena_init;
+	x_arena_init1;
+	x_arena_free;
 	x_base64_decode;
 	x_base64_encode;
 	x_bitmap_count;

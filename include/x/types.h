@@ -491,6 +491,16 @@ typedef struct x_objpool_st x_objpool;
 typedef struct x_slab_st x_slab;
 #endif
 
+#ifndef X_ARENA_DEFINED
+#define X_ARENA_DEFINED
+typedef struct x_arena_st x_arena;
+#endif
+
+#ifndef X_ARENA_PAGE_DEFINED
+#define X_ARENA_PAGE_DEFINED
+typedef struct x_arena_page_st x_arena_page;
+#endif
+
 #ifndef X_PROC_DEFINED
 #define X_PROC_DEFINED
 typedef struct x_proc_st x_proc;
