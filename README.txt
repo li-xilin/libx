@@ -1,24 +1,28 @@
 A lightweight cross-platform C extension library implemented in C99 based on POSIX and WIN32
 
+```
 Basic Headers:
     x/macros.h       Basic macro functions
     x/types.h        Type definitions
     x/errno.h        Error handling
-    x/assert.h       Static and dynamic assertions
     x/detect.h       Compilation environment detection macros
-    x/dump.h         Data structure visualization and dumping
     x/flowctl.h      Flow control statements
-    x/memory.h       Memory allocation management
     x/narg.h         Argument count calculation
     x/trick.h        Macro template functions
     x/time.h         High-precision time calculation
-    x/test.h         Unit testing
     x/twister.h      MT19937 randomizer
-    x/log.h          Logging
     x/compile.h      Compiler features
     x/hash.h         Hash algorithm
-    x/except.h       Exception handling
-    x/endian.h       Byte order detection
+    x/guard.h        Initialization exception handling
+    x/endian.h       Byte order detection and convertion
+    x/linkage.h      Provides macros for linkage
+
+Debug and observability:
+    x/assert.h       Static and dynamic assertions
+    x/dump.h         Data structure visualization and dumping
+    x/debug.h        Stack trace
+    x/test.h         Unit testing
+    x/log.h          Logging
 
 File and Path:
     x/path.h         File path operations
@@ -61,10 +65,15 @@ Data Container:
     x/uidpool.h      Allocate and release UID dynamically
     x/ringbuf.h      Fixed size ring buffer
     x/deqbuf.h       Dynamic double-ended queue buffer
+
+Memory allocation:
+    x/memory.h       Memory allocation management
 	x/objpool.h      Fixed size memory allocator
+	x/arena.h        Linear memory allocator
 
 Threading and Processes:
     x/cond.h         Condition variables
+    x/rwlock.h       Read-write lock
     x/mutex.h        Mutexes
     x/once.h         Atomic initialization
     x/thread.h       Thread operations
@@ -91,3 +100,4 @@ Cryptography：
     x/sha256.h       SHA256 digest algorithm
     x/md5.h          MD5 digest algorithm
     x/random.h       Generate security random sequence
+```

@@ -1,24 +1,28 @@
 使用C99实现的基于POSIX和WIN32的轻量级跨平台C扩展库
 
+```
 基础头文件：
     x/macros.h       基础宏函数
     x/types.h        类型定义
     x/errno.h        错误处理
-    x/assert.h       静态断言和动态断言
     x/detect.h       目标环境探测宏
-    x/dump.h         数据可视化转储
     x/flowctl.h      流程控制语句
-    x/memory.h       管理内存分配
     x/narg.h         参数数量计算
     x/trick.h        宏模板函数
     x/time.h         时间获取和计算
-    x/test.h         单元测试
     x/twister.h      MT19937随机数发生器
-    x/log.h          日志
     x/compile.h      编译器特性
     x/hash.h         多种散列算法
-    x/except.h       异常处理
-    x/endian.h       字节序探测
+    x/guard.h        初始化异常处理
+    x/endian.h       字节序探测和转换
+    x/linkage.h      提供链接相关宏
+
+调试和可观测：
+    x/assert.h       静态断言和动态断言
+    x/dump.h         数据可视化转储
+    x/debug.h        堆栈跟踪
+    x/test.h         单元测试
+    x/log.h          日志
 
 文件和目录：
     x/path.h         文件路径操作
@@ -61,7 +65,11 @@
     x/uidpool.h      动态分配和回收唯一标识
     x/ringbuf.h      环形缓冲区
     x/deqbuf.h       动态双端队列缓冲区
+
+内存分配：
+    x/memory.h       管理内存分配
     x/objpool.h      定长内存分配器
+    x/arena.h        线性内存分配器
 
 线程和进程：
     x/cond.h         条件变量
@@ -92,3 +100,4 @@
     x/sha256.h      SHA256摘要算法
     x/md5.h         MD5摘要算法
     x/random.h      生成安全的随机数
+```
