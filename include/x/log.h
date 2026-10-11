@@ -26,6 +26,7 @@
 #include "linkage.h"
 #include "assert.h"
 #include "types.h"
+#include "uchar.h"
 
 X_EXTERN_C_BEGIN
 
