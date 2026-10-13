@@ -18,7 +18,11 @@ endif
 if WINDOWS
 libx_la_LDFLAGS += -lshlwapi -ldbghelp
 else
+if ANDROID
+libx_la_LDFLAGS += -ldl
+else
 libx_la_LDFLAGS += -ldl -lpthread
+endif
 endif
 
 if ENABLE_NETWORK

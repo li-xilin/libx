@@ -4,7 +4,7 @@ AC_CANONICAL_HOST
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
-AC_PROG_CC
+AC_PROG_CC([clang gcc cc])
 AC_PROG_CC_C99
 AC_EXEEXT
 AC_ENABLE_SHARED
@@ -113,6 +113,11 @@ AC_DEFUN([AC_CHECK_LINUX_HEADERS], [
 AC_CHECK_STDC_HEADERS
 
 case "$host" in
+*-*-linux-android* | *-*-android*)
+    PLATFORM=android
+    LT_INIT
+    AC_CHECK_LINUX_HEADERS
+    ;;
 *-*-linux* | *-*-uclinux*)
 	PLATFORM=linux
 	LT_INIT
@@ -269,7 +274,8 @@ AS_IF([test "x$enable_debug" = "xyes"], [
 ])
 AC_SUBST([PC_DEBUG_CFLAGS])
 
-AM_CONDITIONAL([WINDOWS], [test "x$host_os" = xmingw32 || test "x$host_os" = xcygwin || test "x$host_os" = xmsys])
+AM_CONDITIONAL([WINDOWS], [test "x$PLATFORM" = xwin32])
+AM_CONDITIONAL([ANDROID], [test "x$PLATFORM" = xandroid])
 AM_COND_IF([WINDOWS],
 	regular_CFLAGS="$regular_CFLAGS -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN",
 	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600")

@@ -171,8 +171,10 @@ static void * __x_thread_proc(void *arg)
 	x_thread_fn *entry = info->func;
 	if (commit_thread_info(info))
 		return NULL;
+#ifndef X_OS_ANDROID
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+#endif
 	bool is_jmp = false;
 	int retval;
 	pthread_cleanup_push(thread_exit_unexpected, thread);
@@ -289,10 +291,12 @@ int x_thread_join(x_thread *t, int *ret_code)
 	if(err) {
 		return -1;
 	}
+#ifndef X_OS_ANDROID
 	if (retptr == PTHREAD_CANCELED) {
 		errno = ECANCELED;
 		retptr = (void *)-1;
 	}
+#endif
 
 	if (ret_code)
 		*ret_code = (uintptr_t)retptr;
@@ -335,9 +339,7 @@ void x_thread_kill(x_thread *t)
 #ifdef X_OS_WIN
 	(void)TerminateThread(t->hThread, -1);
 #else
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	(void)pthread_cancel(t->pthread);
+	x_thread_cancel(t);
 #endif
 }
 

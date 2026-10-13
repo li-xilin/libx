@@ -29,7 +29,7 @@ X_EXTERN_C_BEGIN
 
 struct x_tss_st
 {
-#if defined(X_OS_BSD4)
+#if defined(X_OS_BSD4) || defined(X_OS_ANDROID)
 	int32_t key;
 #else
 	uint32_t key;

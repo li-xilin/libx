@@ -127,9 +127,65 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 #include <dlfcn.h>
 #include <string.h>
 
+#if defined(X_OS_ANDROID)
+#include <unwind.h>
+
+struct BacktraceState {
+    void** current;
+    void** end;
+};
+
+static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg) {
+    struct BacktraceState* state = (struct BacktraceState*)arg;
+    uintptr_t pc = _Unwind_GetIP(context);
+    if (pc) {
+        if (state->current == state->end) {
+            return _URC_END_OF_STACK;
+        } else {
+            *state->current++ = (void*)pc;
+        }
+    }
+    return _URC_NO_REASON;
+}
+
+int _backtrace(void** buffer, int max) {
+    struct BacktraceState state = {buffer, buffer + max};
+    _Unwind_Backtrace(unwindCallback, &state);
+    return state.current - buffer;
+}
+
+char** _backtrace_symbols(void* const* buffer, int count) {
+    if (count <= 0 || buffer == NULL)
+        return NULL;
+    char** symbols = (char**)malloc(sizeof(char*) * count);
+    if (!symbols)
+        return NULL;
+    for (int i = 0; i < count; ++i) {
+        Dl_info info;
+        char buf[512];
+		if (dladdr(buffer[i], &info) && info.dli_sname)
+			snprintf(buf, sizeof(buf), "%p %s (%s)", buffer[i], info.dli_sname, info.dli_fname ? info.dli_fname : "?");
+		else
+            snprintf(buf, sizeof(buf), "%p <unknown>", buffer[i]);
+        symbols[i] = strdup(buf);
+        if (symbols[i] == NULL) {
+            for (int j = 0; j < i; ++j)
+                free(symbols[j]);
+            free(symbols);
+            return NULL;
+        }
+    }
+    return symbols;
+}
+
+#else
+#define _backtrace backtrace
+#define _backtrace_symbols backtrace_symbols
+#endif
+
 void x_trace_back(x_trace *trace)
 {
-	trace->depth = backtrace((void **)trace->frame, X_TRACE_MAX);
+	trace->depth = _backtrace((void **)trace->frame, X_TRACE_MAX);
 }
 
 int x_trace_depth(x_trace *trace)
@@ -161,7 +217,7 @@ origin_frame:
 
 void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 {
-	char** addr_tab = backtrace_symbols(trace->frame, trace->depth);
+	char** addr_tab = _backtrace_symbols(trace->frame, trace->depth);
 	for (int i = 0; i < trace->depth; i++) {
 		/* calculate load offset */
 		Dl_info info;
