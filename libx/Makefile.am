@@ -31,7 +31,7 @@ libx_la_LIBADD = -lpthread -ldl
 endif
 if OPENBSD
 libx_la_CFLAGS += -D_BSD_SOURCE
-libx_la_LIBADD = -lpthread
+libx_la_LIBADD = -lpthread -lexecinfo
 endif
 if NETBSD
 libx_la_CFLAGS += -D_NETBSD_SOURCE
