@@ -152,7 +152,7 @@ static x_sock poll_mux_next(x_sockmux *mux, short *res_flags)
 	if (!mux->nreadys)
 		return X_BADSOCK;
 	*res_flags = 0;
-	for (int i = mux->iterator; i < mux->max_events; i++) {
+	for (int i = mux->iterator; i < mux->n_events; i++) {
 		if (mux->fds[i].revents & (POLLIN | POLLPRI))
 			*res_flags |= X_EV_READ;
 		if (mux->fds[i].revents & POLLOUT)
