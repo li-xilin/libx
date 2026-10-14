@@ -23,6 +23,8 @@
 #if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
+
+#include "config.h"
 #include "x/debug.h"
 #include "x/memory.h"
 #include "x/strbuf.h"
@@ -94,93 +96,95 @@ void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 	}
 }
 
-#elif defined(X_OS_DARWIN)
+#else
 
-#include <execinfo.h>
 #include <unistd.h>
 #include <dlfcn.h>
 
-void x_trace_back(x_trace *trace)
-{
-	ret->depth = backtrace((void **)ret->frame, X_TRACE_MAX);
-}
-
-int x_trace_depth(x_trace *trace)
-{
-	return trace->depth;
-}
-
-void x_trace_dump(const x_trace *trace, x_strbuf *sb)
-{
-	char** messages = backtrace_symbols(&trace->frame, trace->depth);
-	if (!messages)
-		return;
-	for (int i = 0; i < trace->depth; ++i)
-		x_bprintf(sb, "%s\n", messages[i]);
-	free(messages);
-}
-
-#elif defined(X_OS_LINUX)
+#if defined(HAVE_EXECINFO_H) && (!defined(__ANDROID_API__) \
+		|| (defined(__ANDROID_API__) && __ANDROID_API__ >= 33))
 
 #include <execinfo.h>
-#include <unistd.h>
-#include <dlfcn.h>
-#include <string.h>
+#define _backtrace backtrace
+#define _backtrace_symbols backtrace_symbols
 
-#if defined(X_OS_ANDROID)
+#elif defined(HAVE__UNWIND_BACKTRACE)
+
 #include <unwind.h>
-
 struct BacktraceState {
-    void** current;
-    void** end;
+	void** current;
+	void** end;
 };
 
 static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg) {
-    struct BacktraceState* state = (struct BacktraceState*)arg;
-    uintptr_t pc = _Unwind_GetIP(context);
-    if (pc) {
-        if (state->current == state->end) {
-            return _URC_END_OF_STACK;
-        } else {
-            *state->current++ = (void*)pc;
-        }
-    }
-    return _URC_NO_REASON;
+	struct BacktraceState* state = (struct BacktraceState*)arg;
+	uintptr_t pc = _Unwind_GetIP(context);
+	if (pc) {
+		if (state->current == state->end) {
+			return _URC_END_OF_STACK;
+		} else {
+			*state->current++ = (void*)pc;
+		}
+	}
+	return _URC_NO_REASON;
 }
 
 int _backtrace(void** buffer, int max) {
-    struct BacktraceState state = {buffer, buffer + max};
-    _Unwind_Backtrace(unwindCallback, &state);
-    return state.current - buffer;
+	struct BacktraceState state = {buffer, buffer + max};
+	_Unwind_Backtrace(unwindCallback, &state);
+	return state.current - buffer;
 }
 
 char** _backtrace_symbols(void* const* buffer, int count) {
-    if (count <= 0 || buffer == NULL)
-        return NULL;
-    char** symbols = (char**)malloc(sizeof(char*) * count);
-    if (!symbols)
-        return NULL;
-    for (int i = 0; i < count; ++i) {
-        Dl_info info;
-        char buf[512];
-		if (dladdr(buffer[i], &info) && info.dli_sname)
-			snprintf(buf, sizeof(buf), "%p %s (%s)", buffer[i], info.dli_sname, info.dli_fname ? info.dli_fname : "?");
+	if (count <= 0 || buffer == NULL)
+		return NULL;
+	char** symbols = (char**)malloc(sizeof(char*) * count);
+	if (!symbols)
+		return NULL;
+	for (int i = 0; i < count; ++i) {
+		Dl_info info;
+		char buf[4096];
+		if (dladdr(buffer[i], &info)) {
+			long func_shift = -1;
+			if (info.dli_saddr)
+				func_shift = (long)((uintptr_t)buffer[i] - (uintptr_t)info.dli_saddr);
+			const char *symbol_name = "";
+			if (info.dli_sname)
+				symbol_name = info.dli_sname;
+			const char *file_name = "?";
+			if (info.dli_fname)
+				file_name = info.dli_fname;
+
+			if (func_shift > 0)
+				snprintf(buf, sizeof(buf), "%p <%s+0x%lx> at %s", buffer[i], symbol_name, func_shift, file_name);
+			else
+				snprintf(buf, sizeof(buf), "%p <%s+?> at %s", buffer[i], symbol_name, file_name);
+		}
 		else
-            snprintf(buf, sizeof(buf), "%p <unknown>", buffer[i]);
-        symbols[i] = strdup(buf);
-        if (symbols[i] == NULL) {
-            for (int j = 0; j < i; ++j)
-                free(symbols[j]);
-            free(symbols);
-            return NULL;
-        }
-    }
-    return symbols;
+			snprintf(buf, sizeof(buf), "%p <unknown> at ?", buffer[i]);
+		symbols[i] = strdup(buf);
+		if (symbols[i] == NULL) {
+			for (int j = 0; j < i; ++j)
+				free(symbols[j]);
+			free(symbols);
+			return NULL;
+		}
+	}
+	return symbols;
 }
 
 #else
-#define _backtrace backtrace
-#define _backtrace_symbols backtrace_symbols
+
+int _backtrace(void** buffer, int max)
+{
+	return 0;
+}
+
+char** _backtrace_symbols(void* const* buffer, int count)
+{
+	return NULL;
+}
+
 #endif
 
 void x_trace_back(x_trace *trace)
@@ -193,84 +197,45 @@ int x_trace_depth(x_trace *trace)
 	return trace->depth;
 }
 
-static void dump_frame(const char *frame_info, size_t name_len, uintptr_t address, x_strbuf *sb)
-{
-	char buf[PATH_MAX + 64];
-	FILE* fp = NULL;
-	snprintf(buf, 1024, "LANG=C addr2line -e '%.*s' -f -C -p %p 2>/dev/null", (int)name_len, frame_info, (void *)address);
-	fp = popen(buf, "r");
-	if (!fp)
-		goto origin_frame;
-
-	while (fgets(buf, sizeof(buf), fp)) {
-		x_bprintf(sb, "%.*s: ", (int)name_len, frame_info);
-		if (strstr(buf, "?? "))
-			x_bprintf(sb, "at +0x%x\n", (unsigned int)address);
-		else
-			x_bprintf(sb, "%s", buf);
-	}
-	pclose(fp);
-	return;
-origin_frame:
-	x_bprintf(sb, "%s at +0x%x\n", frame_info, (unsigned int)address);
-}
-
 void x_trace_dump(const x_trace *trace, x_strbuf *sb)
 {
-	char** addr_tab = _backtrace_symbols(trace->frame, trace->depth);
-	for (int i = 0; i < trace->depth; i++) {
-		/* calculate load offset */
+	char** messages = _backtrace_symbols(trace->frame, trace->depth);
+	if (!messages)
+		return;
+	for (int i = 0; i < trace->depth; ++i) {
 		Dl_info info;
-		dladdr(trace->frame[i], &info);
-		if (info.dli_fbase == (void*)0x400000)
-			info.dli_fbase = NULL; /* address from executable, so don't offset */
-
-		int name_length;
-		for (name_length = 0; addr_tab[i][name_length] && addr_tab[i][name_length] != '('; name_length++);
-		dump_frame(addr_tab[i], name_length, (uintptr_t)trace->frame[i] - (uintptr_t)info.dli_fbase, sb);
+		if (dladdr(trace->frame[i], &info)) {
+			long module_shift = (long)((uintptr_t)trace->frame[i] - 1 - (uintptr_t)info.dli_fbase);
+			x_bprintf(sb, "%s [+0x%lx]\n", messages[i], module_shift);
+		} else
+			x_bprintf(sb, "%s [+?]\n", messages[i]);
 	}
-	free(addr_tab);
-}
-
-#else
-
-void x_trace_back(x_trace *trace)
-{
-}
-
-int x_trace_depth(x_trace *trace)
-{
-	return 0;
-}
-
-void x_trace_dump(const x_trace *trace, x_strbuf *sb)
-{
-	x_bprintf(sb, "stacktrace not supported\n");
+	free(messages);
 }
 
 #endif
 
 inline static void char2hex(char dst[3], uint8_t src)
 {
-    uint8_t major = (src >> 4) , minor = src & 0x0F;
-    dst[0] = (major < 0xA) ? '0' + major : 'A' + (major - 0xA);
-    dst[1] = (minor < 0xA) ? '0' + minor : 'A' + (minor - 0xA);
-    dst[2] = ' ';
+	uint8_t major = (src >> 4) , minor = src & 0x0F;
+	dst[0] = (major < 0xA) ? '0' + major : 'A' + (major - 0xA);
+	dst[1] = (minor < 0xA) ? '0' + minor : 'A' + (minor - 0xA);
+	dst[2] = ' ';
 }
 
 static char *hexlify(const void *p, size_t size, char *out)
 {
-    int i;
-    for (i = 0; i < size; i++)
-        char2hex(out + i * 3, ((uint8_t *)p)[i]);
-    for (i = 0; i < size; i++) {
-        if (((char *)p)[i] > 0x20 && ((char *)p)[i] <= 0x7F)
-            out[size * 3 + i] = ((char *)p)[i];
-        else
-            out[size * 3 + i] = '.';
-    }
-    out[size * 4] = '\0';
-    return out;
+	int i;
+	for (i = 0; i < size; i++)
+		char2hex(out + i * 3, ((uint8_t *)p)[i]);
+	for (i = 0; i < size; i++) {
+		if (((char *)p)[i] > 0x20 && ((char *)p)[i] <= 0x7F)
+			out[size * 3 + i] = ((char *)p)[i];
+		else
+			out[size * 3 + i] = '.';
+	}
+	out[size * 4] = '\0';
+	return out;
 }
 
 void __x_dump_memory(const char *name, const void *p, size_t size, x_strbuf *sb)

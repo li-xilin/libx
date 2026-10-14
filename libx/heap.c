@@ -26,8 +26,8 @@
 #include "x/string.h"
 #include <stdlib.h>
 
-#define PAGE_SIZE  4096
-#define ENTRIES_PER_PAGE(h) (PAGE_SIZE / sizeof(x_ranode *))
+#define X_PAGE_SIZE  4096
+#define ENTRIES_PER_PAGE(h) (X_PAGE_SIZE / sizeof(x_ranode *))
 #define LEFT_CHILD(i)   (((i)<<1)+1)
 #define RIGHT_CHILD(i)  (((i)<<1)+2)
 #define PARENT_ENTRY(i) (((i)-1)>>1)
@@ -62,7 +62,7 @@ void x_heap_push(x_heap* h, x_ranode *p)
 	int mx_entries = h->page_cnt * ENTRIES_PER_PAGE(h);
 	if (h->entry_cnt + 1 > mx_entries) {
 		int new_npages = h->page_cnt ? h->page_cnt * 2 : 1;
-		x_ranode **new_table = x_realloc(h->table, new_npages * PAGE_SIZE);
+		x_ranode **new_table = x_realloc(h->table, new_npages * X_PAGE_SIZE);
 		h->table = new_table;
 		h->page_cnt = new_npages;
 	}
@@ -88,7 +88,7 @@ static void heap_shrink(x_heap* h)
 	int used_pages = h->entry_cnt / ENTRIES_PER_PAGE(h) + ((h->entry_cnt % ENTRIES_PER_PAGE(h) > 0) ? 1 : 0);
 	if (h->page_cnt / 2 > used_pages + 1 && h->page_cnt / 2 >= h->min_page_cnt) {
 		int new_size = h->page_cnt / 2;
-		h->table = x_realloc(h->table, new_size * PAGE_SIZE);
+		h->table = x_realloc(h->table, new_size * X_PAGE_SIZE);
 		h->page_cnt = new_size;
 	}
 }

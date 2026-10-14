@@ -4,8 +4,9 @@
 #include <x/tcolor.h>
 #include <stdio.h>
 #include <signal.h>
+#include <stdlib.h>
 
-static void signal_handler(int sig)
+void bar(void)
 {
 	x_trace t;
 	x_trace_back(&t);
@@ -21,12 +22,7 @@ static void signal_handler(int sig)
 		x_fprintf(stderr, x_u("-> %S\n"), line);
 	}
 	x_strbuf_free(&sb);
-}
-
-void bar(void)
-{
-	int *p = NULL;
-	*p = 1;
+	exit(1);
 }
 
 void foo(void)
@@ -37,8 +33,6 @@ void foo(void)
 int main(void)
 {
 	x_setmode_utf8(stderr);
-	signal(SIGABRT, signal_handler);
-	signal(SIGSEGV, signal_handler);
 	foo();
 }
 

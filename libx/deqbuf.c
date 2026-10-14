@@ -104,6 +104,7 @@ static inline void *locate_front_segment(x_deqbuf *deq, size_t shift)
 	return seg;
 }
 
+#if 0
 static inline void *locate_back_segment(x_deqbuf *deq, size_t shift)
 {
 	void *seg;
@@ -114,6 +115,7 @@ static inline void *locate_back_segment(x_deqbuf *deq, size_t shift)
 		return NULL;
 	return seg;
 }
+#endif
 
 
 static inline void *add_back_segment(x_deqbuf *deq)
@@ -513,7 +515,7 @@ size_t slice_walk_backward(x_deqbuf *deq, size_t start, slice_handler_fn *handle
 		seg_end = seg_cnt - 1 - (start - tail_size) / deq->seg_size;
 		seg_rear = deq->seg_size - (start - tail_size) % deq->seg_size;
 	}
-	for (size_t i = seg_end - 1; i != ~0; i--) {
+	for (size_t i = seg_end - 1; i != (size_t)-1; i--) {
 		size_t rear = i == seg_end - 1 ? seg_rear : deq->seg_size;
 		size_t front = i == 0 ? deq->front : 0;
 		size_t slice_size = rear - front;

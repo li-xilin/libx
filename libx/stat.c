@@ -20,18 +20,15 @@
  * SOFTWARE.
  */
 
-#ifdef __linux__
-#ifndef _GNU_SOURCE
+#if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
-#include <sys/syscall.h>
-#include <unistd.h>
-#include <fcntl.h>
-#endif
 
+#include "config.h"
 #include "x/stat.h"
 #include "x/detect.h"
 #include "x/uchar.h"
+#include "x/errno.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -157,9 +154,11 @@ out:
 }
 
 #else
+#  include <sys/syscall.h>
+#  include <unistd.h>
 #  include <sys/stat.h>
-#  if defined(__linux__) && defined(SYS_statx)
-#    if !defined(STATX_TYPE)
+#  if defined(X_OS_LINUX)
+#    if defined(HAVE_LINUX_STAT_H)
 #      include <linux/stat.h>
 #    endif
 #    include <fcntl.h>
@@ -174,18 +173,21 @@ static int get_file_creation_time(const char *filename, const struct stat *st, t
 #elif defined(st_birthtime)
 	*creat_time = st->st_birthtime;
 	return 0;
-#elif defined(__linux__) && defined(SYS_statx)
+#elif defined(X_OS_LINUX) && defined(HAVE_LINUX_STAT_H) && defined(SYS_statx)
 	struct statx stx;
-	if (syscall(SYS_statx, AT_FDCWD, filename, 0,
+#define _AT_FDCWD (-100)
+	if (syscall(SYS_statx, _AT_FDCWD, filename, 0,
 				STATX_BTIME, &stx) == 0) {
 		if (stx.stx_btime.tv_sec != 0) {
+			errno = X_EOPNOTSUPP;
 			*creat_time = stx.stx_btime.tv_sec;
 			return 0;
 		}
 	}
 	return -1;
 #else
-   return -1;
+	errno = X_EOPNOTSUPP;
+	return -1;
 #endif
 }
 

@@ -358,13 +358,6 @@ static inline void append_termination_with_gadget(output_gadget_t* gadget)
 	}
 }
 
-// We can't use putchar_ as is, since our output gadget
-// only takes pointers to functions with an extra argument
-static inline int putchar_wrapper(x_uchar c, void* unused)
-{
-	return x_putchar(c);
-}
-
 static inline output_gadget_t buffer_gadget(x_uchar* buffer, size_t buffer_size)
 {
 	size_t usable_buffer_size = (buffer_size > PRINTF_MAX_POSSIBLE_BUFFER_SIZE) ?
@@ -400,13 +393,6 @@ static inline output_gadget_t function_gadget(int (*function)(x_uchar, void*), v
 static inline size_t ustrnlen_s_(const x_uchar* str, size_t maxsize)
 {
 	const x_uchar* s;
-	for (s = str; *s && maxsize--; ++s);
-	return (size_t)(s - str);
-}
-
-static inline size_t strnlen_s_(const char* str, size_t maxsize)
-{
-	const char* s;
 	for (s = str; *s && maxsize--; ++s);
 	return (size_t)(s - str);
 }

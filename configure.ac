@@ -4,7 +4,7 @@ AC_CANONICAL_HOST
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
-AC_PROG_CC([clang gcc cc])
+AC_PROG_CC([gcc clang cc])
 AC_PROG_CC_C99
 AC_EXEEXT
 AC_ENABLE_SHARED
@@ -18,6 +18,115 @@ LT_INIT
 AC_DEFUN([AC_CHECK_HEADERS_ERROR], [
 	AC_CHECK_HEADERS(m4_normalize([$1]), [], [AC_MSG_ERROR([required header not found. ])], [$2])
 ])
+
+
+case "$host" in
+*-*-linux-android* | *-*-android*)
+    PLATFORM=android
+    LT_INIT
+    ;;
+*-*-linux* | *-*-uclinux*)
+	PLATFORM=linux
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
+	LT_INIT
+	;;
+*-*-mingw* | *-*-cygwin*)
+	PLATFORM=win32
+	AC_CHECK_TOOL([DLLTOOL], [dlltool], [])
+	lt_cv_sys_path_separator=':'
+	lt_cv_to_host_file_cmd=func_convert_file_noop
+	lt_cv_to_tool_file_cmd=func_convert_file_noop
+	regular_CFLAGS="$regular_CFLAG -static-libgcc -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN"
+	LT_INIT([win32-dll pic-only])
+	;;
+*-*-freebsd* | *-*-kfreebsd*-gnu)
+	PLATFORM=freebsd
+	LT_INIT
+	LDFLAGS="-lexecinfo $LDFLAGS"
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
+	;;
+*-*-darwin*)
+	PLATFORM=darwin
+	LT_INIT([dlopen])
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_DARWIN_C_SOURCE "
+	;;
+*-*-openbsd*)
+	PLATFORM=openbsd
+	LT_INIT
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
+	;;
+*-*-netbsd*)
+	PLATFORM=netbsd
+	LT_INIT
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_NETBSD_SOURCE"
+	;;
+*-*-aix*)
+	PLATFORM=aix
+	LT_INIT
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_BSD"
+	;;
+*-*-gnu* | *-*-*bsd* | *-*-sysv*)
+	PLATFORM=unix
+	LT_INIT
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
+	;;
+*)
+	AC_MSG_WARN([unsupported platform: $host, trying generic configuration])
+	PLATFORM=generic
+	LT_INIT
+	;;
+esac
+
+AC_MSG_CHECKING([whether the linker supports version scripts])
+save_LIBS="$LIBS"
+cat > conftest.map <<EOF
+VERS_1.0 {
+    global:
+        some_function;
+    local:
+        *;
+};
+EOF
+LIBS="$save_LIBS -Wl,--version-script=conftest.map"
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([], [])], # 一个空的测试程序
+    [ac_cv_have_ld_version_script=yes],
+    [ac_cv_have_ld_version_script=no]
+)
+LIBS="$save_LIBS"
+rm -f conftest.map
+AC_MSG_RESULT([$ac_cv_have_ld_version_script])
+AM_CONDITIONAL([HAVE_LD_VERSION_SCRIPT], [test "x$ac_cv_have_ld_version_script" = "xyes"])
+
+AC_ARG_ENABLE([network], [AS_HELP_STRING([--disable-network], [Disable network functions])],
+			  [disable_network=yes],
+			  [disable_network=no])
+AM_CONDITIONAL([ENABLE_NETWORK], [test "x$disable_network" = "xno"])
+if test "x$disable_network" = "xno"; then
+	if test "x$PLATFORM" = xwin32; then
+		AC_CHECK_HEADERS_ERROR([
+			winsock2.h
+			ws2tcpip.h
+		])
+		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [true])
+		AM_CONDITIONAL([HAVE_POLL_H], [false])
+	else
+		AC_CHECK_HEADERS([sys/epoll.h kqueue.h poll.h])
+		if test "x$ac_cv_header_sys_epoll_h" = "xno" -a "x$ac_cv_header_poll_h" = "xno"; then
+			AC_MSG_ERROR([polling header not found ])
+		fi
+		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [test "x$ac_cv_header_sys_epoll_h" = "xyes"])
+		AM_CONDITIONAL([HAVE_POLL_H], [test "x$ac_cv_header_poll_h" = "xyes"])
+	fi
+else
+	AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [false])
+	AM_CONDITIONAL([HAVE_POLL_H], [false])
+fi
+
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debug build (default: no)])],
+			  [enable_debug=$enableval],
+			  [enable_debug=no])
+regular_CFLAGS="$regular_CFLAGS -std=c99 -Wstrict-prototypes -Wformat=2 -pipe"
 
 AC_DEFUN([AC_CHECK_POSIX_HEADERS], [
 	AC_CHECK_HEADERS_ERROR([
@@ -103,116 +212,47 @@ AC_DEFUN([AC_CHECK_STDC_HEADERS], [
 	])
 ])
 
+AC_DEFUN([AC_CHECK_LINUX_HEADERS], [
+	AC_CHECK_HEADERS([
+		linux/stat.h
+		linux/limits.h
+	])
+])
+
+AC_DEFUN([AC_CHECK_UNIX_HEADERS], [
+	AC_CHECK_HEADERS([
+		execinfo.h
+	])
+])
+
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="$regular_CFLAGS $CFLAGS"
 AC_CHECK_STDC_HEADERS
-
-case "$host" in
-*-*-linux-android* | *-*-android*)
-    PLATFORM=android
-    LT_INIT
-    ;;
-*-*-linux* | *-*-uclinux*)
-	PLATFORM=linux
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
-	LT_INIT
-	;;
-*-*-mingw* | *-*-cygwin*)
-	PLATFORM=win32
-	AC_CHECK_TOOL([DLLTOOL], [dlltool], [])
-	lt_cv_sys_path_separator=':'
-	lt_cv_to_host_file_cmd=func_convert_file_noop
-	lt_cv_to_tool_file_cmd=func_convert_file_noop
-	regular_CFLAGS="$regular_CFLAG -static-libgcc -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN"
-	LT_INIT([win32-dll pic-only])
-	AC_CHECK_WIN32_HEADERS
-	;;
-*-*-freebsd* | *-*-kfreebsd*-gnu)
-	PLATFORM=freebsd
-	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
-	;;
-*-*-darwin*)
-	PLATFORM=darwin
-	LT_INIT([dlopen])
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_DARWIN_C_SOURCE "
-	;;
-*-*-openbsd*)
-	PLATFORM=openbsd
-	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
-	;;
-*-*-netbsd*)
-	PLATFORM=netbsd
-	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_NETBSD_SOURCE"
-	;;
-*-*-aix*)
-	PLATFORM=aix
-	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_BSD"
-	;;
-*-*-gnu* | *-*-*bsd* | *-*-sysv*)
-	PLATFORM=unix
-	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
-	;;
-*)
-	AC_MSG_WARN([unsupported platform: $host, trying generic configuration])
-	PLATFORM=generic
-	LT_INIT
-	;;
-esac
-
 if test "x$PLATFORM" = "xwin32"; then
 	AC_CHECK_WIN32_HEADERS
 else
-	AC_CHECK_POSIX_HEADERS
-fi
-
-AC_MSG_CHECKING([whether the linker supports version scripts])
-save_LIBS="$LIBS"
-cat > conftest.map <<EOF
-VERS_1.0 {
-    global:
-        some_function;
-    local:
-        *;
-};
-EOF
-LIBS="$save_LIBS -Wl,--version-script=conftest.map"
-AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([], [])], # 一个空的测试程序
-    [ac_cv_have_ld_version_script=yes],
-    [ac_cv_have_ld_version_script=no]
-)
-LIBS="$save_LIBS"
-rm -f conftest.map
-AC_MSG_RESULT([$ac_cv_have_ld_version_script])
-AM_CONDITIONAL([HAVE_LD_VERSION_SCRIPT], [test "x$ac_cv_have_ld_version_script" = "xyes"])
-
-AC_ARG_ENABLE([network], [AS_HELP_STRING([--disable-network], [Disable network functions])],
-			  [disable_network=yes],
-			  [disable_network=no])
-AM_CONDITIONAL([ENABLE_NETWORK], [test "x$disable_network" = "xno"])
-if test "x$disable_network" = "xno"; then
-	if test "x$PLATFORM" = xwin32; then
-		AC_CHECK_HEADERS_ERROR([
-			winsock2.h
-			ws2tcpip.h
-		])
-		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [true])
-		AM_CONDITIONAL([HAVE_POLL_H], [false])
-	else
-		AC_CHECK_HEADERS([sys/epoll.h kqueue.h poll.h])
-		if test "x$ac_cv_header_sys_epoll_h" = "xno" -a "x$ac_cv_header_poll_h" = "xno"; then
-			AC_MSG_ERROR([polling header not found ])
-		fi
-		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [test "x$ac_cv_header_sys_epoll_h" = "xyes"])
-		AM_CONDITIONAL([HAVE_POLL_H], [test "x$ac_cv_header_poll_h" = "xyes"])
+	if test "x$PLATFORM" = "xlinux"; then
+		AC_CHECK_LINUX_HEADERS
 	fi
-else
-	AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [false])
-	AM_CONDITIONAL([HAVE_POLL_H], [false])
+	AC_CHECK_POSIX_HEADERS
+	AC_CHECK_UNIX_HEADERS
 fi
+AC_MSG_CHECKING([for _Unwind_Backtrace])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+	#include <unwind.h>
+]], [[
+	extern int _Unwind_Backtrace(void *, void *);
+	_Unwind_Backtrace(NULL, NULL);
+]])], [
+	AC_MSG_RESULT([yes])
+	AC_DEFINE([HAVE__UNWIND_BACKTRACE], [1], ["Define if _Unwind_Backtrace is available"])
+], [
+	AC_MSG_RESULT([no])
+])
+AC_MSG_RESULT([yes])
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
 
 AC_ARG_ENABLE([edit], [AS_HELP_STRING([--disable-edit], [Disable readline/edit functions])],
 			  [disable_edit=yes],
@@ -241,11 +281,6 @@ AM_CONDITIONAL([ENABLE_CHARMAP], [test "x$disable_charmap" = "xno"])
 
 AH_TEMPLATE([X_NDEBUG],
 	[Define to 1 when building without debug support, so unsafe/debug-only code is compiled out.])
-
-AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debug build (default: no)])],
-			  [enable_debug=$enableval],
-			  [enable_debug=no])
-regular_CFLAGS="$regular_CFLAGS -std=c99 -Wstrict-prototypes -Wformat=2 -pipe"
 
 AS_IF([test "x$enable_debug" = "xyes"], [
 	PC_DEBUG_CFLAGS="-DX_DEBUG=1"

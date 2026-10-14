@@ -171,7 +171,7 @@ void ut_runner_remove(ut_runner *r, ut_suite* s)
 
 void ut_runner_run(ut_runner *r, ut_process_f *process_cb)
 {
-	int case_tested = 0, case_pass = 0;
+	int case_tested = 0;
 	ut_output_fn *output_cb = r->output_cb ? r->output_cb : ut_case_dump_rope;
 	r->pass = 0;
 	r->fail = 0;
@@ -199,7 +199,6 @@ void ut_runner_run(ut_runner *r, ut_process_f *process_cb)
 				case 0:
 					c->proc(r);
 					c->state = UT_CS_PASS;
-					case_pass ++;
 					break;
 				case 1:
 					c->state = UT_CS_FAIL;

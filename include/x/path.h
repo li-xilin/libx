@@ -34,9 +34,7 @@
 #  define X_PATH_MAX MAX_PATH + 1
 #  define X_PATHNAME_MAX 260
 #else
-#  if defined(X_OS_LINUX)
-#    include <linux/limits.h>
-#  elif defined(X_OS_FREEBSD)
+#  if defined(X_OS_FREEBSD)
 #    include <sys/syslimits.h>
 #  else
 #    ifndef PATH_MAX
@@ -48,7 +46,7 @@
 #    endif
 #  endif
 #  define X_PATH_SEP_CHAR L'/'
-#  define X_PATH_SEP x_u("/")
+#  define X_PATH_SEP "/"
 #  define X_PATH_MAX PATH_MAX
 #  define X_PATHNAME_MAX NAME_MAX
 #endif
