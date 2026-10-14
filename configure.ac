@@ -53,12 +53,13 @@ case "$host" in
 *-*-openbsd*)
 	PLATFORM=openbsd
 	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
+	LDFLAGS="-lexecinfo $LDFLAGS"
+	regular_CFLAGS="$regular_CFLAGS -D_BSD_SOURCE"
 	;;
 *-*-netbsd*)
 	PLATFORM=netbsd
 	LT_INIT
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_NETBSD_SOURCE"
+	regular_CFLAGS="$regular_CFLAGS -D_NETBSD_SOURCE"
 	;;
 *-*-aix*)
 	PLATFORM=aix
@@ -292,6 +293,7 @@ AC_SUBST([PC_DEBUG_CFLAGS])
 
 AM_CONDITIONAL([WINDOWS], [test "x$PLATFORM" = xwin32])
 AM_CONDITIONAL([ANDROID], [test "x$PLATFORM" = xandroid])
+AM_CONDITIONAL([OPENBSD], [test "x$PLATFORM" = xopenbsd])
 
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([LT_VERSION_INFO], ["1:0:0"])

@@ -524,6 +524,8 @@ int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
 	};
 	if (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &keepalive, sizeof(keepalive), NULL, 0, NULL, NULL, NULL) == SOCKET_ERROR)
 		goto fail;
+#elif defined(X_OS_OPENBSD)
+	// Do nothing. Global setting using sysctl
 #else
 	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &idle_sec, sizeof idle_sec))
 		goto fail;
@@ -539,6 +541,7 @@ int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
 
 	return 0;
 	int saved_err;
+	goto fail;
 fail:
 	saved_err = errno;
 	(void)setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&old_keep_alive, sizeof old_keep_alive);

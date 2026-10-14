@@ -21,7 +21,11 @@ else
 if ANDROID
 libx_la_LDFLAGS += -ldl
 else
+if OPENBSD
+libx_la_LDFLAGS += -lpthread
+else
 libx_la_LDFLAGS += -ldl -lpthread
+endif
 endif
 endif
 
