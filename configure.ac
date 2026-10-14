@@ -103,25 +103,17 @@ AC_DEFUN([AC_CHECK_STDC_HEADERS], [
 	])
 ])
 
-AC_DEFUN([AC_CHECK_LINUX_HEADERS], [
-	AC_CHECK_HEADERS_ERROR([
-		sys/syscall.h
-		endian.h
-	])
-])
-
 AC_CHECK_STDC_HEADERS
 
 case "$host" in
 *-*-linux-android* | *-*-android*)
     PLATFORM=android
     LT_INIT
-    AC_CHECK_LINUX_HEADERS
     ;;
 *-*-linux* | *-*-uclinux*)
 	PLATFORM=linux
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
 	LT_INIT
-	AC_CHECK_LINUX_HEADERS
 	;;
 *-*-mingw* | *-*-cygwin*)
 	PLATFORM=win32
@@ -129,63 +121,52 @@ case "$host" in
 	lt_cv_sys_path_separator=':'
 	lt_cv_to_host_file_cmd=func_convert_file_noop
 	lt_cv_to_tool_file_cmd=func_convert_file_noop
-	CFLAGS="$CFLAGS -static-libgcc"
+	regular_CFLAGS="$regular_CFLAG -static-libgcc -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN"
 	LT_INIT([win32-dll pic-only])
 	AC_CHECK_WIN32_HEADERS
 	;;
 *-*-freebsd* | *-*-kfreebsd*-gnu)
 	PLATFORM=freebsd
 	LT_INIT
-	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-	regular_CFLAGS="$regular_CFLAGS -I/usr/local/include -D__BSD_VISIBLE"
-	AC_CHECK_POSIX_HEADERS
-	AC_CHECK_LINUX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
 	;;
 *-*-darwin*)
 	PLATFORM=darwin
 	LT_INIT([dlopen])
-	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_DARWIN_C_SOURCE "
 	;;
 *-*-openbsd*)
 	PLATFORM=openbsd
 	LT_INIT
-	AC_CHECK_POSIX_HEADERS
-	regular_CFLAGS="$regular_CFLAGS -I/usr/local/include -D__BSD_VISIBLE"
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D__BSD_VISIBLE"
 	;;
 *-*-netbsd*)
 	PLATFORM=netbsd
 	LT_INIT
-	AC_CHECK_POSIX_HEADERS
-	regular_CFLAGS="$regular_CFLAGS -D__BSD_VISIBLE"
-	;;
-*-*-solaris* | *-*-sunos*)
-	PLATFORM=solaris
-	LT_INIT
-	LIBS="$LIBS -lsocket -lnsl"
-	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_NETBSD_SOURCE"
 	;;
 *-*-aix*)
 	PLATFORM=aix
 	LT_INIT
-	AC_CHECK_POSIX_HEADERS
-	;;
-*-*-hpux*)
-	PLATFORM=hpux
-	LT_INIT
-	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600 -D_BSD"
 	;;
 *-*-gnu* | *-*-*bsd* | *-*-sysv*)
 	PLATFORM=unix
 	LT_INIT
-	AC_CHECK_POSIX_HEADERS
+	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600"
 	;;
 *)
 	AC_MSG_WARN([unsupported platform: $host, trying generic configuration])
 	PLATFORM=generic
 	LT_INIT
-	AC_CHECK_POSIX_HEADERS
 	;;
 esac
+
+if test "x$PLATFORM" = "xwin32"; then
+	AC_CHECK_WIN32_HEADERS
+else
+	AC_CHECK_POSIX_HEADERS
+fi
 
 AC_MSG_CHECKING([whether the linker supports version scripts])
 save_LIBS="$LIBS"
@@ -276,9 +257,6 @@ AC_SUBST([PC_DEBUG_CFLAGS])
 
 AM_CONDITIONAL([WINDOWS], [test "x$PLATFORM" = xwin32])
 AM_CONDITIONAL([ANDROID], [test "x$PLATFORM" = xandroid])
-AM_COND_IF([WINDOWS],
-	regular_CFLAGS="$regular_CFLAGS -D_WIN32_WINNT=0x0600 -DWIN32_LEAN_AND_MEAN",
-	regular_CFLAGS="$regular_CFLAGS -D_XOPEN_SOURCE=600")
 
 AC_SUBST([regular_CFLAGS])
 AC_SUBST([LT_VERSION_INFO], ["1:0:0"])
