@@ -214,9 +214,9 @@ AH_TEMPLATE([X_NDEBUG],
 
 AS_IF([test "x$enable_debug" = "xyes"], [
 	PC_DEBUG_CFLAGS="-DX_DEBUG=1"
-	CFLAGS="-Wpedantic -g3 -O0 -Wall -Werror $PC_DEBUG_CFLAGS $CFLAGS"
+	CFLAGS="-Wpedantic -Wall -Werror $PC_DEBUG_CFLAGS $CFLAGS -g3 -O0"
 ], [
-	CFLAGS="-O2 -DNDEBUG $CFLAGS "
+	CFLAGS="-DNDEBUG $CFLAGS"
 ])
 AC_SUBST([WARN_CFLAGS])
 AC_SUBST([PC_DEBUG_CFLAGS])
