@@ -128,7 +128,7 @@ $ make
 - 各种容器的 Sanitizer
 - 日志
 
-也可以通过查看 [HEADERS.md](https://github.com/li-xilin/libx/HEADER_zh.md) 了解各个头文件的详细描述。
+也可以通过查看 [HEADERS.md](./HEADER_zh.md) 了解各个头文件的详细描述。
 
 ## 关于项目
 
