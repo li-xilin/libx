@@ -9,26 +9,26 @@ static x_reactor r;
 
 static void timeout(x_event *e)
 {
-	fprintf(stderr, "timer: tid = %ld\n", x_thread_native_id());
+	fprintf(stderr, "timer: tid = %ld\n", (unsigned long)x_thread_native_id());
 }
 
 static int invoke_handler_sync(void *data)
 {
 	fprintf(stderr, "invoke sync: data = %d, tid = %ld\n",
-			(int)(uintptr_t)data, x_thread_native_id());
+			(int)(uintptr_t)data, (unsigned long)x_thread_native_id());
 	return 0;
 }
 
 static int invoke_handler_async(void *data)
 {
 	fprintf(stderr, "invoke asyn: data = %d, tid = %ld\n",
-			(int)(uintptr_t)data, x_thread_native_id());
+			(int)(uintptr_t)data, (unsigned long)x_thread_native_id());
 	return 0;
 }
 
 int thread(void)
 {
-	fprintf(stderr, "invoke caller: tid = %ld\n", x_thread_native_id());
+	fprintf(stderr, "invoke caller: tid = %ld\n", (unsigned long)x_thread_native_id());
 	x_thread_sleep(500);
 	while (1) {
 		x_thread_sleep(1000);
