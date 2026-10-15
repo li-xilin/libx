@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 	ADD_SUITE(hmap_test);
 	ADD_SUITE(objpool_test);
 	ADD_SUITE(bitmap_test);
+	ADD_SUITE(array_test);
 
 	ut_runner_run(&r, process);
 }

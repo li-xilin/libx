@@ -16,6 +16,7 @@ xinclude_HEADERS = \
 	x/heap.h \
 	x/ini.h \
 	x/list.h \
+	x/array.h \
 	x/log.h \
 	x/memory.h \
 	x/arena.h \

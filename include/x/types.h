@@ -138,6 +138,11 @@ typedef struct x_slink_st x_slink;
 typedef struct x_slist_st x_slist;
 #endif
 
+#ifndef X_ARRAY_DEFINED
+#define X_ARRAY_DEFINED
+typedef struct x_array_st x_array;
+#endif
+
 #ifndef X_INI_DEFINED
 #define X_INI_DEFINED
 typedef struct x_ini_st x_ini;
