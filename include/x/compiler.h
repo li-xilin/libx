@@ -44,8 +44,6 @@
 			#define X_THREAD_LOCAL __thread
 		#elif defined(X_CC_MSVC)
 			#define X_THREAD_LOCAL __declspec(thread)
-		#else
-			#error "C++ compiler does not support thread-local storage"
 		#endif
 	#endif
 #else
@@ -60,8 +58,6 @@
 			#define X_THREAD_LOCAL __thread
 		#elif defined(X_CC_IBM) && defined(__IBMCPP__) && __IBMCPP__ >= 1210
 			#define X_THREAD_LOCAL __declspec(thread)
-		#else
-			#error "C compiler does not support thread-local storage"
 		#endif
 	#endif
 #endif

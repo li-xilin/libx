@@ -158,7 +158,7 @@ out:
 #  include <unistd.h>
 #  include <sys/stat.h>
 #  if defined(X_OS_LINUX)
-#    if defined(HAVE_LINUX_STAT_H)
+#    if defined(HAVE_LINUX_STAT_H) && !defined(X_CC_TCC)
 #      include <linux/stat.h>
 #    endif
 #    include <fcntl.h>
