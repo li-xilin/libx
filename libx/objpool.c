@@ -268,28 +268,33 @@ static void slab_props(FILE *out, const x_objpool *pool)
 	x_assert(pool != NULL);
 	size_t item_count = slab_item_count(pool);
 	fprintf(out,
-			"%18s: %8zu\n"
-			"%18s: %8zu\n"
-			"%18s: %8zu = (%zu offset) + (%zu item_count) * (%zu item_size)\n"
-			"%18s: %8zu = (%zu slab_size) - (%zu total)\n"
-			"%18s: %8zu = %zu * (%zu pagesize)\n"
-			"%18s: %8zu = (%zu alloc) / (%zu slab_size)\n",
+			"%18s: %8lu\n"
+			"%18s: %8lu\n"
+			"%18s: %8lu = (%lu offset) + (%lu item_count) * (%lu item_size)\n"
+			"%18s: %8lu = (%lu slab_size) - (%lu total)\n"
+			"%18s: %8lu = %lu * (%lu pagesize)\n"
+			"%18s: %8lu = (%lu alloc) / (%lu slab_size)\n",
 		"pagesize",
-			s_pagesize,
+			(unsigned long)s_pagesize,
 		"slab_size",
-			pool->slab_size, 
+			(unsigned long)pool->slab_size,
 		"total",
-			offsetof(x_slab, data) + item_count * pool->item_size,
-			offsetof(x_slab, data), item_count, pool->item_size,
+			(unsigned long)(offsetof(x_slab, data) + item_count * pool->item_size),
+			(unsigned long)offsetof(x_slab, data),
+			(unsigned long)item_count,
+			(unsigned long)pool->item_size,
 		"waste per slab",
-			pool->slab_size - offsetof(x_slab, data) - item_count * pool->item_size, pool->slab_size,
-			offsetof(x_slab, data) + item_count * pool->item_size,
+			(unsigned long)(pool->slab_size - offsetof(x_slab, data) - item_count * pool->item_size),
+			(unsigned long)pool->slab_size,
+			(unsigned long)(offsetof(x_slab, data) + item_count * pool->item_size),
 		"size per alloc",
-			pool->block_size, pool->block_size / s_pagesize,
-			s_pagesize,
+			(unsigned long)pool->block_size,
+			(unsigned long)pool->block_size / s_pagesize,
+			(unsigned long)s_pagesize,
 		"slabs per alloc",
-			pool->block_size / pool->slab_size, pool->block_size,
-			pool->slab_size);
+			(unsigned long)(pool->block_size / pool->slab_size),
+			(unsigned long)pool->block_size,
+			(unsigned long)pool->slab_size);
 }
 
 void x_objpool_show(const x_objpool *pool, void *out)

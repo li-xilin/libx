@@ -397,6 +397,13 @@ static inline size_t ustrnlen_s_(const x_uchar* str, size_t maxsize)
 	return (size_t)(s - str);
 }
 
+#if defined(X_OS_WIN)
+static inline size_t strnlen_s_(const char* str, size_t maxsize)
+{
+	return strlen(str);
+}
+#endif
+
 // internal test if x_uchar is a digit (0-9)
 // @return true if x_uchar is a digit
 static inline bool is_digit_(x_uchar ch)
