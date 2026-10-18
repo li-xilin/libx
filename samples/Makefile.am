@@ -18,11 +18,8 @@ if ENABLE_CRYPTO
 noinst_PROGRAMS += 21_mt19937
 endif
 
-AM_CFLAGS = $(regular_CFLAGS) -I$(top_srcdir)/include -D_POSIX_C_SOURCE=200112L -pthread
+AM_CFLAGS = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/libx/libx.la
-#if WINDOWS
-#AM_LDFLAGS = -no-fast-install
-#endif
 
 EXTRA_DIST = $(wildcard *.c) example.ini
 MAINTAINERCLEANFILES = Makefile.in

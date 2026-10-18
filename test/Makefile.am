@@ -1,5 +1,5 @@
 noinst_PROGRAMS = test
-test_CFLAGS = $(regular_CFLAGS) -I$(top_srcdir)/include -D_POSIX_C_SOURCE=200112L -pthread
+test_CFLAGS = -I$(top_srcdir)/include
 test_LDADD = $(top_builddir)/libx/libx.la
 test_SOURCES = main.c test_future.c test_index.c test_pathset.c test_pipe.c test_hash.c \
 	test_hfsm.c test_sklist.c test_uidpool.c test_ringbuf.c test_deqbuf.c test_hmap.c \
