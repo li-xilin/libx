@@ -32,8 +32,8 @@
 #define X_ARRAY_INIT(elem_size) { (elem_size) }
 #define X_ARRAY_AT(t, a, i) *((t *)x_array_at(a, i))
 #define x_array_foreach(type, var, arr) \
-	for (type *var = (void *)(arr)->data, *__x_end = (void *)((arr)->data + (arr)->size * (arr)->elem_size);  \
-			var != __x_end; *(uint8_t **)&var += (arr)->elem_size)
+	for (type *var = (void *)(arr)->data, *__x_end = (type *)((arr)->data + (arr)->size * (arr)->elem_size);  \
+			var != __x_end; var = (type *)((char *)var + (arr)->elem_size))
 
 struct x_array_st
 {
