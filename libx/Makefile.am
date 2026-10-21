@@ -43,7 +43,7 @@ libx_la_LDFLAGS += -Wl,--version-script=$(srcdir)/libx.map
 endif
 
 if ENABLE_NETWORK
-libx_la_SOURCES +=  event.c reactor.c socket.c asynet.c ipcsock.c
+libx_la_SOURCES +=  event.c reactor.c socket.c asynet.c ipcsock.c invoke.c
 if WINDOWS
 libx_la_SOURCES += wepoll.c mux_epoll.c
 else

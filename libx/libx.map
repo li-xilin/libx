@@ -137,7 +137,9 @@ global:
 	x_edit_set_hints_cb;
 	x_edit_set_multi_line;
 	x_eval_errno;
+	x_evobject_done;
 	x_evobject_init;
+	x_evobject_wait;
 	x_evsocket_init;
 	x_evtimer_init;
 	x_fdopen;
@@ -229,6 +231,7 @@ global:
 	x_ipcsock_listen;
 	x_ipcsock_set_fastpath;
 	x_isatty;
+	x_invoke_sync;
 	x_jpath_append;
 	x_jpath_create;
 	x_jpath_free;

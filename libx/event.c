@@ -21,6 +21,7 @@
  */
 
 #include "x/event.h"
+#include "x/reactor.h"
 #include <string.h>
 
 void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler)
@@ -47,5 +48,26 @@ void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler)
 	event->base.ev_flags = flags;
 	event->base.type = X_EVENT_OBJECT;
 	event->base.handler = handler;
+	x_cond_init(&event->done_cv);
+}
+
+int x_evobject_wait(x_evobject *event, int millisec)
+{
+	int ret = 0;
+	x_assert(event->base.ev_flags & X_EV_REACTING);
+	x_mutex_lock(&event->base.reactor->lock);
+	while (!event->done)
+		ret = x_cond_sleep(&event->done_cv, &event->base.reactor->lock, millisec);
+	x_mutex_unlock(&event->base.reactor->lock);
+	return ret;
+}
+
+void x_evobject_done(x_evobject *event)
+{
+	x_assert(event->base.ev_flags & X_EV_REACTING);
+	x_mutex_lock(&event->base.reactor->lock);
+	event->done = true;
+	x_cond_wake_all(&event->done_cv);
+	x_mutex_unlock(&event->base.reactor->lock);
 }
 

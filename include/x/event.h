@@ -29,6 +29,7 @@
 #include "heap.h"
 #include "hmap.h"
 #include "types.h"
+#include "cond.h"
 
 X_EXTERN_C_BEGIN
 
@@ -62,10 +63,18 @@ X_EXTERN_C_BEGIN
 	X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
 }
 
+#define X_EVEMIT_INIT(_flags, _user, _handler) { \
+	X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
+	X_LINK_INIT, \
+	X_COND_INIT, \
+	_user, \
+}
+
 enum {
 	X_EVENT_SOCKET,
 	X_EVENT_TIMER,
 	X_EVENT_OBJECT,
+	X_EVENT_EMIT,
 };
 
 typedef void x_event_handler(x_event *e);
@@ -100,11 +109,16 @@ struct x_evobject_st
 {
 	x_event base;
 	x_link link;
+	x_cond done_cv;
+	bool done;
 };
 
 void x_evsocket_init(x_evsocket *event, x_sock sock, short flags, x_event_handler *handler);
 void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_handler *handler);
 void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler);
+int x_evobject_wait(x_evobject *event, int millisec);
+void x_evobject_done(x_evobject *event);
+
 
 X_EXTERN_C_END
 

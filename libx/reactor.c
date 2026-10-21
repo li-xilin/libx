@@ -302,6 +302,7 @@ void x_reactor_pend(x_reactor *r, x_event *e, short res_flags)
 	x_mutex_lock(&r->lock);
 	assert(r != NULL && e != NULL);
 	assert(e->ev_flags & X_EV_REACTING);
+	x_mutex_lock(&r->lock);
 	e->res_flags |= res_flags;
 	if (e->pending_link.next)
 		x_list_del(&e->pending_link);
@@ -328,6 +329,7 @@ void x_reactor_remove(x_event *e)
 			break;
 		case X_EVENT_OBJECT:
 			x_list_del(&eobj->link);
+			x_cond_wake_all(&eobj->done_cv);
 			break;
 		default:
 			errno = X_EINVAL;
@@ -426,8 +428,13 @@ void x_reactor_do_events(x_reactor *r)
 {
 	x_event *e;
 	while ((e = x_reactor_pop_event(r))) {
-		if (e->handler)
+		if (e->handler) {
 			e->handler(e);
+			if (e->type == X_EVENT_OBJECT) {
+				x_evobject *eobj = x_container_of(e, x_evobject, base);
+				x_evobject_done(eobj);
+			}
+		}
 	}
 }
 

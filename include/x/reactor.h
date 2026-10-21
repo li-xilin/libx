@@ -51,6 +51,8 @@ struct x_reactor_st
 	struct timeval last_wait;
 
 	x_list obj_list;
+
+	x_list emit_list;
 };
 
 int x_reactor_init(x_reactor *r);
