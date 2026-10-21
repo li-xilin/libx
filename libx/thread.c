@@ -44,7 +44,7 @@
 #endif
 #include <setjmp.h>
 
-#if defined(X_OS_FREEBSD) || defined(X_OS_NETBSD)
+#if defined(X_OS_FREEBSD) || defined(X_OS_NETBSD) || defined(X_OS_OPENBSD)
 #include <pthread_np.h>
 #endif
 
@@ -103,9 +103,10 @@ uint64_t x_thread_native_id(void)
 	uint64_t tid;
 	pthread_threadid_np(NULL, &tid);
 	return tid;
-#elif defined(X_OS_FREEBSD) || defined(X_OS_NETBSD)
+#elif defined(X_OS_FREEBSD) || defined(X_OS_NETBSD) || defined(X_OS_OPENBSD)
 	return pthread_getthreadid_np();
 #else
+#error "Unknown arch"
 	return 0;
 #endif
 }
