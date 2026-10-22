@@ -289,6 +289,7 @@ int x_thread_join(x_thread *t, int *ret_code)
 #else
 	void *retptr;
 	int err = pthread_join(t->pthread, &retptr);
+	x_free(t);
 	if(err) {
 		return -1;
 	}

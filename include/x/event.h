@@ -30,6 +30,7 @@
 #include "hmap.h"
 #include "types.h"
 #include "cond.h"
+#include "mutex.h"
 
 X_EXTERN_C_BEGIN
 
@@ -41,11 +42,7 @@ X_EXTERN_C_BEGIN
 #define X_EV_ACCURATE (1 << 5)
 
 #define X_EVENT_INIT(_type, _flags, _handler) {  \
-	_type, \
-	0, \
-	_flags, \
-	0, \
-	_handler, \
+	_type, 0, _flags, 0, _handler, \
 }
 
 #define X_EVSOCKET_INIT(_fd, _flags, _handler) { \
@@ -61,13 +58,9 @@ X_EXTERN_C_BEGIN
 
 #define X_EVOBJECT_INIT(_flags, _handler) { \
 	X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
-}
-
-#define X_EVEMIT_INIT(_flags, _user, _handler) { \
-	X_EVENT_INIT(X_EVENT_OBJECT, _flags, _handler), \
 	X_LINK_INIT, \
+	X_MUTEX_INIT, \
 	X_COND_INIT, \
-	_user, \
 }
 
 enum {
@@ -109,6 +102,7 @@ struct x_evobject_st
 {
 	x_event base;
 	x_link link;
+	x_mutex lock;
 	x_cond done_cv;
 	bool done;
 };
@@ -118,7 +112,6 @@ void x_evtimer_init(x_evtimer *event, int interval_ms, short flags, x_event_hand
 void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler);
 int x_evobject_wait(x_evobject *event, int millisec);
 void x_evobject_done(x_evobject *event);
-
 
 X_EXTERN_C_END
 

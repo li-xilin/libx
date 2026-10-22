@@ -3,17 +3,26 @@
 #include "x/reactor.h"
 #include "x/thread.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static x_reactor r;
 
-void timeout(x_event *e)
+static void timeout(x_event *e)
 {
 	fprintf(stderr, "timer: tid = %ld\n", x_thread_native_id());
 }
 
-int invoke_handler(void *param, void *data)
+static int invoke_handler_sync(void *data)
 {
-	fprintf(stderr, "invok: tid = %ld\n", x_thread_native_id());
+	fprintf(stderr, "invoke sync: data = %d, tid = %ld\n",
+			(int)(uintptr_t)data, x_thread_native_id());
+	return 0;
+}
+
+static int invoke_handler_async(void *data)
+{
+	fprintf(stderr, "invoke asyn: data = %d, tid = %ld\n",
+			(int)(uintptr_t)data, x_thread_native_id());
 	return 0;
 }
 
@@ -23,7 +32,9 @@ int thread(void)
 	x_thread_sleep(500);
 	while (1) {
 		x_thread_sleep(1000);
-		x_invoke_sync(&r, invoke_handler, NULL, NULL);
+		x_thread_testcancel(0);
+		x_invoke_sync(&r, invoke_handler_sync, (void *)1);
+		x_invoke_async(&r, invoke_handler_async, (void *)2);
 	}
 }
 
@@ -36,16 +47,22 @@ void signal_handler(int sig)
 int main(void)
 {
 	x_reactor_init(&r);
-	x_tsignal_set(signal_handler);
-
+	if (x_tsignal_set(signal_handler)) {
+		perror("x_tsignal_set");
+		exit(1);
+	}
 	x_thread *thd = x_thread_create(thread, NULL, NULL);
-	(void)thd;
-
+	if (!thd) {
+		perror("x_thread_create");
+		exit(1);
+	}
 	x_evtimer timer = X_EVTIMER_INIT(1000, 0, timeout);
 	x_reactor_add(&r, &timer.base);
 	while (x_reactor_wait(&r) > 0) {
 		x_reactor_do_events(&r);
 	}
+	x_thread_cancel(thd);
+	x_thread_join(thd, NULL);
 	x_reactor_free(&r);
 	fprintf(stderr, "\nexiting\n");
 }

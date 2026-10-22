@@ -430,10 +430,6 @@ void x_reactor_do_events(x_reactor *r)
 	while ((e = x_reactor_pop_event(r))) {
 		if (e->handler) {
 			e->handler(e);
-			if (e->type == X_EVENT_OBJECT) {
-				x_evobject *eobj = x_container_of(e, x_evobject, base);
-				x_evobject_done(eobj);
-			}
 		}
 	}
 }

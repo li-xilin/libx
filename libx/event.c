@@ -48,26 +48,30 @@ void x_evobject_init(x_evobject *event, short flags, x_event_handler *handler)
 	event->base.ev_flags = flags;
 	event->base.type = X_EVENT_OBJECT;
 	event->base.handler = handler;
+	x_mutex_init(&event->lock);
 	x_cond_init(&event->done_cv);
 }
 
 int x_evobject_wait(x_evobject *event, int millisec)
 {
 	int ret = 0;
-	x_assert(event->base.ev_flags & X_EV_REACTING);
-	x_mutex_lock(&event->base.reactor->lock);
+	x_mutex_lock(&event->lock);
 	while (!event->done)
-		ret = x_cond_sleep(&event->done_cv, &event->base.reactor->lock, millisec);
-	x_mutex_unlock(&event->base.reactor->lock);
+		ret = x_cond_sleep(&event->done_cv, &event->lock, millisec);
+	x_mutex_unlock(&event->lock);
 	return ret;
 }
 
 void x_evobject_done(x_evobject *event)
 {
-	x_assert(event->base.ev_flags & X_EV_REACTING);
-	x_mutex_lock(&event->base.reactor->lock);
+	x_mutex_lock(&event->lock);
 	event->done = true;
 	x_cond_wake_all(&event->done_cv);
-	x_mutex_unlock(&event->base.reactor->lock);
+	x_mutex_unlock(&event->lock);
 }
 
+void x_evobject_free(x_evobject *event)
+{
+	x_mutex_destroy(&event->lock);
+	x_cond_destroy(&event->done_cv);
+}

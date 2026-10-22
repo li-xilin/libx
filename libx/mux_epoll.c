@@ -83,6 +83,7 @@ static void epoll_mux_free(x_sockmux *mux)
 {
 	x_free(mux->events);
 	close_epoll(mux->epoll_fd);
+	x_free(mux);
 }
 
 

@@ -24,8 +24,9 @@
 
 #include "types.h"
 
-typedef int x_invoke_handler_fn(void *param, void *data);
-int x_invoke_sync(x_reactor *r, x_invoke_handler_fn *handler, void *param, void *data);
+typedef int x_invoke_fn(void *data);
+int x_invoke_sync(x_reactor *r, x_invoke_fn *handler, void *data);
+int x_invoke_async(x_reactor *r, x_invoke_fn *handler, void *data);
 
 #endif
 

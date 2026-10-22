@@ -25,8 +25,7 @@
 struct sync_call
 {
 	x_evobject event;
-	x_invoke_handler_fn *handler;
-	void *param;
+	x_invoke_fn *handler;
 	void *data;
 	int retval;
 };
@@ -34,16 +33,16 @@ struct sync_call
 static void sync_call_handler(x_event *e)
 {
 	struct sync_call *call = x_container_of(e, struct sync_call, event.base);
-	call->retval = call->handler(call->param, call->data);
+	call->retval = call->handler(call->data);
 	e->res_flags = 0;
+	x_evobject_done(&call->event);
 }
 
-int x_invoke_sync(x_reactor *r, x_invoke_handler_fn *handler, void *param, void *data)
+int x_invoke_sync(x_reactor *r, x_invoke_fn *handler, void *data)
 {
 	struct sync_call call = {
 		.event = X_EVOBJECT_INIT(X_EV_READ, sync_call_handler),
 		.handler = handler,
-		.param = param,
 		.data = data,
 		.retval = 0,
 	};
@@ -56,5 +55,25 @@ int x_invoke_sync(x_reactor *r, x_invoke_handler_fn *handler, void *param, void 
 	}
 	x_reactor_remove(&call.event.base);
 	return call.retval;
+}
+
+
+static void async_call_handler(x_event *e)
+{
+	struct sync_call *call = x_container_of(e, struct sync_call, event.base);
+	call->retval = call->handler(call->data);
+	x_reactor_remove(&call->event.base);
+	x_free(call);
+}
+
+int x_invoke_async(x_reactor *r, x_invoke_fn *handler, void *data)
+{
+	struct sync_call *call = x_malloc(NULL, sizeof *call);
+	x_evobject_init(&call->event, X_EV_READ, async_call_handler);
+	call->handler = handler;
+	call->data = data;
+	call->retval = 0;
+	call->event.base.res_flags = X_EV_READ;
+	return x_reactor_add(r, &call->event.base);
 }
 
