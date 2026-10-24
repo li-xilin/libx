@@ -540,6 +540,7 @@ global:
 	x_stream_recv_buf;
 	x_stream_send;
 	x_stream_send_buf;
+	x_stream_sock;
 	x_strhash;
 	x_stricmp;
 	x_strihash;

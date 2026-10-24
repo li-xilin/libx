@@ -45,6 +45,7 @@ int x_listener_start(x_listener *lnr);
 void x_listener_stop(x_listener *lnr);
 
 x_stream *x_stream_create(x_reactor *reactor, x_sock sock);
+x_sock x_stream_sock(x_stream *stream);
 void x_stream_free(x_stream *stream);
 void x_stream_send(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user);
 void x_stream_recv(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user);
