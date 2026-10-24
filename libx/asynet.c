@@ -419,8 +419,8 @@ static void on_transfer_timeout_event(x_event *ev)
 
 static void complate_transfer(x_stream *stream, struct transfer *p)
 {
-	p->on_transferred(0, p->transferred, p->user);
 	x_list_del(&p->link);
+	p->on_transferred(0, p->transferred, p->user);
 	x_free(p);
 	x_reactor_modify(&stream->error_event.base);
 }
@@ -507,7 +507,7 @@ x_stream *x_stream_create(x_reactor *reactor, x_sock sock)
 	stream->send_error = stream->recv_error = 0;
 	x_evtimer_init(&stream->error_event, TRANSFER_TIMEOUT, 0, on_transfer_timeout_event);
 	x_evsocket_init(&stream->sock_event, sock, 0, on_stream_sock_event);
-	if (!x_reactor_add(reactor, &stream->sock_event.base)) {
+	if (x_reactor_add(reactor, &stream->sock_event.base)) {
 		x_free(stream);
 		return NULL;
 	}
@@ -528,6 +528,11 @@ void x_stream_free(x_stream *stream)
 	x_reactor_remove(&stream->sock_event.base);
 	x_sock_close(stream->sock_event.sock);
 	x_free(stream);
+}
+
+x_sock x_stream_sock(x_stream *stream)
+{
+	return stream->sock_event.sock;
 }
 
 static int iovec_count(x_iovec iovec[])
@@ -677,7 +682,7 @@ x_resolver *x_resolver_create(x_reactor *reactor)
 	x_list_init(&rvr->result_list);
 	rvr->reactor = reactor;
 	x_mset_init(&rvr->mset);
-	return 0;
+	return rvr;
 }
 
 void x_resolver_free(x_resolver *rvr)
@@ -770,7 +775,10 @@ static void on_first_timedout(x_event *ev)
 		return;
 	}
 	x_evtimer_init(&c->timer_event, c->interval, 0, on_periodic_timedout);
-	x_reactor_add(c->timer->reactor, &c->timer_event.base);
+	if (x_reactor_add(c->timer->reactor, &c->timer_event.base)) {
+		free_clock(c);
+		return;
+	}
 }
 
 uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_handler *on_timedout, void *user)
