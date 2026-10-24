@@ -55,6 +55,8 @@ X_EXTERN_C_BEGIN
 #define X_SOCK_ERR(name) name
 #endif
 
+#define X_HOSTPORT_INIT(_host, _port) { _host, _port }
+
 struct x_ipaddr_st {
 	int family;
 	union {
