@@ -26,8 +26,13 @@
 #include "x/detect.h"
 #include "x/uchar.h"
 #include "x/printf.h"
-#include <stdio.h>
+#include "x/uchar.h"
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
+
 #ifdef X_OS_WIN
 #include <io.h>
 #else
@@ -93,11 +98,6 @@ int x_isatty(FILE *file)
 	return isatty(fileno(file));
 #endif
 }
-
-#include "uchar.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 FILE* x_fdopen(intptr_t handle, const x_uchar *mode);
 int x_setinput(FILE *stream);

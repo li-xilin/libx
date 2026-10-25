@@ -26,7 +26,7 @@ if FREEBSD
 libx_la_LIBADD = -lexecinfo -lpthread -ldl
 endif
 if DARWIN
-libx_la_CFLAGS += _DARWIN_C_SOURCE
+libx_la_CFLAGS += -D_DARWIN_C_SOURCE
 libx_la_LIBADD = -lpthread -ldl
 endif
 if OPENBSD

@@ -59,7 +59,9 @@ int x_cond_init(x_cond *cond)
 #else
 	pthread_condattr_t attr;
 	pthread_condattr_init(&attr);
+#if !defined(X_OS_DARWIN)
 	pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+#endif
 	if (pthread_cond_init(&cond->cond, &attr)) {
 		pthread_condattr_destroy(&attr);
 		return -1;

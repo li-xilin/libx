@@ -527,12 +527,15 @@ int x_sock_set_keepalive(x_sock sock, uint32_t idle_sec, uint32_t interval_sec)
 #elif defined(X_OS_OPENBSD)
 	// Do nothing. Global setting using sysctl
 #else
-	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &idle_sec, sizeof idle_sec))
+#if defined(X_OS_DARWIN)
+	int keepidle = TCP_KEEPALIVE;
+#else
+	int keepidle = TCP_KEEPIDLE;
+#endif
+	if (setsockopt(sock, IPPROTO_TCP, keepidle, &idle_sec, sizeof idle_sec))
 		goto fail;
-
 	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &interval_sec, sizeof interval_sec))
 		goto fail;
-
 	// Campatible with NT6.0 or later.
 	int keepcnt = 10;
 	if (setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (char *)&keepcnt, sizeof(int)))

@@ -51,8 +51,8 @@ struct x_dump_format_st
 	int (*indent)(int depth, x_dump_out_cb_f *out_cb, void *ctx);
 };
 
-x_dump *x_dump_int(int64_t val);
-x_dump *x_dump_uint(uint64_t val);
+x_dump *x_dump_int(intmax_t val);
+x_dump *x_dump_uint(uintmax_t val);
 x_dump *x_dump_float(double val);
 x_dump *x_dump_ptr(const void *val);
 x_dump *x_dump_str(const x_uchar *val);
