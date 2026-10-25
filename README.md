@@ -11,7 +11,7 @@ This project supplements the C standard library. It does not depend on any third
 ## Features
 
 - **Comprehensive utilities**: Covers common basic functionality; containers and algorithms meet the needs of most development scenarios.
-- **Strong compatibility**: Developed based on C99, compatible with Windows, Linux, FreeBSD, OpenBSD, Android, and mainstream hardware platforms.
+- **Strong compatibility**: Developed based on C99, compatible with Windows, GNU/Linux, FreeBSD, OpenBSD, Android, OSX, and mainstream hardware platforms.
 - **High reliability**: Comprehensive test coverage ensures the library is stable and reliable.
 - **Interface design**: Uses intrusive containers to facilitate extension while minimizing internal memory allocation in containers.
 
@@ -39,11 +39,12 @@ Compilation options allow fine-grained feature trimming to suit resource-constra
 ### Containers and Algorithms
 
 - Singly and doubly linked list
+- Dynamic array
 - Hash table
 - Skip list
 - Heap (Priority queue)
 - Splay tree
-- Index
+- Multiple key indexer
 - Deque
 - Hierarchical FSM
 - ID allocator
