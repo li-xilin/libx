@@ -100,14 +100,16 @@ if test "x$disable_network" = "xno"; then
 		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [true])
 		AM_CONDITIONAL([HAVE_POLL_H], [false])
 	else
-		AC_CHECK_HEADERS([sys/epoll.h kqueue.h poll.h])
-		if test "x$ac_cv_header_sys_epoll_h" = "xno" -a "x$ac_cv_header_poll_h" = "xno"; then
+		AC_CHECK_HEADERS([sys/epoll.h sys/event.h poll.h])
+		if test "x$ac_cv_header_sys_epoll_h" = "xno" -a "x$ac_cv_header_poll_h" = "xno" -a "x$ac_cv_header_sys_event_h" = "xno"; then
 			AC_MSG_ERROR([polling header not found ])
 		fi
+		AM_CONDITIONAL([HAVE_SYS_EVENT_H], [test "x$ac_cv_header_sys_event_h" = "xyes"])
 		AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [test "x$ac_cv_header_sys_epoll_h" = "xyes"])
 		AM_CONDITIONAL([HAVE_POLL_H], [test "x$ac_cv_header_poll_h" = "xyes"])
 	fi
 else
+	AM_CONDITIONAL([HAVE_SYS_EVENT_H], [false])
 	AM_CONDITIONAL([HAVE_SYS_EPOLL_H], [false])
 	AM_CONDITIONAL([HAVE_POLL_H], [false])
 fi

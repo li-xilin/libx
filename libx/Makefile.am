@@ -47,11 +47,15 @@ libx_la_SOURCES +=  event.c reactor.c socket.c asynet.c ipcsock.c invoke.c
 if WINDOWS
 libx_la_SOURCES += wepoll.c mux_epoll.c
 else
+if HAVE_SYS_EVENT_H
+libx_la_SOURCES += mux_kqueue.c
+else
 if HAVE_SYS_EPOLL_H
 libx_la_SOURCES += mux_epoll.c 
 else
 if HAVE_POLL_H
 libx_la_SOURCES += mux_poll.c 
+endif
 endif
 endif
 endif
