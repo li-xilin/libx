@@ -4,8 +4,11 @@
 #include "x/ringbuf.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define BUF_SIZE 8
+#define SEND_TIMEOUT 5000
+#define RECV_TIMEOUT 5000
 
 struct client {
 	x_link link;
@@ -23,20 +26,12 @@ void on_data_received(int err, size_t transfered, void *user);
 static x_reactor r;
 x_list client_list = X_LIST_INIT(client_list);
 
-static void close_client(struct client *c)
-{
-	fprintf(stderr, "client %d closed\n", x_stream_sock(c->stm));
-	x_stream_free(c->stm);
-	x_list_del(&c->link);
-	x_free(c);
-}
-
 
 void on_data_sent(int err, size_t transfered, void *user)
 {
 	struct client *c = user;
-	if (err == -1) {
-		close_client(c);
+	if (err > 0) {
+		fprintf(stderr, "on_data_sent error %s\n", strerror(err));
 		return;
 	}
 	x_ringbuf_commit_read(&c->rb, transfered);
@@ -57,8 +52,11 @@ void on_data_sent(int err, size_t transfered, void *user)
 void on_data_received(int err, size_t transfered, void *user)
 {
 	struct client *c = user;
-	if (err < 0 || transfered == 0) {
-		close_client(c);
+	if (err > 0 || transfered == 0) {
+		if (err > 0)
+			fprintf(stderr, "on_data_received error %s\n", strerror(err));
+		else
+			fprintf(stderr, "EOF received\n");
 		return;
 	}
 
@@ -80,11 +78,20 @@ void on_data_received(int err, size_t transfered, void *user)
 	}
 }
 
+static void on_stream_finished(x_stream *stream, void *user)
+{
+	struct client *c = user;
+	fprintf(stderr, "client %d closed\n", x_stream_sock(c->stm));
+	x_stream_free(c->stm);
+	x_list_del(&c->link);
+	x_free(c);
+}
+
 static void on_accepted(x_sock fd, void *user)
 {
 	x_reactor *r = user;
 	struct client *c = x_malloc(NULL, sizeof *c);
-	c->stm = x_stream_create(r, fd);
+	c->stm = x_stream_create(r, fd, SEND_TIMEOUT, RECV_TIMEOUT, on_stream_finished, c);
 	c->sending = false, c->recving = true;
 	x_ringbuf_init(&c->rb, c->buf, sizeof c->buf);
 	x_list_add_back(&client_list, &c->link);
@@ -114,6 +121,7 @@ int main(void)
 	while (x_reactor_wait(&r) > 0)
 		x_reactor_do_events(&r);
 
+	x_listener_free(lnr);
 	x_reactor_free(&r);
 }
 

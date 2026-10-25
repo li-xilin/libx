@@ -27,38 +27,38 @@
 
 X_EXTERN_C_BEGIN
 
-typedef void x_dialer_handler(int err, x_sock fd, void *user);
-typedef void x_listener_handler(x_sock fd, void *user);
-typedef void x_stream_handler(int err, size_t transfered, void *user);
-typedef void x_resolver_handler(int err, const char *name, x_ipaddr *addrs, size_t n, void *user);
-typedef bool x_timer_handler(uint32_t id, void *user);
-
+typedef void x_dialer_connected_fn(int err, x_sock fd, void *user);
 x_dialer *x_dialer_create(x_reactor *reactor);
 void x_dialer_free(x_dialer *dialer);
-void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, x_dialer_handler *on_connect, void *user);
+void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, int timeout_ms, x_dialer_connected_fn *on_connected, void *user);
 void x_dialer_cancel(x_dialer *dialer);
 
-x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_listener_handler *on_accept, void *user);
+typedef void x_listener_accepted_fn(x_sock fd, void *user);
+x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_listener_accepted_fn *on_accepted, void *user);
 void x_listener_free(x_listener *lnr);
 short x_listener_port(x_listener *lnr);
 int x_listener_start(x_listener *lnr);
 void x_listener_stop(x_listener *lnr);
 
-x_stream *x_stream_create(x_reactor *reactor, x_sock sock);
+typedef void x_stream_transferred_fn(int err, size_t transfered, void *user);
+typedef void x_stream_finished_fn(x_stream *stream, void *user);
+x_stream *x_stream_create(x_reactor *reactor, x_sock sock, int send_timeout, int recv_timeout, x_stream_finished_fn *on_finished, void *user);
 x_sock x_stream_sock(x_stream *stream);
 void x_stream_free(x_stream *stream);
-void x_stream_send(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user);
-void x_stream_recv(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user);
-void x_stream_send_buf(x_stream *stream, void *data, size_t size, x_stream_handler *on_transfer, void *user);
-void x_stream_recv_buf(x_stream *stream, void *data, size_t size, x_stream_handler *on_transfer, void *user);
+int x_stream_send(x_stream *stream, x_iovec iovec[], x_stream_transferred_fn *on_sent, void *user);
+int x_stream_recv(x_stream *stream, x_iovec iovec[], x_stream_transferred_fn *on_received, void *user);
+int x_stream_send_buf(x_stream *stream, void *data, size_t size, x_stream_transferred_fn *on_sent, void *user);
+int x_stream_recv_buf(x_stream *stream, void *data, size_t size, x_stream_transferred_fn *on_received, void *user);
 
+typedef void x_resolver_completed_fn(int err, const char *name, x_ipaddr *addrs, size_t n, void *user);
 x_resolver *x_resolver_create(x_reactor *reactor);
 void x_resolver_free(x_resolver *rvr);
-void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_handler *on_resolve, void *user);
+void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user);
 
+typedef bool x_timer_timeout_fn(uint32_t id, void *user);
 x_timer *x_timer_create(x_reactor *reactor);
 void x_timer_free(x_timer *timer);
-uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_handler *on_timedout, void *user);
+uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_timeout_fn *on_timedout, void *user);
 void x_timer_remove(x_timer *timer, uint32_t id);
 
 X_EXTERN_C_END

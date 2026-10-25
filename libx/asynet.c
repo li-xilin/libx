@@ -33,9 +33,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define PENDING_LIMIT 256
-#define CONNECT_TIMEOUT (1000 * 5)
-#define TRANSFER_TIMEOUT (1000 * 10)
+#define X_ASYNET_CONNECT_BACKLOG 256
+#define CONNECT_TIMEOUT (1000 * 10)
 
 struct x_dialer_st {
 	x_reactor *reactor;
@@ -50,7 +49,7 @@ struct x_listener_st {
 	x_ipaddr ipaddr;
 	short port;
 	x_list result_list;
-	x_listener_handler *on_accept;
+	x_listener_accepted_fn *on_accepted;
 	void *user;
 };
 
@@ -58,12 +57,14 @@ struct x_stream_st {
 	x_reactor *reactor;
 	x_mset mset;
 	x_evsocket sock_event;
+	x_evtimer send_timeout_event;
+	x_evtimer recv_timeout_event;
 	x_list send_list;
 	x_list recv_list;
-	x_evtimer error_event;
-	int timeout_millisec;
+	x_stream_finished_fn *on_finished;
+	void *user;
+	int send_timeout, recv_timeout;
 	bool finished;
-	int send_error, recv_error;
 };
 
 struct x_resolver_st {
@@ -91,7 +92,7 @@ struct pending
 	x_evtimer timer;
 	x_dialer *dialer;
 	x_evsocket event;
-	x_dialer_handler *on_connect;
+	x_dialer_connected_fn *on_connected;
 	void *user;
 };
 
@@ -104,7 +105,7 @@ struct transfer
 	uint16_t iovec_count, iovec_index;
 	bool wait_all;
 	int error;
-	x_stream_handler *on_transferred;
+	x_stream_transferred_fn *on_transferred;
 	void *user;
 	x_iovec iovec[];
 };
@@ -115,7 +116,7 @@ struct query
 	x_resolver *rvr;
 	x_thrwork work;
 	struct addrinfo *res;
-	x_resolver_handler *on_resolve;
+	x_resolver_completed_fn *on_resolve;
 	void *user;
 	int error;
 	char name[];
@@ -126,7 +127,7 @@ struct clock
 	x_timer *timer;
 	x_uidlink uid;
 	x_evtimer timer_event;
-	x_timer_handler *on_timedout;
+	x_timer_timeout_fn *on_timedout;
 	uint32_t interval;
 	void *user;
 };
@@ -188,15 +189,15 @@ static void on_connect_event(x_event *ev)
 	socklen_t len = sizeof(error);
 	if (getsockopt(p->event.sock, SOL_SOCKET, SO_ERROR, (char *)&error, &len)) {
 		error = errno;
-		p->on_connect(error, X_BADSOCK, p->user);
+		p->on_connected(error, X_BADSOCK, p->user);
 	}
 	else if (error) {
 		x_sock_send_reset(p->event.sock);
-		p->on_connect(error, X_BADSOCK, p->user);
+		p->on_connected(error, X_BADSOCK, p->user);
 	}
 	else {
 		fd = p->event.sock;;
-		p->on_connect(0, fd, p->user);
+		p->on_connected(0, fd, p->user);
 	}
 	x_reactor_remove(&p->event.base);
 	x_reactor_remove(&p->timer.base);
@@ -212,13 +213,13 @@ static void on_connect_error(x_event *ev)
 		p->error = X_ETIMEDOUT;
 		x_reactor_remove(&p->event.base);
 	}
-	p->on_connect(p->error, X_BADSOCK, p->user);
+	p->on_connected(p->error, X_BADSOCK, p->user);
 	x_sock_close(p->event.sock);
 	x_list_del(&p->link);
 	x_free(p);
 }
 
-void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, x_dialer_handler *on_connect, void *user)
+void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, int timeout_ms, x_dialer_connected_fn *on_connected, void *user)
 {
 	x_sock fd = X_BADSOCK;
 	int error;
@@ -227,7 +228,7 @@ void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, x_dialer_handler
 			|| (fd = sock_connect(&ipaddr, addr->port)) == X_BADSOCK)
 		error = errno;
 	struct pending *s = x_malloc(&dialer->mset, sizeof *s);
-	s->on_connect = on_connect;
+	s->on_connected = on_connected;
 	s->user = user;
 	if (fd == X_BADSOCK) {
 		s->error = error;
@@ -237,7 +238,7 @@ void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, x_dialer_handler
 	else {
 		s->error = 0;
 		x_evsocket_init(&s->event, fd, X_EV_WRITE, on_connect_event);
-		x_evtimer_init(&s->timer, CONNECT_TIMEOUT, X_EV_ONCE, on_connect_error);
+		x_evtimer_init(&s->timer, timeout_ms >= 0 ? timeout_ms : CONNECT_TIMEOUT , X_EV_ONCE, on_connect_error);
 		x_reactor_add(dialer->reactor, &s->event.base);
 		x_reactor_add(dialer->reactor, &s->timer.base);
 	}
@@ -251,10 +252,10 @@ void x_dialer_cancel(x_dialer *dialer)
 		if (!p->error) {
 			x_sock_close(p->event.sock);
 			x_reactor_remove(&p->event.base);
-			p->on_connect(X_ECANCELED, X_BADSOCK, p->user);
+			p->on_connected(X_ECANCELED, X_BADSOCK, p->user);
 		}
 		else {
-			p->on_connect(p->error, X_BADSOCK, p->user);
+			p->on_connected(p->error, X_BADSOCK, p->user);
 		}
 		x_reactor_remove(&p->timer.base);
 		x_free(p);
@@ -276,7 +277,7 @@ static void on_listen_event(x_event *ev)
 	x_sock fd = accept(lnr->listen_event.sock, NULL, NULL);
 	if (fd == X_BADSOCK)
 		return;
-	lnr->on_accept(fd, lnr->user);
+	lnr->on_accepted(fd, lnr->user);
 }
 
 static x_sock sock_listen(x_ipaddr *ipaddr, short port)
@@ -310,12 +311,12 @@ static x_sock sock_listen(x_ipaddr *ipaddr, short port)
 	}
 	else
 		abort();
-	if (listen(listen_fd, 256))
+	if (listen(listen_fd, X_ASYNET_CONNECT_BACKLOG))
 		return X_BADSOCK;
 	return listen_fd;
 }
 
-x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_listener_handler *on_accepted, void *user)
+x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_listener_accepted_fn *on_accepted, void *user)
 {
 	x_ipaddr ipaddr;
 	if (x_parse_ipaddr(addr->host, &ipaddr))
@@ -327,7 +328,7 @@ x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_list
 	x_mset_init(&lnr->mset);
 	x_evsocket_init(&lnr->listen_event, -1, 0, NULL);
 	x_list_init(&lnr->result_list);
-	lnr->on_accept = on_accepted;
+	lnr->on_accepted = on_accepted;
 	lnr->user = user;
 	return lnr;
 }
@@ -391,46 +392,64 @@ static void flush_all_recv(x_stream *stream, int error)
 	x_reactor_modify(&stream->sock_event.base);
 }
 
-static void on_transfer_error(x_event *ev)
-{
-	x_stream *stream = x_container_of(ev, x_stream, error_event.base);
-	flush_all_send(stream, X_EPIPE);
-	flush_all_recv(stream, X_EPIPE);
-}
-
 static void finish_stream(x_stream *stream, int send_error, int recv_error)
 {
+	stream->finished = true;
+	flush_all_send(stream, send_error);
+	flush_all_recv(stream, recv_error);
 	x_sock_close(stream->sock_event.sock);
 	x_reactor_remove(&stream->sock_event.base);
-	if (stream->error_event.base.ev_flags & X_EV_REACTING) {
-		x_reactor_remove(&stream->error_event.base);
-		x_evtimer_init(&stream->error_event, 0, X_EV_ONCE, on_transfer_error);
-	}
-	stream->finished = true;
+	if (stream->send_timeout_event.base.ev_flags & X_EV_REACTING)
+		x_reactor_remove(&stream->send_timeout_event.base);
+	if (stream->recv_timeout_event.base.ev_flags & X_EV_REACTING)
+		x_reactor_remove(&stream->recv_timeout_event.base);
+	stream->on_finished(stream, stream->user);
 }
 
-static void on_transfer_timeout_event(x_event *ev)
+static void on_stream_send_timeout_event(x_event *ev)
 {
-	x_stream *stream = x_container_of(ev, x_stream, error_event.base);
-	flush_all_send(stream, X_ECONNRESET);
-	flush_all_recv(stream, X_ECONNRESET);
+	x_stream *stream = x_container_of(ev, x_stream, send_timeout_event.base);
 	finish_stream(stream, X_ETIMEDOUT, X_ETIMEDOUT);
 }
 
-static void complate_transfer(x_stream *stream, struct transfer *p)
+static void on_stream_recv_timeout_event(x_event *ev)
 {
+	x_stream *stream = x_container_of(ev, x_stream, recv_timeout_event.base);
+	finish_stream(stream, X_ETIMEDOUT, X_ETIMEDOUT);
+}
+
+static void complate_send_transfer(x_stream *stream)
+{
+	struct transfer *p = x_container_of(x_list_first(&stream->send_list), struct transfer, link);
 	x_list_del(&p->link);
+	if (stream->send_timeout >= 0) {
+		if (!x_list_is_empty(&stream->send_list))
+			x_reactor_modify(&stream->send_timeout_event.base);
+		else
+			x_reactor_remove(&stream->send_timeout_event.base);
+	}
 	p->on_transferred(0, p->transferred, p->user);
 	x_free(p);
-	x_reactor_modify(&stream->error_event.base);
+}
+
+static void complate_recv_transfer(x_stream *stream)
+{
+	struct transfer *p = x_container_of(x_list_first(&stream->recv_list), struct transfer, link);
+	x_list_del(&p->link);
+	if (stream->recv_timeout >= 0) {
+		if (!x_list_is_empty(&stream->recv_list))
+			x_reactor_modify(&stream->recv_timeout_event.base);
+		else
+			x_reactor_remove(&stream->recv_timeout_event.base);
+	}
+	p->on_transferred(0, p->transferred, p->user);
+	x_free(p);
 }
 
 static void on_stream_sock_event(x_event *e)
 {
 	x_stream *stream = x_container_of(e, x_stream, sock_event.base);
 	if (e->res_flags & X_EV_ERROR) {
-		flush_all_send(stream, X_ECONNRESET);
-		flush_all_recv(stream, X_ECONNRESET);
 		finish_stream(stream, X_ECONNRESET, X_ECONNRESET);
 	}
 	if (e->res_flags & X_EV_READ) {
@@ -439,13 +458,13 @@ static void on_stream_sock_event(x_event *e)
 		size_t buf_len = p->iovec[p->iovec_index].len - p->iovec_shift;
 		x_ssize recv_len = recv(stream->sock_event.sock, buf, buf_len, 0);
 		if (recv_len < 0) {
-			stream->send_error = stream->recv_error = errno;
-			flush_all_recv(stream, errno);
+			finish_stream(stream, 0, errno);
 			return;
 		}
 		else if (recv_len == 0 && p->total_len != 0) {
-			complate_transfer(stream, p);
-			flush_all_recv(stream, 0);
+			if (!p->wait_all)
+				complate_recv_transfer(stream);
+			finish_stream(stream, 0, X_ECONNRESET);
 			return;
 		}
 		p->transferred += recv_len;
@@ -454,12 +473,12 @@ static void on_stream_sock_event(x_event *e)
 			if (p->iovec_shift == p->iovec[p->iovec_index].len) {
 				p->iovec_index++;
 				if (p->iovec_index == p->iovec_count) {
-					complate_transfer(stream, p);
+					complate_recv_transfer(stream);
 				}
 			}
 		}
 		else {
-			complate_transfer(stream, p);
+			complate_recv_transfer(stream);
 		}
 		if (x_list_is_empty(&stream->recv_list)) {
 			stream->sock_event.base.ev_flags &= ~X_EV_READ;
@@ -472,9 +491,7 @@ static void on_stream_sock_event(x_event *e)
 		size_t buf_len = p->iovec[p->iovec_index].len - p->iovec_shift;
 		x_ssize send_len = send(stream->sock_event.sock, buf, buf_len, MSG_NOSIGNAL);
 		if (send_len < 0) {
-			stream->send_error = X_ENETRESET;
-			flush_all_send(stream, errno);
-			finish_stream(stream, X_ENETRESET, errno);
+			finish_stream(stream, errno, X_ECONNABORTED);
 			return;
 		}
 		p->transferred += send_len;
@@ -483,12 +500,12 @@ static void on_stream_sock_event(x_event *e)
 			if (p->iovec_shift == p->iovec[p->iovec_index].len) {
 				p->iovec_index++;
 				if (p->iovec_index == p->iovec_count) {
-					complate_transfer(stream, p);
+					complate_send_transfer(stream);
 				}
 			}
 		}
 		else {
-			complate_transfer(stream, p);
+			complate_send_transfer(stream);
 		}
 		if (x_list_is_empty(&stream->send_list)) {
 			stream->sock_event.base.ev_flags &= ~X_EV_WRITE;
@@ -497,16 +514,18 @@ static void on_stream_sock_event(x_event *e)
 	}
 }
 
-x_stream *x_stream_create(x_reactor *reactor, x_sock sock)
+x_stream *x_stream_create(x_reactor *reactor, x_sock sock, int send_timeout, int recv_timeout, x_stream_finished_fn *on_finished, void *user)
 {
 	x_stream *stream = x_malloc(NULL, sizeof *stream);
 	x_mset_init(&stream->mset);
 	x_list_init(&stream->send_list);
 	x_list_init(&stream->recv_list);
 	stream->reactor = reactor;
-	stream->send_error = stream->recv_error = 0;
-	x_evtimer_init(&stream->error_event, TRANSFER_TIMEOUT, 0, on_transfer_timeout_event);
 	x_evsocket_init(&stream->sock_event, sock, 0, on_stream_sock_event);
+	if (send_timeout >= 0)
+		x_evtimer_init(&stream->send_timeout_event, send_timeout, 0, on_stream_send_timeout_event);
+	if (recv_timeout >= 0)
+		x_evtimer_init(&stream->recv_timeout_event, recv_timeout, 0, on_stream_recv_timeout_event);
 	if (x_reactor_add(reactor, &stream->sock_event.base)) {
 		x_free(stream);
 		return NULL;
@@ -516,6 +535,11 @@ x_stream *x_stream_create(x_reactor *reactor, x_sock sock)
 		x_free(stream);
 		return NULL;
 	}
+	stream->on_finished = on_finished;
+	stream->user = user;
+	stream->send_timeout = send_timeout;
+	stream->recv_timeout = recv_timeout;
+	stream->finished = false;
 	return stream;
 }
 
@@ -523,10 +547,11 @@ void x_stream_free(x_stream *stream)
 {
 	if (!stream)
 		return;
-	flush_all_send(stream, X_ECANCELED);
-	flush_all_recv(stream, X_ECANCELED);
-	x_reactor_remove(&stream->sock_event.base);
-	x_sock_close(stream->sock_event.sock);
+	if (!stream->finished) {
+		x_sock_close(stream->sock_event.sock);
+		x_reactor_remove(&stream->sock_event.base);
+	}
+	x_mset_free(&stream->mset);
 	x_free(stream);
 }
 
@@ -542,7 +567,7 @@ static int iovec_count(x_iovec iovec[])
 	return i;
 }
 
-static struct transfer *create_transfer(x_stream *stream, x_iovec iovec[], bool wait_all, x_stream_handler *on_transferred, void *user)
+static struct transfer *create_transfer(x_stream *stream, x_iovec iovec[], bool wait_all, x_stream_transferred_fn *on_transferred, void *user)
 {
 	int iovec_cnt = iovec_count(iovec);
 	struct transfer *p = x_malloc(&stream->mset, sizeof *p + sizeof(x_iovec) * iovec_cnt);
@@ -562,76 +587,78 @@ static struct transfer *create_transfer(x_stream *stream, x_iovec iovec[], bool 
 	return p;
 }
 
-static void stream_write(x_stream *stream, bool wait_all, x_iovec iovec[], x_stream_handler *on_transferred, void *user)
+static int stream_write(x_stream *stream, bool wait_all, x_iovec iovec[], x_stream_transferred_fn *on_transferred, void *user)
 {
+	if (stream->finished) {
+		errno = X_ECONNABORTED;
+		return -1;
+	}
 	struct transfer *p = create_transfer(stream, iovec, wait_all, on_transferred, user);
 	if (!wait_all) {
 		x_link *last = x_list_last(&stream->send_list);
 		if (last) {
 			struct transfer *last_transfer = x_container_of(last, struct transfer, link);
+			x_assert_printf(last_transfer->wait_all, "x_stream_send_buf is already in pending");
 			if (!last_transfer->wait_all)
 				abort();
 		}
 	}
+	if (x_list_is_empty(&stream->send_list) && stream->send_timeout >= 0)
+			x_reactor_add(stream->reactor, &stream->send_timeout_event.base);
 	x_list_add_back(&stream->send_list, &p->link);
-	if (stream->finished) {
-		if (!(stream->error_event.base.ev_flags & X_EV_REACTING))
-			x_reactor_add(stream->reactor, &stream->error_event.base);
+	if (!(stream->sock_event.base.ev_flags & X_EV_WRITE)) {
+		stream->sock_event.base.ev_flags |= X_EV_WRITE;
+		x_reactor_modify(&stream->sock_event.base);
 	}
-	else {
-		x_reactor_modify(&stream->error_event.base);
-		if (!(stream->sock_event.base.ev_flags & X_EV_WRITE)) {
-			stream->sock_event.base.ev_flags |= X_EV_WRITE;
-			x_reactor_modify(&stream->sock_event.base);
-		}
-	}
+	return 0;
 }
 
-static void stream_read(x_stream *stream, bool wait_all, x_iovec iovec[], x_stream_handler *on_transferred, void *user)
+static int stream_read(x_stream *stream, bool wait_all, x_iovec iovec[], x_stream_transferred_fn *on_transferred, void *user)
 {
+	if (stream->finished) {
+		errno = X_ECONNABORTED;
+		return -1;
+	}
 	struct transfer *p = create_transfer(stream, iovec, wait_all, on_transferred, user);
 	if (!wait_all) {
 		x_link *last = x_list_last(&stream->recv_list);
 		if (last) {
 			struct transfer *last_transfer = x_container_of(last, struct transfer, link);
+			x_assert_printf(last_transfer->wait_all, "x_stream_read_buf is already in pending");
 			if (!last_transfer->wait_all)
 				abort();
 		}
 	}
+	if (x_list_is_empty(&stream->recv_list) && stream->recv_timeout >= 0)
+			x_reactor_add(stream->reactor, &stream->recv_timeout_event.base);
 	x_list_add_back(&stream->recv_list, &p->link);
-	if (stream->finished) {
-		if (!(stream->error_event.base.ev_flags & X_EV_REACTING))
-			x_reactor_add(stream->reactor, &stream->error_event.base);
+	if (!(stream->sock_event.base.ev_flags & X_EV_READ)) {
+		stream->sock_event.base.ev_flags |= X_EV_READ;
+		x_reactor_modify(&stream->sock_event.base);
 	}
-	else {
-		x_reactor_modify(&stream->error_event.base);
-		if (!(stream->sock_event.base.ev_flags & X_EV_READ)) {
-			stream->sock_event.base.ev_flags |= X_EV_READ;
-			x_reactor_modify(&stream->sock_event.base);
-		}
-	}
+	return 0;
 }
 
-void x_stream_send(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user)
+int x_stream_send(x_stream *stream, x_iovec iovec[], x_stream_transferred_fn *on_transfer, void *user)
 {
-	stream_write(stream, true, iovec, on_transfer, user);
+	return stream_write(stream, true, iovec, on_transfer, user);
 }
 
-void x_stream_recv(x_stream *stream, x_iovec iovec[], x_stream_handler *on_transfer, void *user)
+int x_stream_recv(x_stream *stream, x_iovec iovec[], x_stream_transferred_fn *on_transfer, void *user)
 {
-	stream_read(stream, true, iovec, on_transfer, user);
+	return stream_read(stream, true, iovec, on_transfer, user);
 }
 
-void x_stream_send_buf(x_stream *stream, void *data, size_t size, x_stream_handler *on_transfer, void *user)
+int x_stream_send_buf(x_stream *stream, void *data, size_t size, x_stream_transferred_fn *on_transfer, void *user)
 {
 	x_iovec iovec[] = { { data, size }, { NULL } };
-	stream_write(stream, false, iovec, on_transfer, user);
+	return stream_write(stream, false, iovec, on_transfer, user);
 }
 
-void x_stream_recv_buf(x_stream *stream, void *data, size_t size, x_stream_handler *on_transfer, void *user)
+int x_stream_recv_buf(x_stream *stream, void *data, size_t size, x_stream_transferred_fn *on_transfer, void *user)
 {
 	x_iovec iovec[] = { { data, size }, { NULL } };
-	stream_read(stream, false, iovec, on_transfer, user);
+	return stream_read(stream, false, iovec, on_transfer, user);
 }
 
 static void resolver_complete_event(x_event *ev)
@@ -712,7 +739,7 @@ static void resolve_handler(x_thrwork *work)
 	x_reactor_signal(query->rvr->reactor);
 }
 
-void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_handler *on_resolve, void *user)
+void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user)
 {
 	struct query *query = x_malloc(&rvr->mset, sizeof *query + strlen(name) + 1);
 	strcpy(query->name, name);
@@ -781,7 +808,7 @@ static void on_first_timedout(x_event *ev)
 	}
 }
 
-uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_handler *on_timedout, void *user)
+uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_timeout_fn *on_timedout, void *user)
 {
 	if (delay_ms < 0 && interval_ms <= 0)
 		return X_BADUID;
