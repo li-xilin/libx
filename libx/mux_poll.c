@@ -87,6 +87,7 @@ static int poll_mux_add(x_sockmux *mux, x_sock fd, short flags)
 		if(fd == mux->fds_in[i].fd) {
 			/* Override the existing event */
 			mux->fds_in[i].events = poll_setup_mask(flags);
+			mux->need_rememcp = 1;;
 			return 0;
 		}
 	}
@@ -105,6 +106,7 @@ static int poll_mux_mod(x_sockmux *mux, x_sock fd, short flags)
 	for(int i = 0; i < mux->n_events; ++i) {
 		if(fd == mux->fds_in[i].fd) {
 			mux->fds_in[i].events = poll_setup_mask(flags);
+			mux->need_rememcp = 1;
 			return 0;
 		}
 	}
