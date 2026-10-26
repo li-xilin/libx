@@ -97,8 +97,8 @@ global:
 	x_deqbuf_size;
 	x_dialer_cancel;
 	x_dialer_connect;
+	x_dialer_create;
 	x_dialer_free;
-	x_dialer_init;
 	x_dir_close;
 	x_dir_open;
 	x_dir_read;
@@ -323,8 +323,8 @@ global:
 	x_link_sanitize;
 	x_list_merge_back;
 	x_list_merge_front;
+	x_listener_create;
 	x_listener_free;
-	x_listener_init;
 	x_listener_port;
 	x_listener_start;
 	x_listener_stop;
@@ -437,8 +437,8 @@ global:
 	x_recatch_replace;
 	x_recatch_size;
 	x_rematch;
+	x_resolver_create;
 	x_resolver_free;
-	x_resolver_init;
 	x_resolver_query;
 	x_ringbuf_compact;
 	x_ringbuf_copy;
@@ -536,8 +536,8 @@ global:
 	x_strbuf_str;
 	x_strdup;
 	x_strdup2;
+	x_stream_create;
 	x_stream_free;
-	x_stream_init;
 	x_stream_recv;
 	x_stream_recv_buf;
 	x_stream_send;
@@ -589,8 +589,8 @@ global:
 	x_time_now;
 	x_time_tick;
 	x_timer_add;
+	x_timer_create;
 	x_timer_free;
-	x_timer_init;
 	x_timer_remove;
 	x_thrpool_add_work;
 	x_thrpool_clear_work;
