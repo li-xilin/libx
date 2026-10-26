@@ -33,12 +33,12 @@
 #include <stdbool.h>
 
 #ifdef X_OS_WIN
-#  ifndef FileIdInfo
-#    define FileIdInfo 0x12
-#  endif
-#  ifndef FSCTL_GET_REPARSE_POINT
-#    define FSCTL_GET_REPARSE_POINT 0x900a8
-#  endif
+#	ifndef FileIdInfo
+#		define FileIdInfo 0x12
+#	endif
+#	ifndef FSCTL_GET_REPARSE_POINT
+#		define FSCTL_GET_REPARSE_POINT 0x900a8
+#	endif
 
 typedef struct {
 	ULONGLONG   VolumeSerialNumber;
@@ -154,15 +154,21 @@ out:
 }
 
 #else
-#  include <sys/syscall.h>
-#  include <unistd.h>
-#  include <sys/stat.h>
-#  if defined(X_OS_LINUX)
-#    if defined(HAVE_LINUX_STAT_H) && !defined(X_CC_TCC)
-#      include <linux/stat.h>
-#    endif
-#    include <fcntl.h>
-#  endif
+#	include <sys/syscall.h>
+#	include <unistd.h>
+#	include <sys/stat.h>
+#	if defined(X_OS_LINUX)
+#		if defined(HAVE_LINUX_STAT_H) && !defined(X_CC_TCC)
+#			if defined(__GLIBC_PREREQ)
+#				if !__GLIBC_PREREQ(2, 28)
+#					include <linux/stat.h>
+#				endif
+#			else
+#				include <linux/stat.h>
+#			endif
+#		endif
+#		include <fcntl.h>
+#	endif
 
 static int get_file_creation_time(const char *filename, const struct stat *st, time_t *creat_time)
 {
