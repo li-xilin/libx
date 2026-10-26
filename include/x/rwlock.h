@@ -25,6 +25,7 @@
 
 #include "linkage.h"
 #include "types.h"
+#include "detect.h"
 #ifdef X_OS_WIN
 #include <synchapi.h>
 #define X_RWLOCK_INIT { SRWLOCK_INIT, FALSE }
