@@ -335,6 +335,7 @@ global:
 	x_log_set_mode;
 	x_lstat;
 	x_malloc;
+	x_malloc_retry;
 	x_mattach;
 	x_mcopy;
 	x_md5_buffer;
@@ -428,6 +429,7 @@ global:
 	x_reactor_signal;
 	x_reactor_wait;
 	x_realloc;
+	x_realloc_retry;
 	x_recatch_at;
 	x_recatch_fetch;
 	x_recatch_len_at;
