@@ -27,6 +27,8 @@
 
 X_EXTERN_C_BEGIN
 
+#define X_RESOLVER_NAME_MAXLEN 255
+
 typedef void x_dialer_connected_fn(int err, x_sock fd, void *user);
 x_dialer *x_dialer_create(x_reactor *reactor);
 void x_dialer_free(x_dialer *dialer);
@@ -53,7 +55,7 @@ int x_stream_recv_buf(x_stream *stream, void *data, size_t size, x_stream_transf
 typedef void x_resolver_completed_fn(int err, const char *name, x_ipaddr *addrs, size_t n, void *user);
 x_resolver *x_resolver_create(x_reactor *reactor);
 void x_resolver_free(x_resolver *rvr);
-void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user);
+int x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user);
 
 typedef bool x_timer_timeout_fn(uint32_t id, void *user);
 x_timer *x_timer_create(x_reactor *reactor);

@@ -26,7 +26,7 @@
 #include "x/thrpool.h"
 #include "x/uidpool.h"
 #include "x/log.h"
-#include "x/memory.h"
+#include "x/objpool.h"
 #include "x/pipe.h"
 #include "x/errno.h"
 #include "x/sys.h"
@@ -35,16 +35,16 @@
 
 #define X_ASYNET_CONNECT_BACKLOG 256
 #define CONNECT_TIMEOUT (1000 * 10)
+#define TRANSFER_IOVEC_MAX 64
 
 struct x_dialer_st {
 	x_reactor *reactor;
-	x_mset mset;
+	x_objpool objpool;
 	x_list list;
 };
 
 struct x_listener_st {
 	x_reactor *reactor;
-	x_mset mset;
 	x_evsocket listen_event;
 	x_ipaddr ipaddr;
 	short port;
@@ -55,7 +55,7 @@ struct x_listener_st {
 
 struct x_stream_st {
 	x_reactor *reactor;
-	x_mset mset;
+	x_objpool objpool;
 	x_evsocket sock_event;
 	x_evtimer send_timeout_event;
 	x_evtimer recv_timeout_event;
@@ -69,7 +69,7 @@ struct x_stream_st {
 
 struct x_resolver_st {
 	x_reactor *reactor;
-	x_mset mset;
+	x_objpool objpool;
 	x_thrpool thrpool;
 	x_evobject complete_event;
 	x_mutex lock;
@@ -79,7 +79,7 @@ struct x_resolver_st {
 
 struct x_timer_st {
 	x_reactor *reactor;
-	x_mset mset;
+	x_objpool objpool;
 	x_uidpool uidpool;
 };
 
@@ -107,7 +107,7 @@ struct transfer
 	int error;
 	x_stream_transferred_fn *on_transferred;
 	void *user;
-	x_iovec iovec[];
+	x_iovec iovec[TRANSFER_IOVEC_MAX];
 };
 
 struct query
@@ -119,7 +119,7 @@ struct query
 	x_resolver_completed_fn *on_resolve;
 	void *user;
 	int error;
-	char name[];
+	char name[X_RESOLVER_NAME_MAXLEN];
 };
 
 struct clock
@@ -175,7 +175,7 @@ fail:
 x_dialer *x_dialer_create(x_reactor *reactor)
 {
 	x_dialer *dialer = x_malloc(NULL, sizeof *dialer);
-	x_mset_init(&dialer->mset);
+	x_objpool_init(&dialer->objpool, sizeof(struct pending));
 	dialer->reactor = reactor;
 	x_list_init(&dialer->list);
 	return dialer;
@@ -202,7 +202,7 @@ static void on_connect_event(x_event *ev)
 	x_reactor_remove(&p->event.base);
 	x_reactor_remove(&p->timer.base);
 	x_list_del(&p->link);
-	x_free(p);
+	x_objpool_dealloc(&p->dialer->objpool, p);
 }
 
 static void on_connect_error(x_event *ev)
@@ -216,7 +216,7 @@ static void on_connect_error(x_event *ev)
 	p->on_connected(p->error, X_BADSOCK, p->user);
 	x_sock_close(p->event.sock);
 	x_list_del(&p->link);
-	x_free(p);
+	x_objpool_dealloc(&p->dialer->objpool, p);
 }
 
 void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, int timeout_ms, x_dialer_connected_fn *on_connected, void *user)
@@ -227,7 +227,7 @@ void x_dialer_connect(x_dialer *dialer, const x_hostport *addr, int timeout_ms, 
 	if (x_parse_ipaddr(addr->host, &ipaddr)
 			|| (fd = sock_connect(&ipaddr, addr->port)) == X_BADSOCK)
 		error = errno;
-	struct pending *s = x_malloc(&dialer->mset, sizeof *s);
+	struct pending *s = x_objpool_alloc(&dialer->objpool);
 	s->on_connected = on_connected;
 	s->user = user;
 	if (fd == X_BADSOCK) {
@@ -258,7 +258,7 @@ void x_dialer_cancel(x_dialer *dialer)
 			p->on_connected(p->error, X_BADSOCK, p->user);
 		}
 		x_reactor_remove(&p->timer.base);
-		x_free(p);
+		x_objpool_dealloc(&p->dialer->objpool, p);
 	}
 }
 
@@ -267,7 +267,7 @@ void x_dialer_free(x_dialer *dialer)
 	if (!dialer)
 		return;
 	x_dialer_cancel(dialer);
-	x_mset_free(&dialer->mset);
+	x_objpool_free(&dialer->objpool);
 	x_free(dialer);
 }
 
@@ -325,7 +325,7 @@ x_listener *x_listener_create(x_reactor *reactor, const x_hostport *addr, x_list
 	lnr->ipaddr = ipaddr;
 	lnr->port = addr->port;
 	lnr->reactor = reactor;
-	x_mset_init(&lnr->mset);
+	// x_objpool_init(&lnr->objpool);
 	x_evsocket_init(&lnr->listen_event, -1, 0, NULL);
 	x_list_init(&lnr->result_list);
 	lnr->on_accepted = on_accepted;
@@ -366,7 +366,6 @@ void x_listener_free(x_listener *lnr)
 	if (!lnr)
 		return;
 	x_listener_stop(lnr);
-	x_mset_free(&lnr->mset);
 	x_free(lnr);
 }
 
@@ -375,7 +374,7 @@ static void flush_all_send(x_stream *stream, int error)
 	x_list_popeach(cur, &stream->send_list) {
 		struct transfer *p = x_container_of(cur, struct transfer, link);
 		p->on_transferred(error, p->transferred, p->user);
-		x_free(p);
+		x_objpool_dealloc(&stream->objpool, p);
 	}
 	stream->sock_event.base.ev_flags &= ~X_EV_WRITE;
 	x_reactor_modify(&stream->sock_event.base);
@@ -386,7 +385,7 @@ static void flush_all_recv(x_stream *stream, int error)
 	x_list_popeach(cur, &stream->recv_list) {
 		struct transfer *p = x_container_of(cur, struct transfer, link);
 		p->on_transferred(error, p->transferred, p->user);
-		x_free(p);
+		x_objpool_dealloc(&stream->objpool, p);
 	}
 	stream->sock_event.base.ev_flags &= ~X_EV_READ;
 	x_reactor_modify(&stream->sock_event.base);
@@ -429,7 +428,7 @@ static void complate_send_transfer(x_stream *stream)
 			x_reactor_remove(&stream->send_timeout_event.base);
 	}
 	p->on_transferred(0, p->transferred, p->user);
-	x_free(p);
+	x_objpool_dealloc(&stream->objpool, p);
 }
 
 static void complate_recv_transfer(x_stream *stream)
@@ -443,7 +442,7 @@ static void complate_recv_transfer(x_stream *stream)
 			x_reactor_remove(&stream->recv_timeout_event.base);
 	}
 	p->on_transferred(0, p->transferred, p->user);
-	x_free(p);
+	x_objpool_dealloc(&stream->objpool, p);
 }
 
 static void on_stream_sock_event(x_event *e)
@@ -517,7 +516,7 @@ static void on_stream_sock_event(x_event *e)
 x_stream *x_stream_create(x_reactor *reactor, x_sock sock, int send_timeout, int recv_timeout, x_stream_finished_fn *on_finished, void *user)
 {
 	x_stream *stream = x_malloc(NULL, sizeof *stream);
-	x_mset_init(&stream->mset);
+	x_objpool_init(&stream->objpool, sizeof(struct transfer));
 	x_list_init(&stream->send_list);
 	x_list_init(&stream->recv_list);
 	stream->reactor = reactor;
@@ -551,7 +550,7 @@ void x_stream_free(x_stream *stream)
 		x_sock_close(stream->sock_event.sock);
 		x_reactor_remove(&stream->sock_event.base);
 	}
-	x_mset_free(&stream->mset);
+	x_objpool_free(&stream->objpool);
 	x_free(stream);
 }
 
@@ -570,7 +569,8 @@ static int iovec_count(x_iovec iovec[])
 static struct transfer *create_transfer(x_stream *stream, x_iovec iovec[], bool wait_all, x_stream_transferred_fn *on_transferred, void *user)
 {
 	int iovec_cnt = iovec_count(iovec);
-	struct transfer *p = x_malloc(&stream->mset, sizeof *p + sizeof(x_iovec) * iovec_cnt);
+	x_assert(iovec_cnt < TRANSFER_IOVEC_MAX);
+	struct transfer *p = x_objpool_alloc(&stream->objpool);
 	p->iovec_count = iovec_cnt;
 	p->total_len = 0;
 	p->iovec_index = 0;
@@ -673,7 +673,7 @@ static void resolver_complete_event(x_event *ev)
 		x_mutex_unlock(&rvr->lock);
 		for (p = query->res; p; p = p->ai_next)
 			n++;
-		x_ipaddr *addrs = x_malloc(&rvr->mset, sizeof(x_ipaddr) * n);
+		x_ipaddr *addrs = x_stack_alloc(sizeof(x_ipaddr) * n);
 		p = query->res;
 		for (int i = 0; p; p = p->ai_next) {
 			addrs[i].family = p->ai_family;
@@ -683,8 +683,9 @@ static void resolver_complete_event(x_event *ev)
 				addrs[i++].un.in6 = ((struct sockaddr_in6 *)p->ai_addr)->sin6_addr;
 		}
 		query->on_resolve(query->error, query->name, addrs, n, query->user);
+		x_stack_free(addrs);
 		freeaddrinfo(query->res);
-		x_free(query);
+		x_objpool_dealloc(&rvr->objpool, query);
 		x_mutex_lock(&rvr->lock);
 	}
 	ev->res_flags = 0;
@@ -708,7 +709,7 @@ x_resolver *x_resolver_create(x_reactor *reactor)
 	x_list_init(&rvr->query_list);
 	x_list_init(&rvr->result_list);
 	rvr->reactor = reactor;
-	x_mset_init(&rvr->mset);
+	x_objpool_init(&rvr->objpool, sizeof(struct query));
 	return rvr;
 }
 
@@ -720,7 +721,7 @@ void x_resolver_free(x_resolver *rvr)
 	x_thrpool_sync(&rvr->thrpool);
 	x_thrpool_free(&rvr->thrpool);
 	x_reactor_remove(&rvr->complete_event.base);
-	x_mset_free(&rvr->mset);
+	x_objpool_free(&rvr->objpool);
 	x_free(rvr);
 }
 
@@ -739,9 +740,14 @@ static void resolve_handler(x_thrwork *work)
 	x_reactor_signal(query->rvr->reactor);
 }
 
-void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user)
+int x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn *on_resolve, void *user)
 {
-	struct query *query = x_malloc(&rvr->mset, sizeof *query + strlen(name) + 1);
+	if (strlen(name) >= X_RESOLVER_NAME_MAXLEN) {
+		errno = X_ENAMETOOLONG;
+		return -1;
+	}
+
+	struct query *query = x_objpool_alloc(&rvr->objpool);
 	strcpy(query->name, name);
 	query->on_resolve = on_resolve;
 	query->user = user;
@@ -753,6 +759,7 @@ void x_resolver_query(x_resolver *rvr, const char *name, x_resolver_completed_fn
 	x_mutex_unlock(&query->rvr->lock);
 
 	x_thrpool_add_work(&rvr->thrpool, &query->work);
+	return 0;
 }
 
 x_timer *x_timer_create(x_reactor *reactor)
@@ -760,7 +767,7 @@ x_timer *x_timer_create(x_reactor *reactor)
 	x_timer *timer = x_malloc(NULL, sizeof *timer);
 	x_uidpool_init(&timer->uidpool);
 	timer->reactor = reactor;
-	x_mset_init(&timer->mset);
+	x_objpool_init(&timer->objpool, sizeof(struct clock));
 	return timer;
 }
 
@@ -769,7 +776,7 @@ static void free_clock(struct clock *c)
 	if (c->timer_event.base.ev_flags & X_EV_REACTING)
 		x_reactor_remove(&c->timer_event.base);
 	x_uidpool_put(&c->timer->uidpool, &c->uid);
-	x_free(c);
+	x_objpool_dealloc(&c->timer->objpool, c);
 }
 
 void x_timer_free(x_timer *timer)
@@ -779,7 +786,7 @@ void x_timer_free(x_timer *timer)
 	x_sklist_foreach(cur, &timer->uidpool.uid_set)
 		free_clock(cur);
 	x_uidpool_free(&timer->uidpool);
-	x_mset_free(&timer->mset);
+	x_objpool_free(&timer->objpool);
 	x_free(timer);
 }
 
@@ -812,9 +819,9 @@ uint32_t x_timer_add(x_timer *timer, int delay_ms, int interval_ms, x_timer_time
 {
 	if (delay_ms < 0 && interval_ms <= 0)
 		return X_BADUID;
-	struct clock *c = x_malloc(&timer->mset, sizeof *c);
+	struct clock *c = x_objpool_alloc(&timer->objpool);
 	if (x_uidpool_get(&timer->uidpool, &c->uid)) {
-		x_free(c);
+		x_objpool_dealloc(&timer->objpool, c);
 		return X_BADUID;
 	}
 	c->interval = interval_ms;
