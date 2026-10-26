@@ -15,7 +15,7 @@ if ANDROID
 libx_la_LIBADD = -ldl
 endif
 if LINUX
-libx_la_CFLAGS += -D_DEFAULT_SOURCE
+libx_la_CFLAGS += -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
 libx_la_LIBADD = -lpthread -ldl
 endif
 if WINDOWS
